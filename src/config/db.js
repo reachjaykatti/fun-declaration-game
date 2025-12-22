@@ -92,6 +92,13 @@ export async function initDb() {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS series_members (
+      series_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      joined_at TEXT NOT NULL,
+      PRIMARY KEY (series_id, user_id)
+    );
+
     CREATE TABLE IF NOT EXISTS matches (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       series_id INTEGER NOT NULL,
@@ -124,7 +131,7 @@ export async function initDb() {
     );
   `);
 
-  // Bootstrap admin if no users exist
+  // Bootstrap admin user
   const count = await db.get('SELECT COUNT(*) as c FROM users');
   if (!count || count.c === 0) {
     const username = process.env.BOOTSTRAP_ADMIN_USERNAME || 'admin';
