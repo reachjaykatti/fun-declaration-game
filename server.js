@@ -8,7 +8,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { initDb } from './src/config/db.js';
-import { sessionConfig } from './src/config/session.js';
 import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
 import seriesRoutes from './src/routes/series.js';
@@ -51,17 +50,31 @@ app.use((req, res, next) => {
     if (r.origin === `${req.protocol}://${req.get('host')}`) {
       sameOriginRef = r.pathname + r.search + r.hash;
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {}
   res.locals.prevUrl = sameOriginRef;
   next();
 });
 
-// --- BEGIN: Session + No-Cache Setup (AFTER) ---
+
+// ================================
+// ✅ SESSION SETUP (RENDER SAFE)
+// ================================
 const SQLiteStore = SQLiteStoreFactory(session);
 
-// Create a persistent SQLite session store
+// Detect Render environment
+const isRender = process.env.RENDER === 'true';
+
+// Session directory
+const sessionDir = isRender
+  ? '/tmp/sessions'
+  : path.join(__dirname, 'data', 'sessions');
+
+// Ensure directory exists
+fs.mkdirSync(sessionDir, { recursive: true });
+
+// Create SQLite session store
 const sessionStore = new SQLiteStore({
-  dir: path.join(__dirname, 'data'),
+  dir: sessionDir,
   db: 'sessions.sqlite',
   table: 'sessions'
 });
@@ -86,7 +99,9 @@ if ((process.env.RESET_SESSIONS_ON_START || 'true').toLowerCase() === 'true') {
   });
 }
 
+// ================================
 // DB init
+// ================================
 await initDb();
 
 // No-cache headers
