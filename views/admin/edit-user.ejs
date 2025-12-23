@@ -8,18 +8,28 @@
   <br><br>
 
   <label>New Password</label><br>
-  <input type="password" id="pwd" name="new_password">
-  <span style="cursor:pointer;" onclick="togglePwd()">👁️</span>
-  <br><br>
 
-  <button type="submit">Save Changes</button>
-</form>
+<div style="position:relative; width:250px;">
+  <input 
+    type="password"
+    id="new_password"
+    name="new_password"
+    style="width:100%; padding-right:30px;"
+  />
+  <span 
+    onclick="togglePassword()" 
+    style="position:absolute; right:8px; top:6px; cursor:pointer;"
+  >
+    👁️
+  </span>
+</div>
 
 <script>
-function togglePwd() {
-  const p = document.getElementById('pwd');
-  p.type = p.type === 'password' ? 'text' : 'password';
+function togglePassword() {
+  const input = document.getElementById('new_password');
+  input.type = input.type === 'password' ? 'text' : 'password';
 }
 </script>
+
 
 <%- include('../partials/foot') %>
