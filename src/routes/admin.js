@@ -376,7 +376,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       });
     }
 
-    const { rows } = parseDelimited(raw);
+    const rows = parseBulk(raw);
 
     let ok = 0, skipped = 0, errors = [];
 
