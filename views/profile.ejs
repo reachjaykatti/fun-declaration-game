@@ -1,0 +1,32 @@
+<%- include('partials/head', { title }) %>
+
+<h2>My Profile</h2>
+
+<% if (error) { %>
+  <p style="color:red;"><%= error %></p>
+<% } %>
+
+<% if (success) { %>
+  <p style="color:green;"><%= success %></p>
+<% } %>
+
+<hr>
+
+<h3>Change Display Name</h3>
+<form method="post" action="/profile/display-name">
+  <input type="text" name="display_name" value="<%= user.display_name %>" required />
+  <button type="submit">Update Name</button>
+</form>
+
+<hr>
+
+<h3>Change Password</h3>
+<form method="post" action="/profile/change-password">
+  <input type="password" name="current_password" placeholder="Current Password" required />
+  <br>
+  <input type="password" name="new_password" placeholder="New Password" required />
+  <br>
+  <button type="submit">Change Password</button>
+</form>
+
+<%- include('partials/footer') %>
