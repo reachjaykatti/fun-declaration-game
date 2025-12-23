@@ -1,4 +1,4 @@
-<%- include('partials/head', { title: labels.matches }) %>
+<%- include('/partials/head', { title: labels.matches }) %>
 
 <h1>Manage <%= labels.matches %> — <%= series.name %></h1>
 <a class="btn btn-link js-back" data-fallback="/admin">← Back</a>
@@ -35,5 +35,6 @@
   <% }) %>
 </div>
 
-<%- include('../partials/foot') %>
+<%- include('/partials/foot') %>
+
 
