@@ -2,6 +2,7 @@
 
 
 import express from 'express';
+import bcrypt from 'bcrypt';
 import moment from 'moment-timezone';
 import multer from 'multer';
 import { getDb } from '../config/db.js';
