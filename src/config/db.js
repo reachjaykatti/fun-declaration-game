@@ -142,6 +142,7 @@ export async function initDb() {
       created_at TEXT NOT NULL
     );
   `);
+  await ensureMatchesSchema(db);
 
   // Bootstrap admin user
   const count = await db.get('SELECT COUNT(*) as c FROM users');
