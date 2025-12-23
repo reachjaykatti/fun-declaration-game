@@ -66,6 +66,18 @@ export async function getDb() {
   return dbInstance;
 }
 
+async function ensureMatchesSchema(db) {
+  const cols = await db.all(`PRAGMA table_info(matches);`);
+  const names = cols.map(c => c.name);
+
+  if (!names.includes('cutoff_minutes_before')) {
+    await db.run(
+      `ALTER TABLE matches ADD COLUMN cutoff_minutes_before INTEGER NOT NULL DEFAULT 30;`
+    );
+    console.log('[Migration] Added matches.cutoff_minutes_before');
+  }
+}
+
 export async function initDb() {
   const db = await getDb();
 
