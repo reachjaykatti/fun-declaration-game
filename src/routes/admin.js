@@ -443,12 +443,14 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 // === CSV / TSV Parser – Safe String Conversion ===
 // === CSV / TSV Parser – Safe String Conversion (no ?? operators) ===
 function parseDelimited(text) {
-  const cleaned = String((text !== undefined && text !== null) ? text : '')
-                    .replace(/^\uFEFF/, '')
-                    .trim();
+  const cleaned = String(text || '')
+    .replace(/^\uFEFF/, '') // remove BOM
+    .trim();
 
   const lines = cleaned.split(/\r?\n/).filter(l => l.trim().length);
-  if (lines.length === 0) return { header: [], rows: [] };
+  if (lines.length < 2) {
+    return { header: [], rows: [] };
+  }
 
   // Detect delimiter
   const sample = lines[0];
@@ -456,29 +458,31 @@ function parseDelimited(text) {
   const commaCount = (sample.match(/,/g) || []).length;
   const delim = tabCount > commaCount ? '\t' : ',';
 
-  // Split line → safely convert to string
-  const split = function (line) {
-    return line.split(delim).map(function (s) {
-      return String((s !== undefined && s !== null) ? s : '').trim();
-    });
-  };
+  // Split helper
+  const split = (line) =>
+    line.split(delim).map(v => String(v || '').trim());
 
-  // Normalize headers to lowercase strings
-  const header = split(lines[0]).map(function (h) {
-    return String((h !== undefined && h !== null) ? h : '').trim().toLowerCase();
-  });
+  // Header normalization
+  const rawHeader = split(lines[0]);
+  const header = rawHeader.map(h =>
+    h
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+  );
 
-  // Parse rows safely
-  const rows = lines.slice(1).map(function (line, idx) {
-    const parts = split(line);
-    const obj = {};
-    header.forEach(function (h, i) {
-      const val = parts[i];
-      obj[h] = String((val !== undefined && val !== null) ? val : '').trim();
-    });
-    obj.__line = idx + 2; // header = line 1
-    return obj;
-  });
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = split(lines[i]);
+    if (values.every(v => !v)) continue; // skip empty rows
+
+    const row = { __line: i + 1 };
+    for (let c = 0; c < header.length; c++) {
+      row[header[c]] = values[c] || '';
+    }
+    rows.push(row);
+  }
 
   return { header, rows };
 }
