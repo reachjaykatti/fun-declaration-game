@@ -1,0 +1,25 @@
+<%- include('../partials/head', { title }) %>
+
+<h2>Users</h2>
+
+<table border="1" cellpadding="6">
+  <tr>
+    <th>Username</th>
+    <th>Display Name</th>
+    <th>Role</th>
+    <th>Action</th>
+  </tr>
+
+  <% users.forEach(u => { %>
+    <tr>
+      <td><%= u.username %></td>
+      <td><%= u.display_name %></td>
+      <td><%= u.is_admin ? 'Admin' : 'User' %></td>
+      <td>
+        <a href="/admin/users/<%= u.id %>/edit">Edit</a>
+      </td>
+    </tr>
+  <% }) %>
+</table>
+
+<%- include('../partials/footer') %>
