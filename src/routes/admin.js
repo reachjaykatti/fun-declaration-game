@@ -43,7 +43,7 @@ router.post('/users/new', async (req, res) => {
   try {
     await db.run('INSERT INTO users (username, password_hash, display_name, is_admin, created_at) VALUES (?,?,?,?,?)',
       [username, hash, display_name, is_admin ? 1 : 0, nowUtcISO()]);
-    res.redirect('/admin');
+    res.redirect('/admin/users/new');
   } catch (e) {
     res.render('admin/user_new', { title: 'Add User', error: 'Failed: ' + e.message });
   }
