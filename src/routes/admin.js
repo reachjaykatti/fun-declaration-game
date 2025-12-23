@@ -48,6 +48,57 @@ router.post('/users/new', async (req, res) => {
   }
 });
 
+// List all users
+router.get('/users', async (req, res) => {
+  const db = await getDb();
+  const users = await db.all(
+    'SELECT id, username, display_name, is_admin FROM users ORDER BY created_at DESC'
+  );
+
+  res.render('admin/users', {
+    title: 'Users',
+    users
+  });
+});
+// Show edit user page
+router.get('/users/:id/edit', async (req, res) => {
+  const db = await getDb();
+  const user = await db.get(
+    'SELECT id, username, display_name, is_admin FROM users WHERE id = ?',
+    [req.params.id]
+  );
+
+  if (!user) return res.redirect('/admin/users');
+
+  res.render('admin/edit-user', {
+    title: 'Edit User',
+    user
+  });
+});
+
+// Update user (name + password)
+router.post('/users/:id/edit', async (req, res) => {
+  const { display_name, new_password } = req.body;
+  const db = await getDb();
+
+  if (display_name && display_name.trim()) {
+    await db.run(
+      'UPDATE users SET display_name = ? WHERE id = ?',
+      [display_name.trim(), req.params.id]
+    );
+  }
+
+  if (new_password && new_password.length >= 6) {
+    const hash = await bcrypt.hash(new_password, 10);
+    await db.run(
+      'UPDATE users SET password_hash = ? WHERE id = ?',
+      [hash, req.params.id]
+    );
+  }
+
+  res.redirect('/admin/users');
+});
+
 // Series create/edit/members/lock/delete
 router.get('/series/new', (req, res) => res.render('admin/series_new', { title: 'New Series' }));
 router.post('/series/new', async (req, res) => {
