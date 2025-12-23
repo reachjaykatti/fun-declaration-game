@@ -292,8 +292,17 @@ router.get('/series/:id/matches/bulk/template', async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="series_${seriesId}_matches_template.csv"`);
   return res.send(csv);
 });
-
-
+if (!raw.includes(',') && !raw.includes('\t')) {
+  return res.render('admin/matches_bulk', {
+    title: 'Bulk Import Matches',
+    series,
+    result: {
+      ok: 0,
+      skipped: 0,
+      errors: ['Invalid file: values must be comma or tab separated']
+    }
+  });
+}
 
 // Bulk import (CSV/TSV) — supports PASTE (textarea 'text') OR FILE upload ('file')
 // IST-only for input times; converts to UTC internally.
