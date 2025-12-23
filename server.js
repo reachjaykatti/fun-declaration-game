@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import profileRoutes from './src/routes/profile.js';
 import { initDb } from './src/config/db.js';
 import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
@@ -26,6 +27,9 @@ dotenv.config();
 
 const app = express();
 app.use(helmet());
+
+//use of profile routes
+app.use('/', profileRoutes);
 
 // Views (EJS)
 app.set('view engine', 'ejs');
