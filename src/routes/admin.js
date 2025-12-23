@@ -442,50 +442,41 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 // Robust CSV/TSV parser: coerces ALL values to strings safely (no ?? operator)
 // === CSV / TSV Parser – Safe String Conversion ===
 // === CSV / TSV Parser – Safe String Conversion (no ?? operators) ===
-function parseDelimited(text) {
-  const cleaned = String(text || '')
-    .replace(/^\uFEFF/, '') // remove BOM
-    .trim();
+function parseBulk(text) {
+  const lines = String(text || '')
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
 
-  const lines = cleaned.split(/\r?\n/).filter(l => l.trim().length);
-  if (lines.length < 2) {
-    return { header: [], rows: [] };
-  }
+  if (lines.length === 0) return [];
 
-  // Detect delimiter
-  const sample = lines[0];
-  const tabCount = (sample.match(/\t/g) || []).length;
-  const commaCount = (sample.match(/,/g) || []).length;
-  const delim = tabCount > commaCount ? '\t' : ',';
+  // detect delimiter
+  const delim =
+    lines[0].includes('\t') ? '\t' :
+    lines[0].includes(',')  ? ','  : '\t';
 
-  // Split helper
-  const split = (line) =>
-    line.split(delim).map(v => String(v || '').trim());
+  // drop header if detected
+  const first = lines[0].toLowerCase();
+  const hasHeader = first.includes('start_time');
 
-  // Header normalization
-  const rawHeader = split(lines[0]);
-  const header = rawHeader.map(h =>
-    h
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-  );
+  const dataLines = hasHeader ? lines.slice(1) : lines;
 
-  const rows = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = split(lines[i]);
-    if (values.every(v => !v)) continue; // skip empty rows
-
-    const row = { __line: i + 1 };
-    for (let c = 0; c < header.length; c++) {
-      row[header[c]] = values[c] || '';
-    }
-    rows.push(row);
-  }
-
-  return { header, rows };
+  return dataLines.map((line, idx) => {
+    const cols = line.split(delim).map(c => c.trim());
+    return {
+      __line: idx + 2,
+      name: cols[0],
+      sport: cols[1],
+      team_a: cols[2],
+      team_b: cols[3],
+      start_time_ist: cols[4],
+      cutoff_minutes_before: cols[5],
+      entry_points: cols[6]
+    };
+  });
 }
+
 
 // Admin match view / reset / declare
 router.get('/matches/:matchId', async (req, res) => {
