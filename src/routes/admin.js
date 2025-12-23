@@ -284,9 +284,9 @@ router.post('/matches/:matchId/edit', async (req, res) => {
 router.get('/series/:id/matches/bulk/template', async (req, res) => {
   const seriesId = req.params.id;
   const rows = [
-    'name,sport,team_a,team_b,start_time_ist,cutoff_minutes_before,entry_points',
-    'Match 01,cricket,IND,PAK,2025-12-31 20:00,30,50'
-  ];
+  'name\tsport\tteam_a\tteam_b\tstart_time_ist\tcutoff_minutes_before\tentry_points',
+  'Travel01\tTrain\tPuducherry\tTamilnadu\t24-12-2025 09:00\t30\t50'
+];
   const csv = rows.join('\n');
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="series_${seriesId}_matches_template.csv"`);
