@@ -1,0 +1,25 @@
+<%- include('../partials/head', { title }) %>
+
+<h2>Edit User</h2>
+
+<form method="post">
+  <label>Display Name</label><br>
+  <input type="text" name="display_name" value="<%= user.display_name %>">
+  <br><br>
+
+  <label>New Password</label><br>
+  <input type="password" id="pwd" name="new_password">
+  <span style="cursor:pointer;" onclick="togglePwd()">👁️</span>
+  <br><br>
+
+  <button type="submit">Save Changes</button>
+</form>
+
+<script>
+function togglePwd() {
+  const p = document.getElementById('pwd');
+  p.type = p.type === 'password' ? 'text' : 'password';
+}
+</script>
+
+<%- include('../partials/footer') %>
