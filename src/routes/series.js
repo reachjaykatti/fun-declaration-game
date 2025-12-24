@@ -261,6 +261,10 @@ router.get('/:id/matches/:matchId', async (req, res) => {
     (membersCountRow && typeof membersCountRow.c === 'number')
       ? membersCountRow.c
       : 0;
+// --- 🧭 Determine Missed Travellers ---
+const members = await db.all('SELECT u.id, u.display_name FROM series_members sm JOIN users u ON sm.user_id = u.id WHERE sm.series_id = ?', [req.params.id]);
+const votedIds = preds.map(p => p.user_id);
+const missedTravellers = members.filter(m => !votedIds.includes(m.id));
 
   // --- 6️⃣ Probable outcome (only before declaration) ---
   let probable = null;
@@ -334,6 +338,7 @@ router.get('/:id/matches/:matchId', async (req, res) => {
     startedFlag,
     showAll,
     myMatchPoints,
+    missedTravellers,
   });
 });
 
