@@ -385,45 +385,6 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
   });
 });
 
-// Robust CSV/TSV parser: coerces ALL values to strings safely (no ?? operator)
-// === CSV / TSV Parser – Safe String Conversion ===
-// === CSV / TSV Parser – Safe String Conversion (no ?? operators) ===
-function parseBulk(text) {
-  const lines = String(text || '')
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  if (lines.length === 0) return [];
-
-  // detect delimiter
-  const delim =
-    lines[0].includes('\t') ? '\t' :
-    lines[0].includes(',')  ? ','  : '\t';
-
-  // drop header if detected
-  const first = lines[0].toLowerCase();
-  const hasHeader = first.includes('start_time');
-
-  const dataLines = hasHeader ? lines.slice(1) : lines;
-
-  return dataLines.map((line, idx) => {
-    const cols = line.split(delim).map(c => c.trim());
-    return {
-      __line: idx + 2,
-      name: cols[0],
-      sport: cols[1],
-      team_a: cols[2],
-      team_b: cols[3],
-      start_time_ist: cols[4],
-      cutoff_minutes_before: cols[5],
-      entry_points: cols[6]
-    };
-  });
-}
-
-
 // Admin match view / reset / declare
 router.get('/matches/:matchId', async (req, res) => {
   const db = await getDb();
