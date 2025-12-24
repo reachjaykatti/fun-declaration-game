@@ -1,5 +1,5 @@
 import express from 'express';
-import session from 'express-session';
+import setupSession from "./src/middleware/session.js";
 import SQLiteStoreFactory from 'connect-sqlite3';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
@@ -61,47 +61,9 @@ app.use((req, res, next) => {
 
 
 // ================================
-// ✅ SESSION SETUP (RENDER SAFE)
+// ✅ SESSION SETUP (Persistent Disk)
 // ================================
-const SQLiteStore = SQLiteStoreFactory(session);
-
-// Detect Render environment
-const isRender = process.env.RENDER === 'true';
-
-// Session directory
-const sessionDir = isRender
-  ? '/tmp/sessions'
-  : path.join(__dirname, 'data', 'sessions');
-
-// Ensure directory exists
-fs.mkdirSync(sessionDir, { recursive: true });
-
-// Create SQLite session store
-const sessionStore = new SQLiteStore({
-  dir: sessionDir,
-  db: 'sessions.sqlite',
-  table: 'sessions'
-});
-
-app.use(session({
-  store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'dev_secret_change_me',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false
-  }
-}));
-
-// Clear all sessions on start if requested
-if ((process.env.RESET_SESSIONS_ON_START || 'true').toLowerCase() === 'true') {
-  sessionStore.clear(err => {
-    if (err) console.error('Failed to clear sessions:', err);
-    else console.log('All sessions cleared on server start.');
-  });
-}
+setupSession(app);
 
 // ================================
 // DB init
