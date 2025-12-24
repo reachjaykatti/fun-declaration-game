@@ -161,8 +161,6 @@ router.post('/series/:id/delete', async (req, res) => {
 
 // Matches: manage/create/edit
 
-
-
 // === Admin: Manage Matches (series-wise) with IST/Cutoff + Admin declared dot ===
 router.get('/series/:id/matches', async (req, res) => {
   const db = await getDb();
