@@ -365,7 +365,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       skipped++;
       errors.push(`Line ${i + 1}: ${e.message}`);
     }
-  }
+  });
 
   res.render('admin/matches_bulk', {
     title: 'Bulk Import Matches',
