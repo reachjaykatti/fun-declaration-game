@@ -1,3 +1,7 @@
+if (process.env.RESET_DB_ON_START === 'true') {
+  console.log('⚠️ Resetting DB on start');
+  fs.unlinkSync(dbPath);
+}
 // src/config/db.js
 import sqlite3 from "sqlite3";
 import dotenv from "dotenv";
@@ -10,10 +14,7 @@ sqlite3.verbose();
 
 // 🔁 Detect environment
 const isRender = process.env.RENDER === "true";
-if (process.env.RESET_DB_ON_START === 'true') {
-  console.log('⚠️ Resetting DB on start');
-  fs.unlinkSync(dbPath);
-}
+
 // ✅ DB path logic
 const dbPath = isRender
   ? "/tmp/app.db"                          // Render (Linux)
