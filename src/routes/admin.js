@@ -327,55 +327,20 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
   let ok = 0, skipped = 0, errors = [];
 
   for (let i = 0; i < lines.length; i++) {
-    try {
-      throw new Error('🧪 BULK ROUTE POISON PILL HIT');
-      const cols = lines[i].split('\t').map(c => c.trim());
+  try {
+    const cols = lines[i].split('\t');
 
-      if (cols.length < 7) {
-        skipped++;
-        errors.push(`Line ${i + 1}: Expected 7 columns`);
-        continue;
-      }
+    errors.push(
+      `DEBUG Line ${i + 1}: cols=${cols.length}, types=` +
+      cols.map(c => typeof c).join(',')
+    );
 
-      const [name, sport, team_a, team_b, ist, cutoff, entry] = cols;
-
-      const m = moment.tz(
-        ist,
-        ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
-        'Asia/Kolkata',
-        true
-      );
-
-      if (!m.isValid()) {
-        skipped++;
-        errors.push(`Line ${i + 1}: Invalid IST time`);
-        continue;
-      }
-
-      await db.run(
-        `INSERT INTO matches
-         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        [
-          req.params.id,
-          name,
-          sport || 'travel',
-          team_a,
-          team_b,
-          m.utc().toISOString(),
-          parseInt(cutoff || '30', 10),
-          parseFloat(entry || '50'),
-          'scheduled'
-        ]
-      );
-
-      ok++;
-    } catch (e) {
-      skipped++;
-      errors.push(`Line ${i + 1}: ${e.message}`);
-    }
+    skipped++;
+  } catch (e) {
+    errors.push(`CRASH Line ${i + 1}: ${e.message}`);
+    skipped++;
   }
-
+}
   return res.render('admin/matches_bulk', {
     title: 'Bulk Import Matches',
     series,
