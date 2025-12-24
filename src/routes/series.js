@@ -201,14 +201,13 @@ router.post('/:id/matches/:matchId/predict', async (req, res) => {
     } else {
       await db.run(
         'INSERT INTO predictions (match_id, user_id, predicted_team, predicted_at_utc) VALUES (?,?,?,?)',
-[req.params.matchId, req.session.user.id, team, nowISO]
+        [req.params.matchId, req.session.user.id, team, nowISO]
       );
       console.log(
         `✅ New prediction saved for user ${req.session.user.id} → ${team}`
       );
     }
 
-    // Reload the match list so UI updates (buttons disappear)
     res.redirect(`/series/${req.params.id}/matches`);
   } catch (err) {
     console.error('❌ Prediction save error:', err);
