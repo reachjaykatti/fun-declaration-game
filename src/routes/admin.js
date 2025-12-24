@@ -5,6 +5,7 @@ import multer from 'multer';
 import { getDb } from '../config/db.js';
 import { ensureAdmin } from '../middleware/auth.js';
 import { nowUtcISO } from '../utils/time.js';
+import XLSX from 'xlsx';
 
 // Multer for CSV/TSV uploads (kept in memory)
 const upload = multer({
@@ -309,8 +310,6 @@ router.get('/series/:id/matches/bulk/template', (req, res) => {
 // =========================
 // BULK IMPORT – SUBMIT (TSV ONLY)
 // =========================
-const XLSX = require('xlsx');
-
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.render('admin/import_result', {
