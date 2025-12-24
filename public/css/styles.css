@@ -267,46 +267,78 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
   justify-content: space-between;
   margin-top: 0.8rem;
 }
-/* ======================
+/* =====================================
    🌐 Responsive Top Navigation
-   ====================== */
+   ===================================== */
 .top-nav {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  background: var(--surface, #f9f9f9);
+  flex-wrap: wrap;
+  background-color: var(--surface, #f5f5f5);
+  padding: 0.6rem 0.8rem;
   border-bottom: 1px solid #ddd;
 }
 
-.top-nav a,
-.top-nav button {
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Make buttons and links visually consistent */
+.nav-right a,
+.nav-right button {
   text-decoration: none;
-  color: #006666;
   font-weight: 600;
-  padding: 0.4rem 0.6rem;
+  color: #007777;
+  background-color: #e8f6f6;
+  border: 1px solid #cce0e0;
+  padding: 0.3rem 0.6rem;
   border-radius: 6px;
-  background-color: var(--card, #e6f7f7);
-  border: 1px solid #ccecec;
+  transition: all 0.2s ease-in-out;
 }
 
-.top-nav a:hover,
-.top-nav button:hover {
-  background-color: #b2dfdf;
+.nav-right a:hover,
+.nav-right button:hover {
+  background-color: #cdeeee;
+  color: #005555;
 }
 
-/* 📱 Mobile view */
+/* 📱 Mobile adjustments */
 @media (max-width: 768px) {
   .top-nav {
     flex-direction: column;
     align-items: stretch;
+    padding: 0.4rem;
   }
 
-  .top-nav a,
-  .top-nav button {
+  .nav-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .nav-right {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+
+  .nav-right a,
+  .nav-right button,
+  .nav-right form button {
     width: 100%;
     text-align: center;
+    font-size: 1rem;
   }
 }
