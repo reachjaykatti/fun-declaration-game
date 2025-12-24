@@ -13,7 +13,12 @@
     </label>
 
     <label>Type
-      <input name="sport" required placeholder="flight|roadtrip|train" />
+      <select name="sport" required>
+  <option value="Train">Train</option>
+  <option value="Bus">Bus</option>
+  <option value="Flight">Flight</option>
+  <option value="Travels">Travels</option>
+</select>
     </label>
 
     <label>Destination A
@@ -25,12 +30,11 @@
     </label>
 
     <label>Start Time (IST)
-      <input type="datetime-local"
-             name="start_time_ist"
-             required
-             class="form-control"
-             style="width: 100%; padding: 0.5rem;"
-             title="Select date and time in IST" />
+      <input
+  type="text"
+  name="start_time_ist"
+  value="15-01-2026 15:30"
+  required>
     </label>
     
     <label>Start Time (UTC, ISO)
