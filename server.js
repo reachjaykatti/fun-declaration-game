@@ -103,6 +103,23 @@ app.use((req, res) => {
   res.status(404).render('404', { title: 'Not Found' });
 });
 
+// =======================================
+// 🔍 Health check for Render load balancer
+// =======================================
+app.get("/healthz", (req, res) => res.status(200).send("ok"));
+
+// =======================================
+// 🧹 Session validation on every request
+// =======================================
+app.use((req, res, next) => {
+  // if session exists but DB user no longer valid, clear cookie
+  if (req.session?.user && !req.session.user.id) {
+    console.log("⚠️ Invalid session detected, clearing cookie");
+    req.session.destroy(() => {});
+  }
+  next();
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 //import "./src/utils/backupToGitHub.js";
