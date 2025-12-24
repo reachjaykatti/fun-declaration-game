@@ -156,34 +156,64 @@ router.get('/:id/matches', async (req, res) => {
    Submit/Update Prediction
 ---------------------------- */
 router.post('/:id/matches/:matchId/predict', async (req, res) => {
-  const db = await getDb();
-  const match = await db.get(
-    'SELECT * FROM matches WHERE id = ? AND series_id = ?',
-    [req.params.matchId, req.params.id]
-  );
-  if (!match) return res.status(404).send('Match not found');
-
-  const team = String((req.body.team !== undefined && req.body.team !== null) ? req.body.team : '').trim(); // 'A' or 'B'
-
-  const deadlinePassed = hasDeadlinePassed(
-    match.start_time_utc,
-    match.cutoff_minutes_before
-  );
-  const lockedForPrediction = deadlinePassed || (match.status !== 'scheduled');
-  if (lockedForPrediction) return res.status(400).send('Prediction locked');
-
   try {
-    await db.run(
-      'INSERT INTO predictions (match_id, user_id, predicted_team, predicted_at_utc, locked) VALUES (?,?,?,?,?)',
-      [req.params.matchId, req.session.user.id, team, nowUtcISO(), 1]
+    const db = await getDb();
+
+    // Fetch match details
+    const match = await db.get(
+      'SELECT * FROM matches WHERE id = ? AND series_id = ?',
+      [req.params.matchId, req.params.id]
     );
-  } catch {
-    await db.run(
-      'UPDATE predictions SET predicted_team = ?, predicted_at_utc = ? WHERE match_id = ? AND user_id = ?',
-      [team, nowUtcISO(), req.params.matchId, req.session.user.id]
+
+    if (!match) return res.status(404).send('Match not found');
+
+    const team = String(
+      req.body.team !== undefined && req.body.team !== null ? req.body.team : ''
+    ).trim(); // 'A' or 'B'
+
+    if (!team) return res.status(400).send('Invalid team selection');
+
+    // Deadline validation
+    const deadlinePassed = hasDeadlinePassed(
+      match.start_time_utc,
+      match.cutoff_minutes_before
     );
+    const lockedForPrediction = deadlinePassed || match.status !== 'scheduled';
+    if (lockedForPrediction)
+      return res.status(400).send('Prediction locked — cutoff passed.');
+
+    // Ensure upsert (insert or update)
+    const existing = await db.get(
+      'SELECT * FROM predictions WHERE match_id = ? AND user_id = ?',
+      [req.params.matchId, req.session.user.id]
+    );
+
+    const nowISO = nowUtcISO();
+
+    if (existing) {
+      await db.run(
+        'UPDATE predictions SET predicted_team = ?, predicted_at_utc = ? WHERE match_id = ? AND user_id = ?',
+        [team, nowISO, req.params.matchId, req.session.user.id]
+      );
+      console.log(
+        `🔁 Updated prediction for user ${req.session.user.id} → ${team}`
+      );
+    } else {
+      await db.run(
+        'INSERT INTO predictions (match_id, user_id, predicted_team, predicted_at_utc, locked) VALUES (?,?,?,?,?)',
+        [req.params.matchId, req.session.user.id, team, nowISO, 1]
+      );
+      console.log(
+        `✅ New prediction saved for user ${req.session.user.id} → ${team}`
+      );
+    }
+
+    // Reload the match list so UI updates (buttons disappear)
+    res.redirect(`/series/${req.params.id}/matches`);
+  } catch (err) {
+    console.error('❌ Prediction save error:', err);
+    res.status(500).send('Server error while saving prediction');
   }
-  res.redirect('/series/' + req.params.id + '/matches');
 });
 
 /* ---------------------------
