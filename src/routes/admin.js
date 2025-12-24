@@ -310,6 +310,7 @@ router.get('/series/:id/matches/bulk/template', (req, res) => {
 // BULK IMPORT – SUBMIT (TSV ONLY)
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
+  console.log('🔥🔥🔥 NEW TSV BULK ROUTE HIT 🔥🔥🔥');
   const db = await getDb();
   const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
 
