@@ -105,6 +105,7 @@ app.use((req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
+import "./src/utils/backupToGitHub.js";
 app.listen(PORT, () => {
   console.log(`TRAVEL PLAN app running on http://localhost:${PORT}`);
 });
