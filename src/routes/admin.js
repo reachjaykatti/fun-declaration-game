@@ -15,21 +15,6 @@ const upload = multer({
 const router = express.Router();
 router.use(ensureAdmin);
 
-// Admin home
-
-router.get('/', async (req, res) => {
-  const db = await getDb();
-  const rawSeries = await db.all('SELECT * FROM series ORDER BY created_at DESC');
-
-  const series = rawSeries.map(function (s) {
-    const startIst = s.start_date_utc ? moment.tz(s.start_date_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm') : '';
-    const endIst   = s.end_date_utc   ? moment.tz(s.end_date_utc,   'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm') : '';
-    return { ...s, startIst, endIst };
-  });
-
-  res.render('admin/home', { title: 'Admin', series });
-});
-
 // Users
 router.get('/users/new', (req, res) => res.render('admin/user_new', { title: 'Add User' }));
 router.post('/users/new', async (req, res) => {
@@ -277,157 +262,120 @@ router.post('/matches/:matchId/edit', async (req, res) => {
   res.redirect(`/admin/series/${match.series_id}/matches`);
 });
 
-// CSV template download
+// =========================
+// ADMIN HOME
+// =========================
+router.get('/', async (req, res) => {
+  const db = await getDb();
+  const rawSeries = await db.all('SELECT * FROM series ORDER BY created_at DESC');
 
-router.get('/series/:id/matches/bulk/template', async (req, res) => {
-  const seriesId = req.params.id;
-  const rows = [
-  'name\tsport\tteam_a\tteam_b\tstart_time_ist\tcutoff_minutes_before\tentry_points',
-  'Travel01\tTrain\tPuducherry\tTamilnadu\t24-12-2025 09:00\t30\t50'
-];
-  const csv = rows.join('\n');
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="series_${seriesId}_matches_template.csv"`);
-  return res.send(csv);
+  const series = rawSeries.map(s => ({
+    ...s,
+    startIst: s.start_date_utc ? moment.tz(s.start_date_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm') : '',
+    endIst: s.end_date_utc ? moment.tz(s.end_date_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm') : ''
+  }));
+
+  res.render('admin/home', { title: 'Admin', series });
 });
 
-// Bulk import (CSV/TSV) — supports PASTE (textarea 'text') OR FILE upload ('file')
-// IST-only for input times; converts to UTC internally.
-
-// === BULK IMPORT: PAGE (GET) ===
+// =========================
+// BULK IMPORT – PAGE
+// =========================
 router.get('/series/:id/matches/bulk', async (req, res) => {
-  try {
-    const db = await getDb();
-    const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
-    if (!series) {
-      return res.status(404).render('404', { title: 'Not Found', message: 'Series not found.' });
-    }
-    // === Auto-update series start/end (IST) after bulk import ===
-try {
-  const bounds = await db.get(
-    `SELECT
-       MIN(start_time_utc) AS first_utc,
-       MAX(start_time_utc) AS last_utc
-     FROM matches WHERE series_id = ?`,
-    [req.params.id]
-  );
+  const db = await getDb();
+  const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
+  if (!series) return res.status(404).render('404', { title: 'Not Found' });
 
-  if (bounds && bounds.first_utc && bounds.last_utc) {
-    const startIST = moment.tz(bounds.first_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm');
-    const endIST   = moment.tz(bounds.last_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm');
-    await db.run(
-      `UPDATE series SET start_ist = ?, end_ist = ? WHERE id = ?`,
-      [startIST, endIST, req.params.id]
-    );
-  }
-} catch (err) {
-  console.error('Failed to update series dates:', err);
-}
-    return res.render('admin/matches_bulk', {
-      title: 'Bulk Import Matches',
-      series,
-      result: null
-    });
-  } catch (e) {
-    console.error('Bulk GET error:', e);
-    return res.status(500).render('404', { title: 'Not Found', message: 'Failed to load bulk import page.' });
-  }
+  res.render('admin/matches_bulk', {
+    title: 'Bulk Import Matches',
+    series,
+    result: null
+  });
 });
 
-// === BULK IMPORT: TEMPLATE (GET) ===
-router.get('/series/:id/matches/bulk/template', async (req, res) => {
-  const seriesId = req.params.id;
+// =========================
+// BULK IMPORT – TEMPLATE (TSV)
+// =========================
+router.get('/series/:id/matches/bulk/template', (req, res) => {
   const rows = [
-    'name,sport,team_a,team_b,start_time_ist,cutoff_minutes_before,entry_points',
-    'Match 01,cricket,IND,PAK,2025-12-31 20:00,30,50'
+    'name\tsport\tteam_a\tteam_b\tstart_time_ist\tcutoff_minutes_before\tentry_points',
+    'Travel01\tTrain\tPuducherry\tTamilnadu\t24-12-2025 09:00\t30\t50'
   ];
-  const csv = rows.join('\n');
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="series_${seriesId}_matches_template.csv"`);
-  return res.send(csv);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="matches_template.tsv"');
+  res.send(rows.join('\n'));
 });
 
-// === BULK IMPORT: SUBMIT (POST) ===
-// Supports PASTE (textarea 'text') OR FILE upload ('file'); IST-only times.
+// =========================
+// BULK IMPORT – SUBMIT (TSV ONLY)
+// =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
-  try {
-    const db = await getDb();
-    const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
+  const db = await getDb();
+  const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
 
-    function STR(v) { return String((v !== undefined && v !== null) ? v : '').trim(); }
+  const raw =
+    (req.file && req.file.buffer && req.file.buffer.toString('utf8')) ||
+    (req.body.text || '');
 
-    // Prefer file if provided, else textarea content
-    let raw = '';
-    if (req.file && req.file.buffer) {
-      raw = req.file.buffer.toString('utf8');
-    } else {
-      raw = STR(req.body.text);
-    }
+  const lines = raw
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
 
-    if (!raw) {
-      return res.render('admin/matches_bulk', {
-        title: 'Bulk Import Matches',
-        series,
-        result: { ok: 0, skipped: 0, errors: ['No CSV/TSV supplied. Paste data or choose a file.'] }
-      });
-    }
+  let ok = 0, skipped = 0, errors = [];
 
-    const rows = parseBulk(raw);
-
-    let ok = 0, skipped = 0, errors = [];
-
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      try {
-        const name   = STR(r.name || r.match || r.title);
-        const sport  = STR(r.sport || 'cricket');
-        const team_a = STR(r.team_a || r.teama || r.a);
-        const team_b = STR(r.team_b || r.teamb || r.b);
-
-        // IST-only time
-        const istRaw = STR(r.start_time_ist);
-        if (!istRaw) {
-          skipped++;
-          errors.push('Line ' + (r.__line || (i + 2)) + ": Missing 'start_time_ist' (e.g., 2025-12-31 20:00)");
-          continue;
-        }
-
-        // Parse IST → UTC ISO
-        let m = moment.tz(istRaw, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata', true);
-        if (!m.isValid()) m = moment.tz(istRaw, 'DD-MM-YYYY HH:mm', 'Asia/Kolkata', true);
-        if (!m.isValid()) {
-          skipped++;
-          errors.push('Line ' + (r.__line || (i + 2)) + ": Bad IST '" + istRaw + "'. Use YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm");
-          continue;
-        }
-        const start_time_utc = m.utc().toISOString();
-
-        const cutoff = r.cutoff_minutes_before ? parseInt(STR(r.cutoff_minutes_before), 10) : 30;
-        const entry  = r.entry_points ? parseFloat(STR(r.entry_points)) : 50;
-
-        if (!name || !team_a || !team_b) {
-          skipped++;
-          errors.push('Line ' + (r.__line || (i + 2)) + ': Missing (name/team_a/team_b)');
-          continue;
-        }
-
-        await db.run(
-          'INSERT INTO matches (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status) VALUES (?,?,?,?,?,?,?,?,?)',
-          [req.params.id, name, sport, team_a, team_b, start_time_utc, cutoff, entry, 'scheduled']
-        );
-
-        ok++;
-      } catch (e) {
+  for (let i = 0; i < lines.length; i++) {
+    try {
+      const cols = lines[i].split('\t').map(c => c.trim());
+      if (cols.length < 7) {
         skipped++;
-        errors.push('Line ' + (r.__line || (i + 2)) + ': ' + e.message);
+        errors.push(`Line ${i + 1}: Expected 7 columns`);
+        continue;
       }
-    }
 
-    return res.render('admin/matches_bulk', {
-      title: 'Bulk Import Matches',
-      series,
-      result: { ok, skipped, errors: errors.slice(0, 20) }
-    });
+      const [name, sport, team_a, team_b, ist, cutoff, entry] = cols;
+
+      const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
+      if (!m.isValid()) {
+        skipped++;
+        errors.push(`Line ${i + 1}: Invalid IST time`);
+        continue;
+      }
+
+      await db.run(
+        `INSERT INTO matches
+         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        [
+          req.params.id,
+          name,
+          sport || 'travel',
+          team_a,
+          team_b,
+          m.utc().toISOString(),
+          parseInt(cutoff || '30', 10),
+          parseFloat(entry || '50'),
+          'scheduled'
+        ]
+      );
+
+      ok++;
+    } catch (e) {
+      skipped++;
+      errors.push(`Line ${i + 1}: ${e.message}`);
+    }
+  }
+
+  res.render('admin/matches_bulk', {
+    title: 'Bulk Import Matches',
+    series,
+    result: { ok, skipped, errors }
+  });
+});
+
+export default router;
+
   } catch (e) {
     console.error('Bulk POST error:', e);
     return res.status(500).render('404', { title: 'Not Found', message: 'Bulk import failed to load.' });
