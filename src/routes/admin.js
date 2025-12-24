@@ -328,6 +328,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
   for (let i = 0; i < lines.length; i++) {
     try {
+      throw new Error('🧪 BULK ROUTE POISON PILL HIT');
       const cols = lines[i].split('\t').map(c => c.trim());
 
       if (cols.length < 7) {
