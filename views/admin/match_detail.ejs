@@ -63,6 +63,24 @@
   Travellers in series: <strong><%= membersCountVal %></strong>
 </div>
 
+<% if (missedTravellers && missedTravellers.length > 0) { %>
+  <div class="card" style="margin-top:1rem;">
+    <h3 style="color:#cc0000;">Missed Travel</h3>
+    <p>The following travellers did not make a selection before cutoff:</p>
+    <ul>
+      <% missedTravellers.forEach(m => { %>
+        <li><%= m.display_name %></li>
+      <% }) %>
+    </ul>
+  </div>
+<% } else { %>
+  <div class="card" style="margin-top:1rem;">
+    <h3 style="color:gray;">Missed Travel</h3>
+    <p class="text-muted">No missed travellers for this plan.</p>
+  </div>
+<% } %>
+
+
 <h2>Actions</h2>
 <div class="grid" style="gap:.5rem">
   <form method="POST" action="/admin/matches/<%= match.id %>/declare"
