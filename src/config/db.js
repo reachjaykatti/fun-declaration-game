@@ -77,11 +77,20 @@ async function ensureMatchesSchema(db) {
   const cols = await db.all(`PRAGMA table_info(matches);`);
   const names = cols.map((c) => c.name);
 
+  // cutoff column (existing)
   if (!names.includes("cutoff_minutes_before")) {
     await db.run(
       `ALTER TABLE matches ADD COLUMN cutoff_minutes_before INTEGER NOT NULL DEFAULT 30;`
     );
     console.log("[Migration] Added matches.cutoff_minutes_before");
+  }
+
+  // new column for admin declaration timestamp
+  if (!names.includes("admin_declared_at")) {
+    await db.run(
+      `ALTER TABLE matches ADD COLUMN admin_declared_at TEXT;`
+    );
+    console.log("[Migration] Added matches.admin_declared_at");
   }
 }
 
