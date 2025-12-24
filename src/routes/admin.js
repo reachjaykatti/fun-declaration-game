@@ -333,7 +333,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
       try {
         const name = String(r.name).trim();
-        const sport = String(r.sport || 'travel').trim();
+        const sport = String(req.body.sport || 'Travels').trim();
         const team_a = String(r.team_a).trim();
         const team_b = String(r.team_b).trim();
         const ist = String(r.start_time_ist).trim();
