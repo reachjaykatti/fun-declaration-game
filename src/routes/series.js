@@ -172,33 +172,19 @@ router.post('/:id/matches/:matchId/predict', async (req, res) => {
   const lockedForPrediction = deadlinePassed || (match.status !== 'scheduled');
   if (lockedForPrediction) return res.status(400).send('Prediction locked');
 
-  // 1. Check if user already declared
-try {
-  const lockedForPrediction = deadlinePassed || (match.status !== 'scheduled');
-  if (lockedForPrediction) {
-    return res.status(400).send('Prediction locked');
+  try {
+    await db.run(
+      'INSERT INTO predictions (match_id, user_id, predicted_team, predicted_at_utc, locked) VALUES (?,?,?,?,?)',
+      [req.params.matchId, req.session.user.id, team, nowUtcISO(), 1]
+    );
+  } catch {
+    await db.run(
+      'UPDATE predictions SET predicted_team = ?, predicted_at_utc = ? WHERE match_id = ? AND user_id = ?',
+      [team, nowUtcISO(), req.params.matchId, req.session.user.id]
+    );
   }
-
-  const existing = await db.get(
-    'SELECT id FROM predictions WHERE match_id = ? AND user_id = ?',
-    [req.params.matchId, req.session.user.id]
-  );
-
-  if (existing) {
-    return res.status(400).send('Prediction already made');
-  }
-
-  await db.run(
-    'INSERT INTO predictions (match_id, user_id, predicted_team, predicted_at_utc, locked) VALUES (?,?,?,?,?)',
-    [req.params.matchId, req.session.user.id, team, nowUtcISO(), 1]
-  );
-
-  return res.redirect('back');
-
-} catch (err) {
-  console.error('Declare error:', err);
-  return res.status(500).send('Internal error while declaring');
-}
+  res.redirect('/series/' + req.params.id + '/matches');
+});
 
 /* ---------------------------
    Match Detail (user)
