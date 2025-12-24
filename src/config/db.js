@@ -1,7 +1,3 @@
-if (process.env.RESET_DB_ON_START === 'true') {
-  console.log('⚠️ Resetting DB on start');
-  fs.unlinkSync(dbPath);
-}
 // src/config/db.js
 import sqlite3 from "sqlite3";
 import dotenv from "dotenv";
@@ -85,7 +81,22 @@ async function ensureMatchesSchema(db) {
 export async function initDb() {
   const db = await getDb();
 
-  await db.exec(`
+  // ⚠️ Reset DB on start (ONLY when explicitly enabled)
+  if (process.env.RESET_DB_ON_START === 'true') {
+    try {
+      if (fs.existsSync(dbPath)) {
+        console.log('⚠️ Resetting DB on start');
+        fs.unlinkSync(dbPath);
+        dbInstance = null; // force reconnect
+      }
+    } catch (e) {
+      console.error('DB reset failed:', e);
+    }
+  }
+
+  const freshDb = await getDb();
+
+  await freshDb.exec(`
     PRAGMA foreign_keys = ON;
 
     CREATE TABLE IF NOT EXISTS users (
@@ -124,6 +135,7 @@ export async function initDb() {
       team_b TEXT NOT NULL,
       start_time_utc TEXT NOT NULL,
       entry_points REAL NOT NULL DEFAULT 50,
+      cutoff_minutes_before INTEGER NOT NULL DEFAULT 30,
       status TEXT NOT NULL DEFAULT 'scheduled',
       winner TEXT
     );
@@ -146,10 +158,9 @@ export async function initDb() {
       created_at TEXT NOT NULL
     );
   `);
-  await ensureMatchesSchema(db);
 
   // Bootstrap admin user
-  const count = await db.get('SELECT COUNT(*) as c FROM users');
+  const count = await freshDb.get('SELECT COUNT(*) as c FROM users');
   if (!count || count.c === 0) {
     const username = process.env.BOOTSTRAP_ADMIN_USERNAME || 'admin';
     const password = process.env.BOOTSTRAP_ADMIN_PASSWORD || 'Admin@123';
@@ -157,7 +168,7 @@ export async function initDb() {
     const hash = await bcrypt.hash(password, 10);
     const now = new Date().toISOString();
 
-    await db.run(
+    await freshDb.run(
       'INSERT INTO users (username, password_hash, display_name, is_admin, created_at) VALUES (?,?,?,?,?)',
       [username, hash, displayName, 1, now]
     );
@@ -165,3 +176,4 @@ export async function initDb() {
     console.log('✅ Admin user created');
   }
 }
+
