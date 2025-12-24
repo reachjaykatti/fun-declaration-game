@@ -312,11 +312,11 @@ router.get('/series/:id/matches/bulk/template', (req, res) => {
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   if (!req.file) {
-    return res.render('admin/import_result', {
-      ok: 0,
-      skipped: 0,
-      errors: ['Please upload an Excel (.xlsx) file']
-    });
+    return res.json({
+  ok: 0,
+  skipped: 0,
+  errors: ['Please upload an Excel (.xlsx) file']
+});
   }
 
   let ok = 0;
@@ -383,15 +383,15 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       }
     }
 
-    res.render('admin/import_result', { ok, skipped, errors });
+    res.json({ ok, skipped, errors });
 
   } catch (e) {
-    res.render('admin/import_result', {
-      ok: 0,
-      skipped: 0,
-      errors: ['Invalid Excel file']
-    });
-  }
+  res.json({
+    ok: 0,
+    skipped: 0,
+    errors: ['Invalid Excel file']
+  });
+}
 });
 
 // Admin match view / reset / declare
