@@ -328,6 +328,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
   for (let i = 0; i < lines.length; i++) {
     try {
       const cols = lines[i].split('\t').map(c => c.trim());
+
       if (cols.length < 7) {
         skipped++;
         errors.push(`Line ${i + 1}: Expected 7 columns`);
@@ -336,7 +337,13 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
       const [name, sport, team_a, team_b, ist, cutoff, entry] = cols;
 
-      const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
+      const m = moment.tz(
+        ist,
+        ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
+        'Asia/Kolkata',
+        true
+      );
+
       if (!m.isValid()) {
         skipped++;
         errors.push(`Line ${i + 1}: Invalid IST time`);
@@ -365,23 +372,14 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       skipped++;
       errors.push(`Line ${i + 1}: ${e.message}`);
     }
-  });
+  }
 
-  res.render('admin/matches_bulk', {
+  return res.render('admin/matches_bulk', {
     title: 'Bulk Import Matches',
     series,
     result: { ok, skipped, errors }
   });
 });
-
-export default router;
-
-  } catch (e) {
-    console.error('Bulk POST error:', e);
-    return res.status(500).render('404', { title: 'Not Found', message: 'Bulk import failed to load.' });
-  }
-});
-
 
 // Robust CSV/TSV parser: coerces ALL values to strings safely (no ?? operator)
 // === CSV / TSV Parser – Safe String Conversion ===
