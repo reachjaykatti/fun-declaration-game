@@ -40,16 +40,20 @@
   // ---- IST → UTC helper ----
   // Expects IST string 'YYYY-MM-DD HH:mm'
   function istToUtcIso(istStr) {
-    if (!istStr) return '';
-    var m = istStr.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/);
-    if (!m) return '';
-    var y=+m[1], mo=+m[2]-1, d=+m[3], hh=+m[4], mm=+m[5];
-    // Create a UTC date that corresponds to IST - 5:30
-    // i.e., UTC = IST - 05:30
-    var dateUtc = new Date(Date.UTC(y, mo, d, hh, mm));
-    dateUtc.setMinutes(dateUtc.getMinutes() - 330); // subtract 5h30m
-    return dateUtc.toISOString();
-  }
+  if (!istStr) return '';
+
+  // Accept both "YYYY-MM-DD HH:mm" and "YYYY-MM-DDTHH:mm"
+  var clean = istStr.replace('T', ' ');
+
+  var m = clean.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);
+  if (!m) return '';
+
+  var y = +m[1], mo = +m[2] - 1, d = +m[3], hh = +m[4], mm = +m[5];
+
+  var dateUtc = new Date(Date.UTC(y, mo, d, hh, mm));
+  dateUtc.setMinutes(dateUtc.getMinutes() - 330); // IST → UTC
+  return dateUtc.toISOString();
+}
 
   // When submitting admin match forms, auto-convert IST if present
   function wireIstForms() {
