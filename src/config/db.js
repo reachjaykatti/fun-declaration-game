@@ -9,21 +9,31 @@ dotenv.config();
 sqlite3.verbose();
 
 // 🔁 Detect environment
-const isRender = process.env.RENDER === "true";
+const isRender = process.env.RENDER === "true" || process.env.NODE_ENV === "production";
 
 // ✅ DB path logic
-const dbPath = isRender
-  ? "/tmp/app.db"                          // Render (Linux)
-  : path.join(process.cwd(), "data", "app.db"); // Windows local
+const persistentDir = "/opt/render/project/data"; // Render’s permanent disk mount
+const localDir = path.join(process.cwd(), "data");
 
-// Ensure local folder exists
-if (!isRender) {
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+// Decide correct path
+const dbPath = isRender
+  ? path.join(persistentDir, "app.db") // Persistent DB file on Render
+  : path.join(localDir, "app.db");     // Local development
+
+// Ensure directory exists
+try {
+  const targetDir = isRender ? persistentDir : localDir;
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+    console.log(`📁 Created data directory at: ${targetDir}`);
+  }
+} catch (err) {
+  console.error("❌ Error creating data directory:", err);
 }
 
 let dbInstance = null;
 
-// Promise wrapper
+// Helper: Promise wrapper around SQLite3
 function wrapDb(db) {
   return {
     run(sql, params = []) {
@@ -36,23 +46,19 @@ function wrapDb(db) {
     },
     get(sql, params = []) {
       return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) =>
-          err ? reject(err) : resolve(row)
-        );
+        db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
       });
     },
     all(sql, params = []) {
       return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) =>
-          err ? reject(err) : resolve(rows)
-        );
+        db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
       });
     },
     exec(sql) {
       return new Promise((resolve, reject) => {
-        db.exec(sql, err => (err ? reject(err) : resolve()));
+        db.exec(sql, (err) => (err ? reject(err) : resolve()));
       });
-    }
+    },
   };
 }
 
@@ -66,31 +72,32 @@ export async function getDb() {
   return dbInstance;
 }
 
+// Migration helper
 async function ensureMatchesSchema(db) {
   const cols = await db.all(`PRAGMA table_info(matches);`);
-  const names = cols.map(c => c.name);
+  const names = cols.map((c) => c.name);
 
-  if (!names.includes('cutoff_minutes_before')) {
+  if (!names.includes("cutoff_minutes_before")) {
     await db.run(
       `ALTER TABLE matches ADD COLUMN cutoff_minutes_before INTEGER NOT NULL DEFAULT 30;`
     );
-    console.log('[Migration] Added matches.cutoff_minutes_before');
+    console.log("[Migration] Added matches.cutoff_minutes_before");
   }
 }
 
 export async function initDb() {
   const db = await getDb();
 
-  // ⚠️ Reset DB on start (ONLY when explicitly enabled)
-  if (process.env.RESET_DB_ON_START === 'true') {
+  // ⚠️ Optional: Reset DB only if enabled via ENV
+  if (process.env.RESET_DB_ON_START === "true") {
     try {
       if (fs.existsSync(dbPath)) {
-        console.log('⚠️ Resetting DB on start');
+        console.log("⚠️ Resetting DB on start");
         fs.unlinkSync(dbPath);
         dbInstance = null; // force reconnect
       }
     } catch (e) {
-      console.error('DB reset failed:', e);
+      console.error("DB reset failed:", e);
     }
   }
 
@@ -159,21 +166,22 @@ export async function initDb() {
     );
   `);
 
+  await ensureMatchesSchema(freshDb);
+
   // Bootstrap admin user
-  const count = await freshDb.get('SELECT COUNT(*) as c FROM users');
+  const count = await freshDb.get("SELECT COUNT(*) as c FROM users");
   if (!count || count.c === 0) {
-    const username = process.env.BOOTSTRAP_ADMIN_USERNAME || 'admin';
-    const password = process.env.BOOTSTRAP_ADMIN_PASSWORD || 'Admin@123';
-    const displayName = 'Admin';
+    const username = process.env.BOOTSTRAP_ADMIN_USERNAME || "admin";
+    const password = process.env.BOOTSTRAP_ADMIN_PASSWORD || "Admin@123";
+    const displayName = "Admin";
     const hash = await bcrypt.hash(password, 10);
     const now = new Date().toISOString();
 
     await freshDb.run(
-      'INSERT INTO users (username, password_hash, display_name, is_admin, created_at) VALUES (?,?,?,?,?)',
+      "INSERT INTO users (username, password_hash, display_name, is_admin, created_at) VALUES (?,?,?,?,?)",
       [username, hash, displayName, 1, now]
     );
 
-    console.log('✅ Admin user created');
+    console.log("✅ Admin user created");
   }
 }
-
