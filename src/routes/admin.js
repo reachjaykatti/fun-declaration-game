@@ -335,8 +335,13 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
         continue;
       }
 
-      const [name, sport, team_a, team_b, ist, cutoff, entry] = cols;
-
+      const name   = String(cols[0]);
+      const sport  = String(cols[1]);
+      const team_a = String(cols[2]);
+      const team_b = String(cols[3]);
+      const ist    = String(cols[4]);
+      const cutoff = String(cols[5]);
+      const entry  = String(cols[6]);
       const m = moment.tz(
         ist,
         ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
