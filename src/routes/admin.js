@@ -422,6 +422,11 @@ router.get('/matches/:matchId', async (req, res) => {
 
   const entry = match.entry_points || 0;
 
+  // --- 🧭 Determine Missed Travellers ---
+const members = await db.all('SELECT u.id, u.display_name FROM series_members sm JOIN users u ON sm.user_id = u.id WHERE sm.series_id = ?', [match.series_id]);
+const votedIds = preds.map(p => p.user_id);
+const missedTravellers = members.filter(m => !votedIds.includes(m.id));
+
   // Determine cutoff status
   const cutoffMins = match.cutoff_minutes_before || 30;
   const cutoffTime = moment.utc(match.start_time_utc).subtract(cutoffMins, 'minutes');
@@ -454,6 +459,7 @@ router.get('/matches/:matchId', async (req, res) => {
     missed,
     probable,
     isCutoffOver,
+    missedTravellers,
     labels: req.app.locals.labels || {}
   });
 });
