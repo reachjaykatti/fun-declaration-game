@@ -45,7 +45,18 @@
         <li class="text-muted">No one skipped.</li>
       <% } %>
     </ul>
-  </div>
+
+    <% if (missedTravellers && missedTravellers.length > 0) { %>
+      <h3>Missed Travel</h3>
+      <ul>
+        <% missedTravellers.forEach(m => { %>
+          <li><%= m.display_name %></li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <ul><li class="text-muted">No missed travellers.</li></ul>
+    <% } %>
+</div>
 
 <% } else { %>
   <!-- ✅ Before cutoff or declaration -->
