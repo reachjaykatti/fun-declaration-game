@@ -327,7 +327,11 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
   for (let i = 0; i < lines.length; i++) {
     try {
-      const cols = lines[i].split('\t').map(c => c.trim());
+      // Try splitting by tab first, if only one column, try comma
+let cols = lines[i].split('\t').map(c => c.trim());
+if (cols.length <= 1) {
+  cols = lines[i].split(',').map(c => c.trim());
+}
 
       if (cols.length < 7) {
         skipped++;
