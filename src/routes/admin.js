@@ -309,84 +309,90 @@ router.get('/series/:id/matches/bulk/template', (req, res) => {
 // =========================
 // BULK IMPORT – SUBMIT (TSV ONLY)
 // =========================
+const XLSX = require('xlsx');
+
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
-  const db = await getDb();
-  const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
-
-  const raw =
-    (req.file && req.file.buffer && req.file.buffer.toString('utf8')) ||
-    (req.body.text || '');
-
-  const lines = raw
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  let ok = 0, skipped = 0, errors = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    try {
-      // Try splitting by tab first, if only one column, try comma
-let cols = lines[i].split('\t').map(c => c.trim());
-if (cols.length <= 1) {
-  cols = lines[i].split(',').map(c => c.trim());
-}
-
-      if (cols.length < 7) {
-        skipped++;
-        errors.push(`Line ${i + 1}: Expected 7 columns`);
-        continue;
-      }
-
-      const name   = String(cols[0]);
-      const sport  = String(cols[1]);
-      const team_a = String(cols[2]);
-      const team_b = String(cols[3]);
-      const ist    = String(cols[4]);
-      const cutoff = String(cols[5]);
-      const entry  = String(cols[6]);
-      const m = moment.tz(
-        ist,
-        ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
-        'Asia/Kolkata',
-        true
-      );
-
-      if (!m.isValid()) {
-        skipped++;
-        errors.push(`Line ${i + 1}: Invalid IST time`);
-        continue;
-      }
-
-      await db.run(
-        `INSERT INTO matches
-         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        [
-          req.params.id,
-          name,
-          sport || 'travel',
-          team_a,
-          team_b,
-          m.utc().toISOString(),
-          parseInt(cutoff || '30', 10),
-          parseFloat(entry || '50'),
-          'scheduled'
-        ]
-      );
-
-      ok++;
-    } catch (e) {
-      skipped++;
-      errors.push(`Line ${i + 1}: ${e.message}`);
-    }
+  if (!req.file) {
+    return res.render('admin/import_result', {
+      ok: 0,
+      skipped: 0,
+      errors: ['Please upload an Excel (.xlsx) file']
+    });
   }
-  return res.render('admin/matches_bulk', {
-    title: 'Bulk Import Matches',
-    series,
-    result: { ok, skipped, errors }
-  });
+
+  let ok = 0;
+  let skipped = 0;
+  const errors = [];
+
+  try {
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+
+      try {
+        const name = String(r.name).trim();
+        const sport = String(r.sport || 'travel').trim();
+        const team_a = String(r.team_a).trim();
+        const team_b = String(r.team_b).trim();
+        const ist = String(r.start_time_ist).trim();
+        const cutoff = parseInt(r.cutoff_minutes_before || 30, 10);
+        const entry = parseFloat(r.entry_points || 50);
+
+        if (!name || !team_a || !team_b || !ist) {
+          skipped++;
+          errors.push(`Row ${i + 2}: Missing required fields`);
+          continue;
+        }
+
+        const m = moment.tz(
+          ist,
+          ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
+          'Asia/Kolkata',
+          true
+        );
+
+        if (!m.isValid()) {
+          skipped++;
+          errors.push(`Row ${i + 2}: Invalid IST time`);
+          continue;
+        }
+
+        await db.run(
+          `INSERT INTO matches
+           (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
+          [
+            req.params.id,
+            name,
+            sport,
+            team_a,
+            team_b,
+            m.utc().toISOString(),
+            cutoff,
+            entry,
+            'scheduled'
+          ]
+        );
+
+        ok++;
+      } catch (e) {
+        skipped++;
+        errors.push(`Row ${i + 2}: ${e.message}`);
+      }
+    }
+
+    res.render('admin/import_result', { ok, skipped, errors });
+
+  } catch (e) {
+    res.render('admin/import_result', {
+      ok: 0,
+      skipped: 0,
+      errors: ['Invalid Excel file']
+    });
+  }
 });
 
 // Admin match view / reset / declare
