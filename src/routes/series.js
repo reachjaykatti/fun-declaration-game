@@ -1,6 +1,6 @@
 
 // src/routes/series.js  (FULL FILE REPLACEMENT)
-
+import moment from 'moment-timezone';
 import express from 'express';
 import { getDb } from '../config/db.js';
 import {
@@ -175,6 +175,21 @@ for (const m of matches) {
     const hours = Math.floor(diff / 3600000);
     const mins = Math.floor((diff % 3600000) / 60000);
     m.time_left = `${hours}h ${mins}m left`;
+  }
+}
+
+// Compute IST-friendly display and cutoff time
+for (const m of matches) {
+  // Convert UTC start time → IST formatted string
+  if (m.start_time_utc) {
+    const ist = moment.utc(m.start_time_utc).tz('Asia/Kolkata');
+    m.start_time_ist = ist.format('YYYY-MM-DD HH:mm');
+
+    const cutoff = ist.clone().subtract(m.cutoff_minutes_before || 30, 'minutes');
+    m.cutoff_time_ist = cutoff.format('YYYY-MM-DD HH:mm');
+  } else {
+    m.start_time_ist = '-';
+    m.cutoff_time_ist = '-';
   }
 }
 
