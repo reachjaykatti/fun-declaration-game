@@ -160,6 +160,23 @@ for (const m of matches) {
   );
   m.user_points = ledger?.total ?? null;
 }
+// ⏰ Compute time left for each match
+for (const m of matches) {
+  const start = new Date(m.start_time_utc);
+  const cutoff = new Date(start.getTime() - (m.cutoff_minutes_before || 30) * 60000);
+  const now = new Date();
+
+  if (now >= cutoff) {
+    m.locked = true;
+    m.time_left = "Closed";
+  } else {
+    m.locked = false;
+    const diff = cutoff - now;
+    const hours = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    m.time_left = `${hours}h ${mins}m left`;
+  }
+}
 
     return res.render('series/matches_list', {
       title: 'My Matches',
