@@ -3,6 +3,27 @@
 <h1><%= labels.matches %> — <%= series.name %></h1>
 <a class="btn btn-link js-back" data-fallback="/series">← Back</a>
 
+<!-- =============================== -->
+<!-- 📊 My Travel Summary Bar -->
+<!-- =============================== -->
+<%
+  // Compute summary stats
+  let totalPoints = 0, plannedCount = 0, missedCount = 0;
+
+  matches.forEach(m => {
+    if (m.user_points !== null) totalPoints += m.user_points;
+    if (m.user_has_predicted) plannedCount++;
+    else if (m.status === 'completed' && !m.user_has_predicted) missedCount++;
+  });
+%>
+
+<div class="summary-bar">
+  <span>📊 <strong>My Travel Summary</strong></span>
+  <span>Total Points: <strong><%= totalPoints.toFixed(2) %></strong></span>
+  <span>Planned: <strong><%= plannedCount %></strong></span>
+  <span>Missed: <strong><%= missedCount %></strong></span>
+</div>
+
 <!-- ===== TRAVEL GRID ===== -->
 <div class="travel-grid">
   <% matches.forEach(function(m) { %>
@@ -87,5 +108,6 @@
 </div>
 
 <%- include('../partials/foot') %>
+
 
 
