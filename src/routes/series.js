@@ -152,6 +152,15 @@ matches.sort((a, b) => {
   return new Date(a.start_time_utc) - new Date(b.start_time_utc);
 });
 
+    // Include user-specific points per match (if available)
+for (const m of matches) {
+  const ledger = await db.get(
+    'SELECT SUM(points) AS total FROM points_ledger WHERE user_id = ? AND match_id = ?',
+    [req.session.user.id, m.id]
+  );
+  m.user_points = ledger?.total ?? null;
+}
+
     return res.render('series/matches_list', {
       title: 'My Matches',
       series,
