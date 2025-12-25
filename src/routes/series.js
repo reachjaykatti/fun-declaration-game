@@ -97,6 +97,23 @@ router.get('/:id/matches', async (req, res) => {
         m.user_predicted_team = null;
         m.user_predicted_name = null;
       }
+            // --- Admin Declaration Flag ---
+      // Use series.created_by as admin reference
+      let adminUserId = series?.created_by || null;
+      if (!adminUserId) {
+        const adm = await db.get('SELECT id FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1');
+        adminUserId = adm ? adm.id : null;
+      }
+
+      let adminDeclared = false;
+      if (adminUserId) {
+        const adminPred = await db.get(
+          'SELECT 1 FROM predictions WHERE user_id = ? AND match_id = ?',
+          [adminUserId, m.id]
+        );
+        adminDeclared = !!adminPred;
+      }
+      m.admin_declared = adminDeclared;
 
       // --- Points (if completed) ---
       const ledger = await db.get(
