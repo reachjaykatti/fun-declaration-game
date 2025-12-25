@@ -81,6 +81,21 @@ p, table, ul, ol {
     font-size: 1.2rem;
   }
 }
+.btn-small {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 5px;
+  margin: 2px;
+}
+
+.chip-info {
+  background: #e9f4ff;
+  color: #004a8f;
+  border: 1px solid #cce4ff;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
 
 button, .btn {
   font-size: 0.95rem;
