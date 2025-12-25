@@ -262,7 +262,27 @@ router.post('/matches/:matchId/edit', async (req, res) => {
   const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
   res.redirect(`/admin/series/${match.series_id}/matches`);
 });
+/* ------------------------------
+   ❌ Delete Match (Cascade)
+------------------------------ */
+router.post('/matches/:matchId/delete', ensureAuthenticated, async (req, res) => {
+  const db = await getDb();
+  const matchId = req.params.matchId;
 
+  try {
+    await db.run('BEGIN TRANSACTION');
+    await db.run('DELETE FROM points_ledger WHERE match_id = ?', [matchId]);
+    await db.run('DELETE FROM predictions WHERE match_id = ?', [matchId]);
+    await db.run('DELETE FROM matches WHERE id = ?', [matchId]);
+    await db.run('COMMIT');
+    console.log(`🗑️ Match ${matchId} deleted (with all references)`);
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error('❌ Delete failed:', err);
+  }
+
+  res.redirect('/admin/series/' + req.body.series_id + '/matches');
+});
 // =========================
 // ADMIN HOME
 // =========================
