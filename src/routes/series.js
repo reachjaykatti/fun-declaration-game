@@ -164,7 +164,7 @@ for (const m of matches) {
     return res.render('series/matches_list', {
       title: 'My Matches',
       series,
-      matches: rows
+      matches
     });
   } catch (e) {
     console.error('Series list error:', e);
