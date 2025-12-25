@@ -37,175 +37,97 @@ router.get('/:id', async (req, res) => {
   return res.redirect('/series/' + req.params.id + '/matches');
 });
 
-/* ---------------------------
-   User: List Matches in a Series
-   (IST time, time left, user prediction state, ADMIN declared flag)
----------------------------- */
+// ==============================
+// 🧭 View Matches in a Series
+// ==============================
 router.get('/:id/matches', async (req, res) => {
   try {
     const db = await getDb();
-    const seriesId = parseInt(req.params.id, 10);
-    const userId = req.session.user.id;
+    const seriesId = req.params.id;
 
+    // 1️⃣ Fetch series info
     const series = await db.get('SELECT * FROM series WHERE id = ?', [seriesId]);
-    if (!series) {
-      return res.status(404).render('404', { title: 'Not Found' });
-    }
+    if (!series) return res.status(404).send('Series not found');
 
+    // 2️⃣ Fetch matches ordered by start time
     const matches = await db.all(
       'SELECT * FROM matches WHERE series_id = ? ORDER BY start_time_utc ASC',
       [seriesId]
     );
-       // Load user's predictions for these matches
-    let predByMatch = {};
-    if (matches.length > 0) {
-      const ids = matches.map(m => m.id).join(',');
-      const preds = await db.all(
-        'SELECT match_id, predicted_team FROM predictions WHERE user_id = ? AND match_id IN (' + ids + ')',
-        [userId]
+
+    const now = new Date();
+
+    // 3️⃣ Enrich each match with computed data
+    for (const m of matches) {
+      // --- Compute cutoff ---
+      const cutoffUtc = new Date(
+        new Date(m.start_time_utc).getTime() - m.cutoff_minutes_before * 60000
       );
-      for (let i = 0; i < preds.length; i++) {
-        const r = preds[i];
-        predByMatch[r.match_id] = r.predicted_team; // 'A' or 'B'
-      }
-    }
 
-    // --- ADMIN-AS-PLAYER declared flag -------------------------------------
-    // Prefer series.created_by as the "Admin-as-player"; fallback to first is_admin=1
-    let adminUserId = series && series.created_by ? series.created_by : null;
-    if (!adminUserId) {
-      const adm = await db.get('SELECT id FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1');
-      adminUserId = adm ? adm.id : null;
-    }
-
-    // Map of match_id => true if Admin declared
-    let adminDeclaredMap = {};
-    if (adminUserId && matches.length > 0) {
-      const ids = matches.map(m => m.id).join(',');
-      const aPreds = await db.all(
-        'SELECT match_id FROM predictions WHERE user_id = ? AND match_id IN (' + ids + ')',
-        [adminUserId]
-      );
-      for (let i = 0; i < aPreds.length; i++) {
-        adminDeclaredMap[aPreds[i].match_id] = true;
-      }
-    }
-    // -----------------------------------------------------------------------
-
-    // Build derived rows for the view
-    const rows = matches.map(function (m) {
-      const startIstStr = toIst(m.start_time_utc).format('YYYY-MM-DD HH:mm');
-
-      const cutoffIso = cutoffTimeUtc(m.start_time_utc, m.cutoff_minutes_before);
-      const cutoffMillis = new Date(cutoffIso).getTime();
-      const nowMillis = Date.now();
-
-      let timeLeftLabel = '';
-      let lockedForPrediction = hasDeadlinePassed(m.start_time_utc, m.cutoff_minutes_before) || (m.status !== 'scheduled');
-
-      if (lockedForPrediction) {
-        timeLeftLabel = 'Closed';
+      // --- Compute time left ---
+      const diffMs = cutoffUtc - now;
+      if (diffMs <= 0) {
+        m.locked = true;
+        m.time_left = 'Closed';
       } else {
-        const msLeft = cutoffMillis - nowMillis;
-        const minsTotal = Math.floor(msLeft / (60 * 1000));
-        const hours = Math.floor(minsTotal / 60);
-        const mins = minsTotal % 60;
-        timeLeftLabel = (hours > 0 ? (hours + 'h ') : '') + mins + 'm left';
+        m.locked = false;
+        const hrs = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        m.time_left = `${hrs}h ${mins}m left`;
       }
 
-      const userPredCode = predByMatch[m.id] ? predByMatch[m.id] : null; // 'A' or 'B'
-      const userPredName =
-        userPredCode === 'A' ? m.team_a :
-        userPredCode === 'B' ? m.team_b : null;
+      // --- Convert IST times ---
+      const startIST = new Date(m.start_time_utc).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const cutoffIST = new Date(cutoffUtc).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      m.start_time_ist = startIST;
+      m.cutoff_time_ist = cutoffIST;
 
-      const userHasPredicted = !!userPredCode;
+      // --- User Prediction ---
+      const pred = await db.get(
+        'SELECT predicted_team FROM predictions WHERE match_id = ? AND user_id = ?',
+        [m.id, req.session.user.id]
+      );
 
-      return {
-        id: m.id,
-        name: m.name,
-        sport: m.sport,
-        team_a: m.team_a,
-        team_b: m.team_b,
-        entry_points: m.entry_points,
-        status: m.status,
-        start_time_ist: startIstStr,
-        time_left: timeLeftLabel,
-        locked: lockedForPrediction,
-        user_predicted_code: userPredCode,
-        user_predicted_name: userPredName,
-        user_has_predicted: userHasPredicted,
+      if (pred) {
+        m.user_has_predicted = true;
+        m.user_predicted_team = pred.predicted_team;
+        m.user_predicted_name = pred.predicted_team === 'A' ? m.team_a : m.team_b;
+      } else {
+        m.user_has_predicted = false;
+        m.user_predicted_team = null;
+        m.user_predicted_name = null;
+      }
 
-        // NEW: show admin declared as green/red dot
-        admin_declared: adminDeclaredMap[m.id] ? true : false
-      };
+      // --- Points (if completed) ---
+      const ledger = await db.get(
+        'SELECT SUM(points) AS total FROM points_ledger WHERE user_id = ? AND match_id = ?',
+        [req.session.user.id, m.id]
+      );
+      m.user_points = ledger?.total ?? null;
+    }
+
+    // 4️⃣ Sort: upcoming first, then completed
+    matches.sort((a, b) => {
+      const order = { scheduled: 1, completed: 2, cancelled: 3 };
+      const aOrder = order[a.status] || 99;
+      const bOrder = order[b.status] || 99;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return new Date(a.start_time_utc) - new Date(b.start_time_utc);
     });
-// 🧭 Sort matches: scheduled (nearest cutoff first), then completed (latest last)
-matches.sort((a, b) => {
-  const order = { scheduled: 1, completed: 2, cancelled: 3 };
-  const aOrder = order[a.status] || 99;
-  const bOrder = order[b.status] || 99;
 
-  if (aOrder !== bOrder) return aOrder - bOrder;
-
-  // Within same status, sort by start time
-  return new Date(a.start_time_utc) - new Date(b.start_time_utc);
-});
-
-    // Include user-specific points per match (if available)
-for (const m of matches) {
-  const ledger = await db.get(
-    'SELECT SUM(points) AS total FROM points_ledger WHERE user_id = ? AND match_id = ?',
-    [req.session.user.id, m.id]
-  );
-  m.user_points = ledger?.total ?? null;
-}
-// ⏰ Compute time left for each match
-for (const m of matches) {
-  const start = new Date(m.start_time_utc);
-  const cutoff = new Date(start.getTime() - (m.cutoff_minutes_before || 30) * 60000);
-  const now = new Date();
-
-  if (now >= cutoff) {
-    m.locked = true;
-    m.time_left = "Closed";
-  } else {
-    m.locked = false;
-    const diff = cutoff - now;
-    const hours = Math.floor(diff / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    m.time_left = `${hours}h ${mins}m left`;
-  }
-}
-
-// Compute IST-friendly display and cutoff time
-for (const m of matches) {
-  // Convert UTC start time → IST formatted string
-  if (m.start_time_utc) {
-    const ist = moment.utc(m.start_time_utc).tz('Asia/Kolkata');
-    m.start_time_ist = ist.format('YYYY-MM-DD HH:mm');
-
-    const cutoff = ist.clone().subtract(m.cutoff_minutes_before || 30, 'minutes');
-    m.cutoff_time_ist = cutoff.format('YYYY-MM-DD HH:mm');
-  } else {
-    m.start_time_ist = '-';
-    m.cutoff_time_ist = '-';
-  }
-}
-
+    // 5️⃣ Render
     return res.render('series/matches_list', {
       title: 'My Matches',
       series,
       matches
     });
-  } catch (e) {
-    console.error('Series list error:', e);
-    return res.status(500).render('404', { title: 'Not Found' });
+
+  } catch (err) {
+    console.error('❌ Error loading series matches:', err);
+    res.status(500).send('Server Error');
   }
 });
 
-/* ---------------------------
-   Submit/Update Prediction
----------------------------- */
 router.post('/:id/matches/:matchId/predict', async (req, res) => {
   try {
     const db = await getDb();
