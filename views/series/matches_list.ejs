@@ -14,11 +14,24 @@
 
     <div class="travel-card" style="position:relative;">
   <!-- 🟩 / 🟥 User Status Indicator -->
-  <% if (userHasPredicted) { %>
-    <div class="status-box status-green" title="You planned this travel"></div>
-  <% } else if (cutoffPassed) { %>
-    <div class="status-box status-red" title="You missed this travel or not interested"></div>
+<% 
+  const isCompleted = m.status === 'completed';
+  const plannedTeam = m.user_predicted_name || '';
+  const winnerTeam = m.winner_team || ''; 
+%>
+
+<% if (isCompleted) { %>
+  <% if (plannedTeam === winnerTeam && plannedTeam) { %>
+    <div class="status-box status-green" title="You planned correctly"></div>
+  <% } else { %>
+    <div class="status-box status-red" title="You missed or planned incorrectly"></div>
   <% } %>
+<% } else if (userHasPredicted) { %>
+  <div class="status-box status-green" title="You planned this travel"></div>
+<% } else if (cutoffPassed) { %>
+  <div class="status-box status-red" title="You missed this travel or not interested"></div>
+<% } %>
+
 
   <!-- 💰 User Points Badge (for completed travels) -->
   <% if (m.status === 'completed' && userPoints !== null) { %>
@@ -74,4 +87,5 @@
 </div>
 
 <%- include('../partials/foot') %>
+
 
