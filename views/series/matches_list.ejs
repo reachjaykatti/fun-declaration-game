@@ -6,7 +6,20 @@
 <!-- ===== TRAVEL GRID ===== -->
 <div class="travel-grid">
   <% matches.forEach(function(m) { %>
-    <div class="travel-card">
+    <% 
+      const userHasPredicted = m.user_has_predicted;
+      const cutoffPassed = m.locked; // true if cutoff passed
+      const userPoints = m.user_points !== undefined ? m.user_points : null;
+    %>
+
+    <div class="travel-card" style="position:relative;">
+      <!-- 🟩 / 🟥 User Status Indicator -->
+      <% if (userHasPredicted) { %>
+        <div class="status-box status-green" title="You planned this travel"></div>
+      <% } else if (cutoffPassed) { %>
+        <div class="status-box status-red" title="You missed this travel or not interested"></div>
+      <% } %>
+
       <div class="travel-card-header">
         <span class="status-dot <%= m.admin_declared ? 'status-green' : 'status-red' %>"
               title="<%= m.admin_declared ? 'Travel planned by admin' : 'Travel not yet planned' %>"></span>
@@ -19,14 +32,19 @@
       <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
       <div class="travel-meta"><strong>Time Left:</strong> <%= m.time_left %></div>
 
+      <% if (userPoints !== null) { %>
+        <div class="travel-meta"><strong>My Points:</strong> <%= userPoints.toFixed ? userPoints.toFixed(2) : userPoints %></div>
+      <% } %>
+
       <div class="travel-actions">
         <a class="btn" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
 
-        <% if (m.user_has_predicted) { %>
-          <span class="chip"><span class="dot dot-ok"></span>
+        <% if (userHasPredicted) { %>
+          <span class="chip">
+            <span class="dot dot-ok"></span>
             Planned: <strong><%= m.user_predicted_name %></strong>
           </span>
-        <% } else if (!m.locked && m.status === 'scheduled') { %>
+        <% } else if (!cutoffPassed && m.status === 'scheduled') { %>
           <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
                 data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
                 data-confirm2="Final confirmation: <%= m.team_a %>?">
