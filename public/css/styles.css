@@ -382,13 +382,15 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 /* ============================
    🎨 Travel Card Indicators
    ============================ */
+/* Right-corner status box (user indicator) */
 .status-box {
   position: absolute;
   top: 10px;
-  right: 35px;
-  width: 14px;
-  height: 14px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 3px;
+  z-index: 5;
 }
 
 .status-green { background: #28a745; }
@@ -398,14 +400,28 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 .points-badge {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 12px;
   font-size: 0.8rem;
-  padding: 3px 7px;
+  padding: 3px 7px 3px 24px; /* give room for square box */
   border-radius: 6px;
   font-weight: 600;
+  line-height: 1.1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
-.points-positive { background: #e9f9ef; color: #198754; border: 1px solid #b7f0c2; }
-.points-negative { background: #fdeaea; color: #d32f2f; border: 1px solid #f5c2c2; }
+
+.points-positive {
+  background: #e9f9ef;
+  color: #198754;
+  border: 1px solid #b7f0c2;
+}
+
+.points-negative {
+  background: #fdeaea;
+  color: #d32f2f;
+  border: 1px solid #f5c2c2;
+}
 
 .travel-actions {
   display: flex;
