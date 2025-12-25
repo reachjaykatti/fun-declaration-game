@@ -4,6 +4,7 @@ import moment from 'moment-timezone';
 import multer from 'multer';
 import { getDb } from '../config/db.js';
 import { ensureAdmin } from '../middleware/auth.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
 import { nowUtcISO } from '../utils/time.js';
 import XLSX from 'xlsx';
 
