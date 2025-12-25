@@ -342,3 +342,43 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
     font-size: 1rem;
   }
 }
+/* ============================
+   🎨 Travel Card Indicators
+   ============================ */
+.status-box {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+.status-green {
+  background-color: #28a745; /* Planner */
+}
+
+.status-red {
+  background-color: #dc3545; /* Missed or Not interested */
+}
+
+.travel-card {
+  position: relative;
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--surface, #f9f9f9);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease-in-out;
+}
+
+.travel-card:hover {
+  transform: scale(1.02);
+}
+
+.travel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
