@@ -345,6 +345,18 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 /* ============================
    🎨 Travel Card Indicators
    ============================ */
+.points-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #007bff;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
 .status-box {
   position: absolute;
   top: 8px;
