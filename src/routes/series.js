@@ -260,7 +260,7 @@ router.post('/:id/matches/:matchId/predict', async (req, res) => {
       );
     }
 
-    res.redirect(`/series/${req.params.id}/matches`);
+    res.redirect(`/series/${req.params.seriesId}/matches`);
   } catch (err) {
     console.error('❌ Prediction save error:', err);
     res.status(500).send('Server error while saving prediction');
