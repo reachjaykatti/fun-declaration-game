@@ -7,9 +7,7 @@
 <!-- 📊 My Travel Summary Bar -->
 <!-- =============================== -->
 <%
-  // Compute summary stats
   let totalPoints = 0, plannedCount = 0, missedCount = 0;
-
   matches.forEach(m => {
     if (m.user_points !== null) totalPoints += m.user_points;
     if (m.user_has_predicted) plannedCount++;
@@ -24,104 +22,95 @@
   <span>Missed: <strong><%= missedCount %></strong></span>
 </div>
 
-<!-- ===== TRAVEL GRID ===== -->
+<!-- =============================== -->
+<!-- 🧳 TRAVEL GRID -->
+<!-- =============================== -->
 <div class="travel-grid">
   <% matches.forEach(function(m) { %>
     <% 
       const userHasPredicted = m.user_has_predicted;
-      const cutoffPassed = m.locked; // true if cutoff passed
-      const userPoints = m.user_points !== undefined ? m.user_points : null;
+      const cutoffPassed = m.locked; // from backend logic
+      const userPoints = m.user_points ?? null;
+      const isCompleted = m.status === 'completed';
     %>
 
     <div class="travel-card" style="position:relative;">
-  <!-- 🟩 / 🟥 User Status Indicator -->
-<% 
-  const isCompleted = m.status === 'completed';
-  const plannedTeam = m.user_predicted_name || '';
-  const winnerTeam = m.winner_team || ''; 
-%>
+      
+      <!-- 🟢 Left: Admin declaration indicator -->
+      <div class="travel-card-header">
+        <span class="status-dot <%= m.admin_declared ? 'status-green' : 'status-red' %>"
+              title="<%= m.admin_declared ? 'Admin has declared this travel' : 'Travel not yet declared' %>"></span>
+        <h3><%= m.name %></h3>
 
-<% if (isCompleted) { %>
-  <% if (plannedTeam === winnerTeam && plannedTeam) { %>
-    <div class="status-box status-green" title="You planned correctly"></div>
-  <% } else { %>
-    <div class="status-box status-red" title="You missed or planned incorrectly"></div>
-  <% } %>
-<% } else if (userHasPredicted) { %>
-  <div class="status-box status-green" title="You planned this travel"></div>
-<% } else if (cutoffPassed) { %>
-  <div class="status-box status-red" title="You missed this travel or not interested"></div>
-<% } %>
+        <!-- 💰 My Points Badge -->
+        <% if (isCompleted && userPoints !== null) { %>
+          <span class="points-badge <%= userPoints >= 0 ? 'points-positive' : 'points-negative' %>">
+            <%= userPoints.toFixed(2) %>
+          </span>
+        <% } %>
+      </div>
 
+      <!-- 🟥🟩 Right user status indicator -->
+      <% 
+        let userBoxClass = 'status-grey';
+        if (isCompleted) {
+          if (userPoints > 0) userBoxClass = 'status-green';
+          else userBoxClass = 'status-red';
+        } else if (userHasPredicted) {
+          userBoxClass = 'status-green';
+        } else if (cutoffPassed) {
+          userBoxClass = 'status-red';
+        }
+      %>
+      <div class="status-box <%= userBoxClass %>"></div>
 
-  <!-- 💰 User Points Badge (for completed travels) -->
-  <% if (m.status === 'completed' && userPoints !== null) { %>
-    <div class="points-badge" title="Your Points">
-      <%= userPoints.toFixed ? userPoints.toFixed(2) : userPoints %>
-    </div>
-  <% } %>
-
-  <div class="travel-card-header">
-    <span class="status-dot <%= m.admin_declared ? 'status-green' : 'status-red' %>"
-          title="<%= m.admin_declared ? 'Travel planned by admin' : 'Travel not yet planned' %>"></span>
-    <h3><%= m.name %></h3>
-  </div>
-
+      <!-- 🧾 Travel details -->
       <div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> <%= labels.vs %> <%= m.team_b %></div>
       <div class="travel-meta"><strong>Start (IST):</strong> <%= m.start_time_ist %></div>
       <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
       <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
       <div class="travel-meta"><strong>Time Left:</strong> <%= m.time_left %></div>
 
-      <% if (userPoints !== null) { %>
-        <div class="travel-meta"><strong>My Points:</strong> <%= userPoints.toFixed ? userPoints.toFixed(2) : userPoints %></div>
+      <% if (userHasPredicted && !isCompleted) { %>
+        <div class="travel-meta planned-dest">
+          ✅ Planned: <strong><%= m.user_predicted_name %></strong>
+        </div>
       <% } %>
 
+      <!-- 🎯 Buttons or Info -->
       <div class="travel-actions">
         <a class="btn" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
 
-        <!-- ✅ Show correct buttons based on travel status -->
-<% if (m.status === 'completed') { %>
-  <% if (m.user_points !== null) { %>
-    <span class="chip chip-info">
-      💰 My Points: <strong><%= m.user_points.toFixed(2) %></strong>
-    </span>
-  <% } else { %>
-    <span class="chip text-muted">Travel Completed</span>
-  <% } %>
+        <% if (isCompleted) { %>
+          <span class="chip text-muted">Travel Completed</span>
 
-<% } else if (m.user_has_predicted) { %>
-  <span class="chip chip-ok">
-    <span class="dot dot-ok"></span>
-    Planned: <strong><%= m.user_predicted_name %></strong>
-  </span>
+        <% } else if (userHasPredicted) { %>
+          <span class="chip chip-ok">
+            <span class="dot dot-ok"></span>
+            Planned: <strong><%= m.user_predicted_name %></strong>
+          </span>
 
-<% } else if (!cutoffPassed && m.status === 'scheduled') { %>
-  <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-        data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
-        data-confirm2="Finalize plan to <%= m.team_a %>?">
-    <input type="hidden" name="team" value="A" />
-    <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
-  </form>
+        <% } else if (!cutoffPassed && m.status === 'scheduled') { %>
+          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+                data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
+                data-confirm2="Finalize plan to <%= m.team_a %>?">
+            <input type="hidden" name="team" value="A" />
+            <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
+          </form>
 
-  <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-        data-confirm1="Confirm your travel plan: <%= m.team_b %>?"
-        data-confirm2="Finalize plan to <%= m.team_b %>?">
-    <input type="hidden" name="team" value="B" />
-    <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
-  </form>
+          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+                data-confirm1="Confirm your travel plan: <%= m.team_b %>?"
+                data-confirm2="Finalize plan to <%= m.team_b %>?">
+            <input type="hidden" name="team" value="B" />
+            <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
+          </form>
 
-<% } else { %>
-  <span class="text-muted">Travel planning closed</span>
-<% } %>
-
+        <% } else { %>
+          <span class="text-muted">Travel planning closed</span>
+        <% } %>
       </div>
     </div>
   <% }) %>
 </div>
 
 <%- include('../partials/foot') %>
-
-
-
-
