@@ -397,41 +397,39 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 }
 
 }
-.status-dot,
 .status-box {
   position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.status-green { background: #28a745; }
+.status-red { background: #dc3545; }
+.status-grey { background: #adb5bd; }
+
+.points-badge {
+  position: absolute;
   top: 8px;
-  left: 10px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  z-index: 1;
+  right: 32px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 5px;
+  z-index: 10;
 }
-
-.status-green {
-  background-color: #28a745; /* Planner */
-}
-
-.status-red {
-  background-color: #dc3545; /* Missed or Not interested */
-}
-
-.travel-card {
-  position: relative;
-  border-radius: 10px;
-  padding: 1rem;
-  background: var(--surface, #f9f9f9);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  transition: transform 0.2s ease-in-out;
-}
-
-.travel-card:hover {
-  transform: scale(1.02);
-}
+.points-positive { background: #e9f9ef; color: #198754; border: 1px solid #b7f0c2; }
+.points-negative { background: #fdeaea; color: #d32f2f; border: 1px solid #f5c2c2; }
 
 .travel-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.6rem;
+  align-items: center;
+}
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
 }
