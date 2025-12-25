@@ -61,11 +61,11 @@
       <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
       <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
 
-      <% if (m.user_has_predicted && m.status !== 'completed') { %>
-        <div class="travel-meta planned-dest">
-          ✅ Planned: <strong><%= m.user_predicted_name %></strong>
-        </div>
-      <% } %>
+      <% if (m.user_has_predicted) { %>
+  <div class="travel-meta planned-dest">
+    🧭 Planned: <strong><%= m.user_predicted_name %></strong>
+  </div>
+<% } %>
 
       <!-- 🎯 Action Area -->
       <div class="travel-actions">
@@ -105,3 +105,4 @@
 </div>
 
 <%- include('../partials/foot') %>
+
