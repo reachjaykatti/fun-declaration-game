@@ -237,34 +237,60 @@ router.post('/series/:id/matches/new', async (req, res) => {
     [req.params.id, name, sport, team_a, team_b, startUtc, cutoff_minutes_before || 30, entry_points || 50, 'scheduled']);
   res.redirect(`/admin/series/${req.params.id}/matches`);
 });
+// -----------------------------
+// ✏️ Edit Match (GET)
+// -----------------------------
 router.get('/matches/:matchId/edit', async (req, res) => {
   const db = await getDb();
   const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
+  if (!match) return res.status(404).send('Match not found');
+
   const series = await db.get('SELECT * FROM series WHERE id = ?', [match.series_id]);
   res.render('admin/match_edit', { title: 'Edit Match', match, series });
 });
+
+// -----------------------------
+// ✏️ Edit Match (POST)
+// -----------------------------
 router.post('/matches/:matchId/edit', async (req, res) => {
   const db = await getDb();
-  const { name, sport, team_a, team_b, start_time_ist, start_time_utc, cutoff_minutes_before, entry_points, status } = req.body;
+  const {
+    name,
+    sport,
+    team_a,
+    team_b,
+    start_time_ist,
+    start_time_utc,
+    cutoff_minutes_before,
+    entry_points,
+    status
+  } = req.body;
 
   let startUtc = start_time_utc && start_time_utc.trim() ? start_time_utc.trim() : '';
+
+  // If UTC not provided, try IST conversion
   if (!startUtc && start_time_ist && start_time_ist.trim()) {
-    const istVal = start_time_ist.trim();
-    let m = moment.tz(istVal, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata', true);
-    if (!m.isValid()) m = moment.tz(istVal, 'DD-MM-YYYY HH:mm', 'Asia/Kolkata', true);
+    let m = moment.tz(start_time_ist.trim(), ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
     if (!m.isValid()) return res.status(400).send('Invalid IST format. Use YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm');
     startUtc = m.utc().toISOString();
   }
+
   if (!startUtc) return res.status(400).send('Start time required (IST or UTC)');
 
-  await db.run('UPDATE matches SET name=?, sport=?, team_a=?, team_b=?, start_time_utc=?, cutoff_minutes_before=?, entry_points=?, status=? WHERE id=?',
-    [name, sport, team_a, team_b, startUtc, cutoff_minutes_before, entry_points, status, req.params.matchId]);
+  await db.run(
+    `UPDATE matches
+     SET name=?, sport=?, team_a=?, team_b=?, start_time_utc=?, cutoff_minutes_before=?, entry_points=?, status=?
+     WHERE id=?`,
+    [name, sport, team_a, team_b, startUtc, cutoff_minutes_before, entry_points, status, req.params.matchId]
+  );
+
   const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
   res.redirect(`/admin/series/${match.series_id}/matches`);
 });
-/* ------------------------------
-   ❌ Delete Match (Cascade)
------------------------------- */
+
+// -----------------------------
+// ❌ Delete Match (Cascade Delete)
+// -----------------------------
 router.post('/matches/:matchId/delete', ensureAuthenticated, async (req, res) => {
   const db = await getDb();
   const matchId = req.params.matchId;
@@ -275,14 +301,16 @@ router.post('/matches/:matchId/delete', ensureAuthenticated, async (req, res) =>
     await db.run('DELETE FROM predictions WHERE match_id = ?', [matchId]);
     await db.run('DELETE FROM matches WHERE id = ?', [matchId]);
     await db.run('COMMIT');
-    console.log(`🗑️ Match ${matchId} deleted (with all references)`);
+    console.log(`🗑️ Match ${matchId} deleted (with all linked data)`);
   } catch (err) {
     await db.run('ROLLBACK');
     console.error('❌ Delete failed:', err);
+    return res.status(500).send('Database delete failed.');
   }
 
-  res.redirect('/admin/series/' + req.body.series_id + '/matches');
+  res.redirect(`/admin/series/${req.body.series_id}/matches`);
 });
+
 // =========================
 // ADMIN HOME
 // =========================
