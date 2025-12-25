@@ -56,6 +56,31 @@ router.get('/:id/matches', async (req, res) => {
       'SELECT * FROM matches WHERE series_id = ? ORDER BY start_time_utc ASC',
       [seriesId]
     );
+    // Compute user-specific data for each match
+for (const m of matches) {
+  // Check if user predicted this match
+  const prediction = await db.get(
+    'SELECT predicted_team FROM predictions WHERE match_id = ? AND user_id = ?',
+    [m.id, req.session.user.id]
+  );
+
+  if (prediction) {
+    m.user_has_predicted = true;
+    m.user_predicted_name = prediction.predicted_team === 'A' ? m.team_a : m.team_b;
+  } else {
+    m.user_has_predicted = false;
+    m.user_predicted_name = null;
+  }
+
+  // Compute cutoff & status lock
+  const deadlinePassed = hasDeadlinePassed(
+    m.start_time_utc,
+    m.cutoff_minutes_before
+  );
+  m.locked = deadlinePassed || m.status !== 'scheduled';
+}
+res.render('series/matches_list', { series, matches });
+
 
     // Load user's predictions for these matches
     let predByMatch = {};
