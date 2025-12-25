@@ -61,8 +61,15 @@
     </div>
   </form>
 </div>
+<!-- Danger Zone -->
+<hr style="margin:1rem 0;">
+<form method="POST"
+      action="/admin/matches/<%= match.id %>/delete"
+      class="js-confirm-double"
+      data-confirm1="Are you sure you want to delete this travel?"
+      data-confirm2="This will permanently remove all points and predictions. Proceed?">
+  <input type="hidden" name="series_id" value="<%= series.id %>">
+  <button type="submit" class="btn btn-danger">🗑️ Delete Travel</button>
+</form>
 
 <%- include('../partials/foot') %>
-
-
-
