@@ -140,6 +140,17 @@ router.get('/:id/matches', async (req, res) => {
         admin_declared: adminDeclaredMap[m.id] ? true : false
       };
     });
+// 🧭 Sort matches: scheduled (nearest cutoff first), then completed (latest last)
+matches.sort((a, b) => {
+  const order = { scheduled: 1, completed: 2, cancelled: 3 };
+  const aOrder = order[a.status] || 99;
+  const bOrder = order[b.status] || 99;
+
+  if (aOrder !== bOrder) return aOrder - bOrder;
+
+  // Within same status, sort by start time
+  return new Date(a.start_time_utc) - new Date(b.start_time_utc);
+});
 
     return res.render('series/matches_list', {
       title: 'My Matches',
