@@ -80,34 +80,48 @@
       <div class="travel-actions">
         <a class="btn" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
 
-        <% if (userHasPredicted) { %>
-          <span class="chip">
-            <span class="dot dot-ok"></span>
-            Planned: <strong><%= m.user_predicted_name %></strong>
-          </span>
-        <% } else if (!cutoffPassed && m.status === 'scheduled') { %>
-          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-                data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
-                data-confirm2="Final confirmation: <%= m.team_a %>?">
-            <input type="hidden" name="team" value="A" />
-            <button class="btn" type="submit"><%= labels.declare %> <%= m.team_a %></button>
-          </form>
+        <!-- ✅ Show correct buttons based on travel status -->
+<% if (m.status === 'completed') { %>
+  <% if (m.user_points !== null) { %>
+    <span class="chip chip-info">
+      💰 My Points: <strong><%= m.user_points.toFixed(2) %></strong>
+    </span>
+  <% } else { %>
+    <span class="chip text-muted">Travel Completed</span>
+  <% } %>
 
-          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-                data-confirm1="Confirm your travel plan: <%= m.team_b %>?"
-                data-confirm2="Final confirmation: <%= m.team_b %>?">
-            <input type="hidden" name="team" value="B" />
-            <button class="btn" type="submit"><%= labels.declare %> <%= m.team_b %></button>
-          </form>
-        <% } else { %>
-          <span class="text-muted">Travel planning closed</span>
-        <% } %>
+<% } else if (m.user_has_predicted) { %>
+  <span class="chip chip-ok">
+    <span class="dot dot-ok"></span>
+    Planned: <strong><%= m.user_predicted_name %></strong>
+  </span>
+
+<% } else if (!cutoffPassed && m.status === 'scheduled') { %>
+  <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+        data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
+        data-confirm2="Finalize plan to <%= m.team_a %>?">
+    <input type="hidden" name="team" value="A" />
+    <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
+  </form>
+
+  <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+        data-confirm1="Confirm your travel plan: <%= m.team_b %>?"
+        data-confirm2="Finalize plan to <%= m.team_b %>?">
+    <input type="hidden" name="team" value="B" />
+    <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
+  </form>
+
+<% } else { %>
+  <span class="text-muted">Travel planning closed</span>
+<% } %>
+
       </div>
     </div>
   <% }) %>
 </div>
 
 <%- include('../partials/foot') %>
+
 
 
 
