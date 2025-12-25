@@ -3,9 +3,7 @@
 <h1><%= labels.matches %> — <%= series.name %></h1>
 <a class="btn btn-link js-back" data-fallback="/series">← Back</a>
 
-<!-- =============================== -->
-<!-- 📊 My Travel Summary Bar -->
-<!-- =============================== -->
+<!-- 📊 My Travel Summary -->
 <%
   let totalPoints = 0, plannedCount = 0, missedCount = 0;
   matches.forEach(m => {
@@ -22,88 +20,81 @@
   <span>Missed: <strong><%= missedCount %></strong></span>
 </div>
 
-<!-- =============================== -->
-<!-- 🧳 TRAVEL GRID -->
-<!-- =============================== -->
+<!-- 🧭 TRAVEL GRID -->
 <div class="travel-grid">
   <% matches.forEach(function(m) { %>
-    <% 
-      const userHasPredicted = m.user_has_predicted;
-      const cutoffPassed = m.locked; // from backend logic
-      const userPoints = m.user_points ?? null;
-      const isCompleted = m.status === 'completed';
-    %>
-
     <div class="travel-card" style="position:relative;">
-      
-      <!-- 🟢 Left: Admin declaration indicator -->
+
+      <!-- 🟢 Admin Declaration Indicator -->
       <div class="travel-card-header">
         <span class="status-dot <%= m.admin_declared ? 'status-green' : 'status-red' %>"
-              title="<%= m.admin_declared ? 'Admin has declared this travel' : 'Travel not yet declared' %>"></span>
+          title="<%= m.admin_declared ? 'Admin has declared this travel' : 'Travel not yet declared' %>"></span>
         <h3><%= m.name %></h3>
-
-        <!-- 💰 My Points Badge -->
-        <% if (isCompleted && userPoints !== null) { %>
-          <span class="points-badge <%= userPoints >= 0 ? 'points-positive' : 'points-negative' %>">
-            <%= userPoints.toFixed(2) %>
-          </span>
-        <% } %>
       </div>
 
-      <!-- 🟥🟩 Right user status indicator -->
+      <!-- 💰 My Points Badge -->
+      <% if (m.status === 'completed' && m.user_points !== null) { %>
+        <span class="points-badge <%= m.user_points >= 0 ? 'points-positive' : 'points-negative' %>">
+          <%= m.user_points.toFixed(2) %>
+        </span>
+      <% } %>
+
+      <!-- 🟩 User Indicator -->
       <% 
         let userBoxClass = 'status-grey';
-        if (isCompleted) {
-          if (userPoints > 0) userBoxClass = 'status-green';
+        if (m.status === 'completed') {
+          if (m.user_points > 0) userBoxClass = 'status-green';
           else userBoxClass = 'status-red';
-        } else if (userHasPredicted) {
+        } else if (m.user_has_predicted) {
           userBoxClass = 'status-green';
-        } else if (cutoffPassed) {
+        } else if (m.locked) {
           userBoxClass = 'status-red';
         }
       %>
       <div class="status-box <%= userBoxClass %>"></div>
 
-      <!-- 🧾 Travel details -->
+      <!-- 📄 Travel Info -->
       <div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> <%= labels.vs %> <%= m.team_b %></div>
       <div class="travel-meta"><strong>Start (IST):</strong> <%= m.start_time_ist %></div>
+      <div class="travel-meta"><strong>Cutoff (IST):</strong> <%= m.cutoff_time_ist || '-' %></div>
+      <div class="travel-meta"><strong>Time until cutoff:</strong> <%= m.time_left %></div>
       <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
       <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
-      <div class="travel-meta"><strong>Time Left:</strong> <%= m.time_left %></div>
 
-      <% if (userHasPredicted && !isCompleted) { %>
+      <% if (m.user_has_predicted && m.status !== 'completed') { %>
         <div class="travel-meta planned-dest">
           ✅ Planned: <strong><%= m.user_predicted_name %></strong>
         </div>
       <% } %>
 
-      <!-- 🎯 Buttons or Info -->
+      <!-- 🎯 Action Area -->
       <div class="travel-actions">
-        <a class="btn" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
+        <a class="btn btn-small" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
 
-        <% if (isCompleted) { %>
-          <span class="chip text-muted">Travel Completed</span>
+        <% if (m.status === 'completed') { %>
+          <span class="text-muted">Travel Completed</span>
 
-        <% } else if (userHasPredicted) { %>
-          <span class="chip chip-ok">
-            <span class="dot dot-ok"></span>
-            Planned: <strong><%= m.user_predicted_name %></strong>
-          </span>
-
-        <% } else if (!cutoffPassed && m.status === 'scheduled') { %>
-          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-                data-confirm1="Confirm your travel plan: <%= m.team_a %>?"
-                data-confirm2="Finalize plan to <%= m.team_a %>?">
+        <% } else if (!m.locked && m.status === 'scheduled' && !m.user_has_predicted) { %>
+          <form class="inline js-confirm-double" method="post"
+            action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+            data-confirm1="Confirm travel plan: <%= m.team_a %>?"
+            data-confirm2="Finalize travel plan: <%= m.team_a %>?">
             <input type="hidden" name="team" value="A" />
             <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
           </form>
 
-          <form class="inline js-confirm-double" method="post" action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-                data-confirm1="Confirm your travel plan: <%= m.team_b %>?"
-                data-confirm2="Finalize plan to <%= m.team_b %>?">
+          <form class="inline js-confirm-double" method="post"
+            action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+            data-confirm1="Confirm travel plan: <%= m.team_b %>?"
+            data-confirm2="Finalize travel plan: <%= m.team_b %>?">
             <input type="hidden" name="team" value="B" />
             <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
           </form>
+
+        <% } else if (m.user_has_predicted) { %>
+          <span class="chip chip-ok">
+            <span class="dot dot-ok"></span> Planned: <strong><%= m.user_predicted_name %></strong>
+          </span>
 
         <% } else { %>
           <span class="text-muted">Travel planning closed</span>
