@@ -3,28 +3,53 @@
   <script src="/public/js/main.js"></script>
 </body>
         <script>
-  // --- Collapsible Section Titles ---
   document.addEventListener("DOMContentLoaded", () => {
+    // Make section titles collapsible (User Page)
     document.querySelectorAll(".section-title").forEach(title => {
       title.style.cursor = "pointer";
+      let icon = title.querySelector(".toggle-icon");
 
-      // Add a chevron symbol for clarity
-      const icon = document.createElement("span");
-      icon.textContent = " ▼";
-      icon.style.fontSize = "0.8em";
-      icon.style.opacity = "0.6";
-      title.appendChild(icon);
+      if (!icon) {
+        icon = document.createElement("span");
+        icon.classList.add("toggle-icon");
+        icon.textContent = " ▼";
+        icon.style.fontSize = "0.8em";
+        icon.style.opacity = "0.6";
+        title.appendChild(icon);
+      }
 
       title.addEventListener("click", () => {
         const section = title.closest(".section-block");
+        if (!section) return;
         const grid = section.querySelector(".travel-grid");
-        const isCollapsed = grid.style.display === "none";
+        if (!grid) return;
 
-        // Toggle grid visibility
+        const isCollapsed = grid.style.display === "none";
         grid.style.display = isCollapsed ? "grid" : "none";
         icon.textContent = isCollapsed ? " ▼" : " ►";
       });
     });
+
+    // Global Collapse / Expand Button (User + Admin Pages)
+    const toggleBtn = document.getElementById("toggleAllSections");
+    if (toggleBtn) {
+      let allCollapsed = false;
+      toggleBtn.addEventListener("click", () => {
+        const grids = document.querySelectorAll(".travel-grid");
+        const icons = document.querySelectorAll(".toggle-icon");
+        if (!grids.length) return;
+
+        allCollapsed = !allCollapsed;
+        grids.forEach(grid => {
+          grid.style.display = allCollapsed ? "none" : "grid";
+        });
+        icons.forEach(icon => {
+          icon.textContent = allCollapsed ? " ►" : " ▼";
+        });
+
+        toggleBtn.textContent = allCollapsed ? "🔼 Expand All" : "🔽 Collapse All";
+      });
+    }
   });
 </script>
 
