@@ -216,6 +216,11 @@ router.get('/series/:id/matches', async (req, res) => {
     completed: matches.filter(m => m.status === 'completed'),
     cancelled: matches.filter(m => m.status === 'cancelled'),
   };
+  // Define basic UI labels (if not already globally passed)
+const labels = {
+  declare: 'Plan',
+  vs: 'OR'
+};
 
   // ✅ Render grouped layout
   res.render('admin/manage_matches_list', {
