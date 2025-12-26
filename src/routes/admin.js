@@ -222,7 +222,7 @@ const labels = { declare: 'Plan', vs: 'OR' };
 
 // ✅ Render grouped layout — ensure file name matches actual EJS file
 try {
-  res.render('admin/manage_matches_list', {
+  res.render('admin/matches_manage', {
     title: 'Manage Travels',
     series,
     matches,
