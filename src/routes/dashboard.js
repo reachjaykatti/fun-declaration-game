@@ -70,54 +70,60 @@ router.get('/', async (req, res) => {
     : null;
 
   // ----- Leaderboard (global or series-wise) -----
-  let leaderboard = [];
-  let seriesUnsupported = false;
+let leaderboard = [];
+let seriesUnsupported = false;
 
-  if (!hasSeriesFilter) {
-    // Global leaderboard (existing behavior)
-    leaderboard = await db.all(`
-      SELECT u.display_name, COALESCE(SUM(pl.points),0) as points
-      FROM users u
-      LEFT JOIN points_ledger pl ON pl.user_id = u.id
-      GROUP BY u.id
-      ORDER BY points DESC
-    `);
-  } else {
-    // Series-wise leaderboard: try to filter by series_id or match_id if available
-    const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
-    const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
+// Determine if user selected a series
+const selectedSeriesId = req.query.seriesId || null;
+const hasSeriesFilter = !!selectedSeriesId;
 
-    if (hasSeriesIdCol) {
-      leaderboard = await db.all(`
-        SELECT u.display_name, COALESCE(SUM(pl.points),0) as points
-        FROM users u
-        LEFT JOIN points_ledger pl
-          ON pl.user_id = u.id AND pl.series_id = ?
-        GROUP BY u.id
-        ORDER BY points DESC
-      `, [selectedSeriesId]);
-    } else if (hasMatchIdCol) {
-      leaderboard = await db.all(`
-        SELECT u.display_name, COALESCE(SUM(pl.points),0) as points
-        FROM users u
-        LEFT JOIN points_ledger pl ON pl.user_id = u.id
-        LEFT JOIN matches m        ON m.id = pl.match_id
-        WHERE m.series_id = ?
-        GROUP BY u.id
-        ORDER BY points DESC
-      `, [selectedSeriesId]);
-    } else {
-      // No way to filter the ledger by series -> fall back to global
-      seriesUnsupported = true;
-      leaderboard = await db.all(`
-        SELECT u.display_name, COALESCE(SUM(pl.points),0) as points
-        FROM users u
-        LEFT JOIN points_ledger pl ON pl.user_id = u.id
-        GROUP BY u.id
-        ORDER BY points DESC
-      `);
-    }
-  }
+const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
+const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
+
+if (!hasSeriesFilter) {
+  // 🌍 Global leaderboard (default)
+  leaderboard = await db.all(`
+    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    GROUP BY u.id
+    ORDER BY points DESC
+  `);
+
+} else if (hasSeriesIdCol) {
+  // 🎯 Filter by series_id (preferred path)
+  leaderboard = await db.all(`
+    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    WHERE pl.series_id = ?
+    GROUP BY u.id
+    ORDER BY points DESC
+  `, [selectedSeriesId]);
+
+} else if (hasMatchIdCol) {
+  // 🔄 Fallback path: match_id → series_id relationship
+  leaderboard = await db.all(`
+    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    LEFT JOIN matches m ON m.id = pl.match_id
+    WHERE m.series_id = ?
+    GROUP BY u.id
+    ORDER BY points DESC
+  `, [selectedSeriesId]);
+
+} else {
+  // 🚫 No column found → fallback
+  seriesUnsupported = true;
+  leaderboard = await db.all(`
+    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    GROUP BY u.id
+    ORDER BY points DESC
+  `);
+}
 
   // ----- W/L streaks for the current user (unchanged) -----
   const wlRows = await db.all(`
