@@ -250,43 +250,62 @@ router.get('/matches/:matchId/edit', async (req, res) => {
   res.render('admin/match_edit', { title: 'Edit Match', match, series });
 });
 
-// -----------------------------
-// ✏️ Edit Match (POST)
-// -----------------------------
+/* ---------------------------
+   Update (Edit) Travel / Match
+---------------------------- */
 router.post('/matches/:matchId/edit', async (req, res) => {
-  const db = await getDb();
-  const {
-    name,
-    sport,
-    team_a,
-    team_b,
-    start_time_ist,
-    start_time_utc,
-    cutoff_minutes_before,
-    entry_points,
-    status
-  } = req.body;
+  try {
+    const db = await getDb();
+    const matchId = parseInt(req.params.matchId, 10);
+    const body = req.body;
 
-  let startUtc = start_time_utc && start_time_utc.trim() ? start_time_utc.trim() : '';
+    // 🔍 Fetch the existing record
+    const existing = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+    if (!existing) {
+      return res.status(404).render('404', { title: 'Travel not found' });
+    }
 
-  // If UTC not provided, try IST conversion
-  if (!startUtc && start_time_ist && start_time_ist.trim()) {
-    let m = moment.tz(start_time_ist.trim(), ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
-    if (!m.isValid()) return res.status(400).send('Invalid IST format. Use YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm');
-    startUtc = m.utc().toISOString();
+    // 🕐 Convert IST input (if provided) → UTC ISO
+    let startTimeUtc = existing.start_time_utc;
+    if (body.start_time_ist && body.start_time_ist.trim() !== '') {
+      const istDate = new Date(body.start_time_ist.replace(' ', 'T') + ':00+05:30');
+      startTimeUtc = istDate.toISOString();
+    }
+
+    // 🧮 Compute cutoff (keep default if not changed)
+    const cutoffMinutes = body.cutoff_minutes_before
+      ? parseInt(body.cutoff_minutes_before, 10)
+      : existing.cutoff_minutes_before || 30;
+
+    // ✅ Prepare fields to update
+    const updatedFields = {
+      name: body.name || existing.name,
+      sport: body.sport || existing.sport,
+      team_a: body.team_a || existing.team_a,
+      team_b: body.team_b || existing.team_b,
+      start_time_utc: startTimeUtc,
+      entry_points: body.entry_points ? parseFloat(body.entry_points) : existing.entry_points,
+      cutoff_minutes_before: cutoffMinutes,
+      status: body.status || existing.status,
+    };
+
+    // 🧾 Build dynamic SET clause only for changed fields
+    const setClause = Object.keys(updatedFields)
+      .map(k => `${k} = ?`)
+      .join(', ');
+    const values = Object.values(updatedFields);
+
+    // 🧱 Update query
+    await db.run(`UPDATE matches SET ${setClause} WHERE id = ?`, [...values, matchId]);
+
+    console.log(`✅ Travel updated: ${matchId} (${updatedFields.name})`);
+
+    // ✅ Redirect back to the series manage page
+    res.redirect(`/admin/series/${existing.series_id}/matches`);
+  } catch (err) {
+    console.error('❌ Error updating travel:', err);
+    res.status(500).render('404', { title: 'Update Failed' });
   }
-
-  if (!startUtc) return res.status(400).send('Start time required (IST or UTC)');
-
-  await db.run(
-    `UPDATE matches
-     SET name=?, sport=?, team_a=?, team_b=?, start_time_utc=?, cutoff_minutes_before=?, entry_points=?, status=?
-     WHERE id=?`,
-    [name, sport, team_a, team_b, startUtc, cutoff_minutes_before, entry_points, status, req.params.matchId]
-  );
-
-  const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
-  res.redirect(`/admin/series/${match.series_id}/matches`);
 });
 
 // -----------------------------
