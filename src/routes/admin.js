@@ -150,10 +150,16 @@ router.post('/series/:id/delete', async (req, res) => {
 
 // === Admin: Manage Matches (series-wise) with IST/Cutoff + Admin declared dot ===
 router.get('/series/:id/matches', async (req, res) => {
+  // Group matches by status
+const grouped = {
+  upcoming: matches.filter(m => m.status === 'scheduled'),
+  ongoing: matches.filter(m => m.status === 'live'),
+  completed: matches.filter(m => m.status === 'completed'),
+  cancelled: matches.filter(m => m.status === 'cancelled'),
+};
   const db = await getDb();
   const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
   const rawMatches = await db.all('SELECT * FROM matches WHERE series_id = ? ORDER BY start_time_utc ASC', [req.params.id]);
-
   const nowMillis = Date.now();
 
   // Determine admin-as-player user id (prefer series.created_by, fallback to first is_admin=1)
@@ -207,11 +213,12 @@ router.get('/series/:id/matches', async (req, res) => {
     };
   });
 
-  res.render('admin/matches_manage', {
-    title: `Manage Matches - ${series.name}`,
-    series,
-    matches
-  });
+  res.render('admin/manage_matches_list', {
+  series,
+  matches,
+  grouped,
+  labels
+});
 });
 
 router.get('/series/:id/matches/new', async (req, res) => {
