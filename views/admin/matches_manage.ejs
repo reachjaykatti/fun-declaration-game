@@ -11,6 +11,11 @@
 </div>
 
 <!-- === Travel Cards Grid Layout === -->
+<div class="section-controls" style="margin: 1rem 0; text-align: right;">
+  <button id="toggleAllSections" class="btn btn-outline btn-small">
+    🔽 Collapse All
+  </button>
+</div>
 <div class="travel-grid">
   <% matches.forEach(function(m){ %>
     <div class="travel-card">
@@ -36,6 +41,7 @@
 </div>
 
 <%- include('../partials/foot') %>
+
 
 
 
