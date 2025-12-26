@@ -486,10 +486,14 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
   text-decoration: underline;
   transition: color 0.2s;
 }
+.section-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
 .section-controls .btn {
   font-size: 0.85rem;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   cursor: pointer;
 }
-
