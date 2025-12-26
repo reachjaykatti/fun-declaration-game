@@ -93,7 +93,7 @@
          const medal = idx===0 ? '🥇' : idx===1 ? '🥈' : idx===2 ? '🥉' : '—'; %>
       <tr>
         <td><%= idx+1 %></td>
-        <td><%= l.display_name %></td>
+        <td><a href="/dashboard/player/<%= l.user_id %>"><%= l.display_name %></a></td>
         <td><%= medal %></td>
         <td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
       </tr>
