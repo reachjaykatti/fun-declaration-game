@@ -74,7 +74,6 @@ let leaderboard = [];
 let seriesUnsupported = false;
 
 // Ensure selectedSeriesId is integer (not string)
-const selectedSeriesId = req.query.seriesId ? parseInt(req.query.seriesId, 10) : null;
 const hasSeriesFilter = !!selectedSeriesId;
 
 // Detect DB schema columns
