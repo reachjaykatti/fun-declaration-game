@@ -481,3 +481,9 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 .travel-grid {
   gap: 0.75rem;
 }
+.section-title:hover {
+  color: #007bff;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
