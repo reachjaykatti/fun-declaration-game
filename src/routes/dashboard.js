@@ -74,7 +74,6 @@ let leaderboard = [];
 let seriesUnsupported = false;
 
 // Determine if user selected a series
-const selectedSeriesId = req.query.seriesId || null;
 const hasSeriesFilter = !!selectedSeriesId;
 
 const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
