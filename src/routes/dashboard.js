@@ -74,7 +74,6 @@ let leaderboard = [];
 let seriesUnsupported = false;
 
 // Determine if user selected a series
-const hasSeriesFilter = !!selectedSeriesId;
 
 const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
 const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
