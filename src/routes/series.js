@@ -133,11 +133,48 @@ router.get('/:id/matches', async (req, res) => {
     });
 
     // 5️⃣ Render
-    return res.render('series/matches_list', {
-      title: 'My Matches',
-      series,
-      matches
-    });
+    // ---------------------------------------------------
+// 🧭 GROUP MATCHES by STATUS for easier UI rendering
+// ---------------------------------------------------
+const grouped = {
+  upcoming: [],
+  ongoing: [],
+  completed: [],
+  cancelled: []
+};
+
+for (const m of matches) {
+  if (m.status === 'cancelled' || m.status === 'washed_out') {
+    grouped.cancelled.push(m);
+  } else if (m.status === 'completed') {
+    grouped.completed.push(m);
+  } else if (m.locked) {
+    grouped.ongoing.push(m); // cutoff passed but not completed yet
+  } else {
+    grouped.upcoming.push(m);
+  }
+}
+
+// Optional: sort within each group (nearest cutoff first)
+for (const key of Object.keys(grouped)) {
+  grouped[key].sort((a, b) => new Date(a.start_time_utc) - new Date(b.start_time_utc));
+}
+
+// Debug log for verification
+console.log('Grouped counts →', {
+  upcoming: grouped.upcoming.length,
+  ongoing: grouped.ongoing.length,
+  completed: grouped.completed.length,
+  cancelled: grouped.cancelled.length
+});
+
+// ✅ Render with grouped object
+return res.render('series/matches_list', {
+  title: 'My Matches',
+  series,
+  grouped   // <---- pass grouped sets
+});
+
 
   } catch (err) {
     console.error('❌ Error loading series matches:', err);
