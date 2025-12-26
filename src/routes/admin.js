@@ -210,26 +210,29 @@ router.get('/series/:id/matches', async (req, res) => {
   });
 
   // ✅ Group matches *after* building them
-  const grouped = {
-    upcoming: matches.filter(m => m.status === 'scheduled'),
-    ongoing: matches.filter(m => m.status === 'live'),
-    completed: matches.filter(m => m.status === 'completed'),
-    cancelled: matches.filter(m => m.status === 'cancelled'),
-  };
-  // Define basic UI labels (if not already globally passed)
-const labels = {
-  declare: 'Plan',
-  vs: 'OR'
+const grouped = {
+  upcoming: matches.filter(m => m.status === 'scheduled'),
+  ongoing: matches.filter(m => m.status === 'live'),
+  completed: matches.filter(m => m.status === 'completed'),
+  cancelled: matches.filter(m => m.status === 'cancelled'),
 };
 
-  // ✅ Render grouped layout
+// ✅ Define labels before rendering
+const labels = { declare: 'Plan', vs: 'OR' };
+
+// ✅ Render grouped layout — ensure file name matches actual EJS file
+try {
   res.render('admin/manage_matches_list', {
+    title: 'Manage Travels',
     series,
     matches,
     grouped,
     labels
   });
-});
+} catch (err) {
+  console.error("❌ Admin render failed:", err);
+  res.status(500).send("Render error — check EJS template path or variable names.");
+}
 
 router.get('/series/:id/matches/new', async (req, res) => {
   const db = await getDb();
