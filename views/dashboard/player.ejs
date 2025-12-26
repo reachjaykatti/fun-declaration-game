@@ -1,0 +1,54 @@
+<%- include('../partials/head', { title: title }) %>
+
+<h1>🏆 <%= user.display_name %> — Performance Dashboard</h1>
+
+<div class="card">
+  <p><strong>Total Points:</strong> <%= totalPoints.toFixed(2) %></p>
+  <p><strong>Rank:</strong> #<%= rank %></p>
+  <p><strong>Win Accuracy:</strong> <%= accuracy %>%</p>
+</div>
+
+<h2>📅 Per Travel Series Summary</h2>
+<table class="table">
+  <tr>
+    <th>Travel</th>
+    <th>Total Points</th>
+    <th>Travels Participated</th>
+    <th>Planned Travels</th>
+  </tr>
+  <% perSeries.forEach(s => { %>
+  <tr>
+    <td><%= s.series_name %></td>
+    <td><%= s.total_points.toFixed(2) %></td>
+    <td><%= s.total_travels %></td>
+    <td><%= s.planned_travels %></td>
+  </tr>
+  <% }) %>
+</table>
+
+<h2>📈 Performance Trend</h2>
+<canvas id="performanceChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('performanceChart').getContext('2d');
+  const labels = <%- JSON.stringify(perSeries.map(s => s.series_name)) %>;
+  const data = <%- JSON.stringify(perSeries.map(s => s.total_points)) %>;
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Points per Travel',
+        data,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+
+<%- include('../partials/foot') %>
