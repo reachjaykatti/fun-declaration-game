@@ -16,31 +16,72 @@
     🔽 Collapse All
   </button>
 </div>
-<div class="travel-grid">
-  <% matches.forEach(function(m){ %>
-    <div class="travel-card">
-      <div class="travel-card-header">
-        <span class="status-dot <%= m.adminDeclared ? 'status-green' : 'status-red' %>"
-              title="<%= m.adminDeclared ? 'Admin has planned travel' : 'Admin has not planned travel' %>"></span>
-        <h3><%= m.name %></h3>
-      </div>
-
-      <div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> <%= labels.vs %> <%= m.team_b %></div>
-      <div class="travel-meta"><strong>Start (IST):</strong> <%= m.startIstStr %></div>
-      <div class="travel-meta"><strong>Cutoff (IST):</strong> <%= m.cutoffIstStr %></div>
-      <div class="travel-meta"><strong>Time until cutoff:</strong> <%= m.timeLeftLabel %></div>
-      <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
-      <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
-
-      <div class="travel-actions">
-        <a class="btn" href="/admin/matches/<%= m.id %>/edit">Edit</a>
-        <a class="btn" href="/admin/matches/<%= m.id %>">Planner</a>
-      </div>
+<!-- ========================= -->
+<!-- 🟢 Live & Upcoming Travels -->
+<!-- ========================= -->
+<% if (grouped.upcoming && grouped.upcoming.length > 0) { %>
+  <div class="section-block">
+    <h2 class="section-title">🟢 Live & Upcoming Travels</h2>
+    <div class="travel-grid">
+      <% grouped.upcoming.forEach(function(m) { %>
+        <div class="travel-card" style="position:relative;">
+          <%- include('../series/travel_card', { m, series, labels }) %>
+        </div>
+      <% }) %>
     </div>
-  <% }) %>
-</div>
+  </div>
+<% } %>
+
+<!-- ========================= -->
+<!-- 🟠 Ongoing Travels -->
+<!-- ========================= -->
+<% if (grouped.ongoing && grouped.ongoing.length > 0) { %>
+  <div class="section-block">
+    <h2 class="section-title">🟠 Ongoing Travels</h2>
+    <div class="travel-grid">
+      <% grouped.ongoing.forEach(function(m) { %>
+        <div class="travel-card" style="position:relative;">
+          <%- include('../series/travel_card', { m, series, labels }) %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<!-- ========================= -->
+<!-- ⚪ Completed Travels -->
+<!-- ========================= -->
+<% if (grouped.completed && grouped.completed.length > 0) { %>
+  <div class="section-block">
+    <h2 class="section-title">⚪ Completed Travels</h2>
+    <div class="travel-grid">
+      <% grouped.completed.forEach(function(m) { %>
+        <div class="travel-card" style="position:relative;">
+          <%- include('../series/travel_card', { m, series, labels }) %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<!-- ========================= -->
+<!-- 🔴 Cancelled / Washed Out -->
+<!-- ========================= -->
+<% if (grouped.cancelled && grouped.cancelled.length > 0) { %>
+  <div class="section-block">
+    <h2 class="section-title">🔴 Cancelled / Washed Out</h2>
+    <div class="travel-grid">
+      <% grouped.cancelled.forEach(function(m) { %>
+        <div class="travel-card" style="position:relative;">
+          <%- include('../series/travel_card', { m, series, labels }) %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
 
 <%- include('../partials/foot') %>
+
 
 
 
