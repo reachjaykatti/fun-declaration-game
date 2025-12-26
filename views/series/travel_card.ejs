@@ -8,11 +8,11 @@
     <h3><%= m.name %></h3>
   </div>
 
-  <% if (m.status === 'completed' && m.user_points !== null) { %>
-    <span class="points-badge <%= m.user_points >= 0 ? 'points-positive' : 'points-negative' %>">
-      <%= m.user_points.toFixed(2) %>
-    </span>
-  <% } %>
+  <% if (m.status === 'completed' && m.user_points !== undefined && m.user_points !== null) { %>
+  <span class="points-badge <%= m.user_points >= 0 ? 'points-positive' : 'points-negative' %>">
+    <%= Number(m.user_points).toFixed(2) %>
+  </span>
+<% } %>
 
   <% 
     let userBoxClass = 'status-grey';
