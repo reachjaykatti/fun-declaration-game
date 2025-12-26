@@ -4,11 +4,13 @@
 </body>
         <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Make section titles collapsible (User Page)
+    console.log("✅ Collapse/Expand script initialized");
+
+    // Handle user grouping (section titles)
     document.querySelectorAll(".section-title").forEach(title => {
       title.style.cursor = "pointer";
-      let icon = title.querySelector(".toggle-icon");
 
+      let icon = title.querySelector(".toggle-icon");
       if (!icon) {
         icon = document.createElement("span");
         icon.classList.add("toggle-icon");
@@ -19,8 +21,9 @@
       }
 
       title.addEventListener("click", () => {
-        const section = title.closest(".section-block");
+        const section = title.closest(".section-block") || title.closest(".travel-section");
         if (!section) return;
+
         const grid = section.querySelector(".travel-grid");
         if (!grid) return;
 
@@ -30,26 +33,36 @@
       });
     });
 
-    // Global Collapse / Expand Button (User + Admin Pages)
+    // Universal Collapse/Expand All button (works on both pages)
     const toggleBtn = document.getElementById("toggleAllSections");
-    if (toggleBtn) {
-      let allCollapsed = false;
-      toggleBtn.addEventListener("click", () => {
-        const grids = document.querySelectorAll(".travel-grid");
-        const icons = document.querySelectorAll(".toggle-icon");
-        if (!grids.length) return;
-
-        allCollapsed = !allCollapsed;
-        grids.forEach(grid => {
-          grid.style.display = allCollapsed ? "none" : "grid";
-        });
-        icons.forEach(icon => {
-          icon.textContent = allCollapsed ? " ►" : " ▼";
-        });
-
-        toggleBtn.textContent = allCollapsed ? "🔼 Expand All" : "🔽 Collapse All";
-      });
+    if (!toggleBtn) {
+      console.log("⚠️ No global collapse button found.");
+      return;
     }
+
+    let allCollapsed = false;
+
+    toggleBtn.addEventListener("click", () => {
+      console.log("🟢 Collapse/Expand button clicked");
+
+      const grids = document.querySelectorAll(".travel-grid");
+      if (!grids.length) {
+        console.log("⚠️ No travel grids found.");
+        return;
+      }
+
+      allCollapsed = !allCollapsed;
+      grids.forEach(grid => {
+        grid.style.display = allCollapsed ? "none" : "grid";
+      });
+
+      const icons = document.querySelectorAll(".toggle-icon");
+      icons.forEach(icon => {
+        icon.textContent = allCollapsed ? " ►" : " ▼";
+      });
+
+      toggleBtn.textContent = allCollapsed ? "🔼 Expand All" : "🔽 Collapse All";
+    });
   });
 </script>
 
