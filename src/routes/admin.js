@@ -152,16 +152,12 @@ router.post('/series/:id/delete', async (req, res) => {
 router.get('/series/:id/matches', async (req, res) => {
   const db = await getDb();
   const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
-  const rawMatches = await db.all('SELECT * FROM matches WHERE series_id = ? ORDER BY start_time_utc ASC', [req.params.id]);
+  const rawMatches = await db.all(
+    'SELECT * FROM matches WHERE series_id = ? ORDER BY start_time_utc ASC',
+    [req.params.id]
+  );
   const nowMillis = Date.now();
 
-  // Group matches by status
-const grouped = {
-  upcoming: matches.filter(m => m.status === 'scheduled'),
-  ongoing: matches.filter(m => m.status === 'live'),
-  completed: matches.filter(m => m.status === 'completed'),
-  cancelled: matches.filter(m => m.status === 'cancelled'),
-};
   // Determine admin-as-player user id (prefer series.created_by, fallback to first is_admin=1)
   let adminUserId = (series && series.created_by) ? series.created_by : null;
   if (!adminUserId) {
@@ -182,26 +178,26 @@ const grouped = {
     }
   }
 
+  // ✅ Build matches array with computed times & labels
   const matches = rawMatches.map(function (m) {
-    // Start (IST) — use imported moment, not require(...)
     const startIstStr = moment.tz(m.start_time_utc, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm');
 
-    // Cutoff IST (start - cutoff)
-    const cutoffMinutes = (typeof m.cutoff_minutes_before === 'number' && !isNaN(m.cutoff_minutes_before)) ? m.cutoff_minutes_before : 30;
-    const startMillis   = new Date(m.start_time_utc).getTime();
-    const cutoffMillis  = startMillis - cutoffMinutes * 60 * 1000;
-    const cutoffIstStr  = moment.tz(cutoffMillis, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm');
+    const cutoffMinutes = (typeof m.cutoff_minutes_before === 'number' && !isNaN(m.cutoff_minutes_before))
+      ? m.cutoff_minutes_before : 30;
 
-    // Time left label
+    const startMillis = new Date(m.start_time_utc).getTime();
+    const cutoffMillis = startMillis - cutoffMinutes * 60 * 1000;
+    const cutoffIstStr = moment.tz(cutoffMillis, 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm');
+
     let timeLeftLabel = '';
     if (nowMillis >= cutoffMillis) {
       timeLeftLabel = 'Cutoff closed';
     } else {
-      const msLeft   = cutoffMillis - nowMillis;
+      const msLeft = cutoffMillis - nowMillis;
       const minsTotal = Math.floor(msLeft / (60 * 1000));
-      const hours     = Math.floor(minsTotal / 60);
-      const mins      = minsTotal % 60;
-      timeLeftLabel   = (hours > 0 ? (hours + 'h ') : '') + mins + 'm left';
+      const hours = Math.floor(minsTotal / 60);
+      const mins = minsTotal % 60;
+      timeLeftLabel = (hours > 0 ? (hours + 'h ') : '') + mins + 'm left';
     }
 
     return {
@@ -213,12 +209,21 @@ const grouped = {
     };
   });
 
+  // ✅ Group matches *after* building them
+  const grouped = {
+    upcoming: matches.filter(m => m.status === 'scheduled'),
+    ongoing: matches.filter(m => m.status === 'live'),
+    completed: matches.filter(m => m.status === 'completed'),
+    cancelled: matches.filter(m => m.status === 'cancelled'),
+  };
+
+  // ✅ Render grouped layout
   res.render('admin/manage_matches_list', {
-  series,
-  matches,
-  grouped,
-  labels
-});
+    series,
+    matches,
+    grouped,
+    labels
+  });
 });
 
 router.get('/series/:id/matches/new', async (req, res) => {
