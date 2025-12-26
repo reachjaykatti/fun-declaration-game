@@ -614,4 +614,4 @@ router.post('/matches/:matchId/declare', async (req, res) => {
   res.redirect(`/admin/matches/${req.params.matchId}`);
 });
 
-module.exports = router;
+export default router;
