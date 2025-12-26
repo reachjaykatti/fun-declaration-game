@@ -121,4 +121,67 @@ if (!hasSeriesFilter) {
   });
 });
 
+// -----------------------------------------
+// 👤 Player Performance Dashboard
+// -----------------------------------------
+router.get('/player/:userId', ensureAuthenticated, async (req, res) => {
+  try {
+    const db = await getDb();
+    const userId = parseInt(req.params.userId, 10);
+
+    const user = await db.get('SELECT id, display_name FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).render('404', { title: 'User Not Found' });
+
+    // Total points & ranking position
+    const total = await db.get(`
+      SELECT COALESCE(SUM(points), 0) as totalPoints FROM points_ledger WHERE user_id = ?
+    `, [userId]);
+
+    const leaderboard = await db.all(`
+      SELECT user_id, SUM(points) AS totalPoints
+      FROM points_ledger
+      GROUP BY user_id
+      ORDER BY totalPoints DESC
+    `);
+    const rank = leaderboard.findIndex(u => u.user_id === userId) + 1;
+
+    // Per-Series stats
+    const perSeries = await db.all(`
+      SELECT s.name AS series_name,
+             COALESCE(SUM(pl.points), 0) AS total_points,
+             COUNT(DISTINCT m.id) AS total_travels,
+             COUNT(DISTINCT CASE WHEN p.user_id IS NOT NULL THEN m.id END) AS planned_travels
+      FROM series s
+      LEFT JOIN matches m ON m.series_id = s.id
+      LEFT JOIN points_ledger pl ON pl.match_id = m.id AND pl.user_id = ?
+      LEFT JOIN predictions p ON p.match_id = m.id AND p.user_id = ?
+      GROUP BY s.id
+      ORDER BY s.start_date_utc DESC
+    `, [userId, userId]);
+
+    // Win Accuracy
+    const correct = await db.get(`
+      SELECT COUNT(*) AS wins
+      FROM predictions p
+      JOIN matches m ON m.id = p.match_id
+      WHERE p.user_id = ? AND p.predicted_team = m.winner
+    `, [userId]);
+    const totalPreds = await db.get(`SELECT COUNT(*) AS total FROM predictions WHERE user_id = ?`, [userId]);
+    const accuracy = totalPreds.total ? ((correct.wins / totalPreds.total) * 100).toFixed(1) : 0;
+
+    res.render('dashboard/player', {
+      title: `${user.display_name} — Performance`,
+      user,
+      totalPoints: total.totalPoints,
+      rank,
+      perSeries,
+      accuracy
+    });
+  } catch (e) {
+    console.error('Player stats error:', e);
+    res.status(500).render('404', { title: 'Error' });
+  }
+});
+
+
 export default router;
