@@ -73,9 +73,6 @@ router.get('/', async (req, res) => {
 let leaderboard = [];
 let seriesUnsupported = false;
 
-// Ensure selectedSeriesId is integer (not string)
-const hasSeriesFilter = !!selectedSeriesId;
-
 // Detect DB schema columns
 const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
 const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
