@@ -28,4 +28,4 @@ router.post('/logout', ensureAuthenticated, (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
