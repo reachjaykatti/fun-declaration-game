@@ -73,13 +73,16 @@ router.get('/', async (req, res) => {
 let leaderboard = [];
 let seriesUnsupported = false;
 
-// Determine if user selected a series
+// Ensure selectedSeriesId is integer (not string)
+const selectedSeriesId = req.query.seriesId ? parseInt(req.query.seriesId, 10) : null;
+const hasSeriesFilter = !!selectedSeriesId;
 
+// Detect DB schema columns
 const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
 const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
 
 if (!hasSeriesFilter) {
-  // 🌍 Global leaderboard (default)
+  // 🌍 Global leaderboard
   leaderboard = await db.all(`
     SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
     FROM users u
@@ -89,7 +92,7 @@ if (!hasSeriesFilter) {
   `);
 
 } else if (hasSeriesIdCol) {
-  // 🎯 Filter by series_id (preferred path)
+  // 🎯 Filter directly via points_ledger.series_id
   leaderboard = await db.all(`
     SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
     FROM users u
@@ -100,7 +103,7 @@ if (!hasSeriesFilter) {
   `, [selectedSeriesId]);
 
 } else if (hasMatchIdCol) {
-  // 🔄 Fallback path: match_id → series_id relationship
+  // 🔄 Fallback: derive series from matches
   leaderboard = await db.all(`
     SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
     FROM users u
@@ -112,7 +115,7 @@ if (!hasSeriesFilter) {
   `, [selectedSeriesId]);
 
 } else {
-  // 🚫 No column found → fallback
+  // 🚫 No schema support for series filtering
   seriesUnsupported = true;
   leaderboard = await db.all(`
     SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
