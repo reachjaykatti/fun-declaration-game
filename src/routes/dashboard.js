@@ -1,4 +1,3 @@
-
 import express from 'express';
 import { getDb } from '../config/db.js';
 
@@ -69,13 +68,9 @@ router.get('/', async (req, res) => {
     ? ((seriesStats.find(s => s.series_id === selectedSeriesId) || {}).name || null)
     : null;
 
-  // ----- Leaderboard (global or series-wise) -----
+ // ----- Leaderboard (global or series-wise) -----
 let leaderboard = [];
 let seriesUnsupported = false;
-
-// Detect DB schema columns
-const hasSeriesIdCol = await tableHasColumn('points_ledger', 'series_id');
-const hasMatchIdCol  = await tableHasColumn('points_ledger', 'match_id');
 
 if (!hasSeriesFilter) {
   // 🌍 Global leaderboard
@@ -87,19 +82,8 @@ if (!hasSeriesFilter) {
     ORDER BY points DESC
   `);
 
-} else if (hasSeriesIdCol) {
-  // 🎯 Filter directly via points_ledger.series_id
-  leaderboard = await db.all(`
-    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
-    FROM users u
-    LEFT JOIN points_ledger pl ON pl.user_id = u.id
-    WHERE pl.series_id = ?
-    GROUP BY u.id
-    ORDER BY points DESC
-  `, [selectedSeriesId]);
-
-} else if (hasMatchIdCol) {
-  // 🔄 Fallback: derive series from matches
+} else {
+  // 🎯 Series-specific leaderboard via match linkage (always safe)
   leaderboard = await db.all(`
     SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
     FROM users u
@@ -109,17 +93,6 @@ if (!hasSeriesFilter) {
     GROUP BY u.id
     ORDER BY points DESC
   `, [selectedSeriesId]);
-
-} else {
-  // 🚫 No schema support for series filtering
-  seriesUnsupported = true;
-  leaderboard = await db.all(`
-    SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
-    FROM users u
-    LEFT JOIN points_ledger pl ON pl.user_id = u.id
-    GROUP BY u.id
-    ORDER BY points DESC
-  `);
 }
 
   // ----- W/L streaks for the current user (unchanged) -----
