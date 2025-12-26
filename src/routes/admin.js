@@ -233,7 +233,7 @@ try {
   console.error("❌ Admin render failed:", err);
   res.status(500).send("Render error — check EJS template path or variable names.");
 }
-
+});
 router.get('/series/:id/matches/new', async (req, res) => {
   const db = await getDb();
   const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
