@@ -373,5 +373,4 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
     missedTravellers,
   });
 });
-
-export default router;
+module.exports = router;
