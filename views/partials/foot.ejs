@@ -2,4 +2,30 @@
   </main>
   <script src="/public/js/main.js"></script>
 </body>
+        <script>
+  // --- Collapsible Section Titles ---
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".section-title").forEach(title => {
+      title.style.cursor = "pointer";
+
+      // Add a chevron symbol for clarity
+      const icon = document.createElement("span");
+      icon.textContent = " ▼";
+      icon.style.fontSize = "0.8em";
+      icon.style.opacity = "0.6";
+      title.appendChild(icon);
+
+      title.addEventListener("click", () => {
+        const section = title.closest(".section-block");
+        const grid = section.querySelector(".travel-grid");
+        const isCollapsed = grid.style.display === "none";
+
+        // Toggle grid visibility
+        grid.style.display = isCollapsed ? "grid" : "none";
+        icon.textContent = isCollapsed ? " ▼" : " ►";
+      });
+    });
+  });
+</script>
+
 </html>
