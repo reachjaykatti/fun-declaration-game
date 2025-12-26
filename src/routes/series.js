@@ -172,9 +172,14 @@ console.log('Grouped counts →', {
 return res.render('series/matches_list', {
   title: 'My Matches',
   series,
-  grouped   // <---- pass grouped sets
+  grouped,
+  matches: [
+    ...grouped.upcoming,
+    ...grouped.ongoing,
+    ...grouped.completed,
+    ...grouped.cancelled
+  ]
 });
-
 
   } catch (err) {
     console.error('❌ Error loading series matches:', err);
