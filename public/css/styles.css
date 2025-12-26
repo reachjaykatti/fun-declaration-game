@@ -434,3 +434,50 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
   font-size: 0.85rem;
   padding: 0.25rem 0.6rem;
 }
+/* ================================
+   SECTION GROUP THEMES
+===================================*/
+.section-title {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-left: 5px solid var(--accent, #007bff);
+  padding-left: 0.5rem;
+  color: #333;
+}
+
+.section-block {
+  border-radius: 10px;
+  padding: 0.75rem 1rem 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* Live / Upcoming */
+.section-upcoming {
+  background: #f5fff4;
+  border-left: 4px solid #28a745;
+}
+
+/* Ongoing */
+.section-ongoing {
+  background: #fffbe6;
+  border-left: 4px solid #ffc107;
+}
+
+/* Completed */
+.section-completed {
+  background: #f4f7ff;
+  border-left: 4px solid #007bff;
+}
+
+/* Cancelled */
+.section-cancelled {
+  background: #fff0f0;
+  border-left: 4px solid #dc3545;
+}
+
+/* Reduce card gaps a bit */
+.travel-grid {
+  gap: 0.75rem;
+}
