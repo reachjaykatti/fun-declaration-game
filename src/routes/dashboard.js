@@ -23,7 +23,6 @@ function computeStreaks(seq) {
   return { currentStreak, longestWin, longestLoss };
 }
 
-
 router.get('/', async (req, res) => {
   const db = await getDb();
   const uid = req.session.user.id;
@@ -121,6 +120,5 @@ if (!hasSeriesFilter) {
     seriesUnsupported
   });
 });
-
 
 export default router;
