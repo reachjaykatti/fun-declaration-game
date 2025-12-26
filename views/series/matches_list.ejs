@@ -20,89 +20,72 @@
   <span>Missed: <strong><%= missedCount %></strong></span>
 </div>
 
-<!-- 🧭 TRAVEL GRID -->
-<div class="travel-grid">
-  <% matches.forEach(function(m) { %>
-    <div class="travel-card" style="position:relative;">
-
-      <!-- 🟢 Admin Declaration Indicator -->
-      <div class="travel-card-header">
-        <span class="status-dot <%= m.admin_declared ? 'status-green' : 'status-red' %>"
-          title="<%= m.admin_declared ? 'Admin has declared this travel' : 'Travel not yet declared' %>"></span>
-        <h3><%= m.name %></h3>
+<!-- ========================= -->
+<!-- 🟢 Live & Upcoming Travels -->
+<!-- ========================= -->
+<% if (grouped.upcoming && grouped.upcoming.length > 0) { %>
+  <h2 class="section-title">🟢 Live & Upcoming Travels</h2>
+  <div class="travel-grid">
+    <% grouped.upcoming.forEach(function(m) { %>
+      <div class="travel-card" style="position:relative;">
+        <%- include('travel_card', { m, series, labels }) %>
       </div>
-
-      <!-- 💰 My Points Badge -->
-      <% if (m.status === 'completed' && m.user_points !== null) { %>
-        <span class="points-badge <%= m.user_points >= 0 ? 'points-positive' : 'points-negative' %>">
-          <%= m.user_points.toFixed(2) %>
-        </span>
-      <% } %>
-
-      <!-- 🟩 User Indicator -->
-      <% 
-        let userBoxClass = 'status-grey';
-        if (m.status === 'completed') {
-          if (m.user_points > 0) userBoxClass = 'status-green';
-          else userBoxClass = 'status-red';
-        } else if (m.user_has_predicted) {
-          userBoxClass = 'status-green';
-        } else if (m.locked) {
-          userBoxClass = 'status-red';
-        }
-      %>
-      <div class="status-box <%= userBoxClass %>"></div>
-
-      <!-- 📄 Travel Info -->
-      <div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> <%= labels.vs %> <%= m.team_b %></div>
-      <div class="travel-meta"><strong>Start (IST):</strong> <%= m.start_time_ist %></div>
-      <div class="travel-meta"><strong>Cutoff (IST):</strong> <%= m.cutoff_time_ist || '-' %></div>
-      <div class="travel-meta"><strong>Time until cutoff:</strong> <%= m.time_left %></div>
-      <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
-      <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
-
-      <% if (m.user_has_predicted) { %>
-  <div class="travel-meta planned-dest">
-    🧭 Planned: <strong><%= m.user_predicted_name %></strong>
+    <% }) %>
   </div>
 <% } %>
 
-      <!-- 🎯 Action Area -->
-      <div class="travel-actions">
-        <a class="btn btn-small" href="/series/<%= series.id %>/matches/<%= m.id %>">Details</a>
-
-        <% if (m.status === 'completed') { %>
-          <span class="text-muted">Travel Completed</span>
-
-        <% } else if (!m.locked && m.status === 'scheduled' && !m.user_has_predicted) { %>
-          <form class="inline js-confirm-double" method="post"
-            action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-            data-confirm1="Confirm travel plan: <%= m.team_a %>?"
-            data-confirm2="Finalize travel plan: <%= m.team_a %>?">
-            <input type="hidden" name="team" value="A" />
-            <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
-          </form>
-
-          <form class="inline js-confirm-double" method="post"
-            action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-            data-confirm1="Confirm travel plan: <%= m.team_b %>?"
-            data-confirm2="Finalize travel plan: <%= m.team_b %>?">
-            <input type="hidden" name="team" value="B" />
-            <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
-          </form>
-
-        <% } else if (m.user_has_predicted) { %>
-          <span class="chip chip-ok">
-            <span class="dot dot-ok"></span> Planned: <strong><%= m.user_predicted_name %></strong>
-          </span>
-
-        <% } else { %>
-          <span class="text-muted">Travel planning closed</span>
-        <% } %>
+<!-- ========================= -->
+<!-- 🟠 Ongoing Travels -->
+<!-- ========================= -->
+<% if (grouped.ongoing && grouped.ongoing.length > 0) { %>
+  <h2 class="section-title">🟠 Ongoing Travels</h2>
+  <div class="travel-grid">
+    <% grouped.ongoing.forEach(function(m) { %>
+      <div class="travel-card" style="position:relative;">
+        <%- include('travel_card', { m, series, labels }) %>
       </div>
-    </div>
-  <% }) %>
-</div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- ========================= -->
+<!-- ⚪ Completed Travels -->
+<!-- ========================= -->
+<% if (grouped.completed && grouped.completed.length > 0) { %>
+  <h2 class="section-title">⚪ Completed Travels</h2>
+  <div class="travel-grid">
+    <% grouped.completed.forEach(function(m) { %>
+      <div class="travel-card" style="position:relative;">
+        <%- include('travel_card', { m, series, labels }) %>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- ========================= -->
+<!-- 🔴 Cancelled / Washed Out -->
+<!-- ========================= -->
+<% if (grouped.cancelled && grouped.cancelled.length > 0) { %>
+  <h2 class="section-title">🔴 Cancelled / Washed Out</h2>
+  <div class="travel-grid">
+    <% grouped.cancelled.forEach(function(m) { %>
+      <div class="travel-card" style="position:relative;">
+        <%- include('travel_card', { m, series, labels }) %>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- If no travels at all -->
+<% if (
+  (!grouped.upcoming || grouped.upcoming.length === 0) &&
+  (!grouped.ongoing || grouped.ongoing.length === 0) &&
+  (!grouped.completed || grouped.completed.length === 0) &&
+  (!grouped.cancelled || grouped.cancelled.length === 0)
+) { %>
+  <p class="text-muted">No travels found.</p>
+<% } %>
+
 
 <%- include('../partials/foot') %>
 
