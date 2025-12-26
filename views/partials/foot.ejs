@@ -28,4 +28,28 @@
   });
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggleBtn = document.getElementById("toggleAllSections");
+    if (!toggleBtn) return;
+
+    let allCollapsed = false;
+
+    toggleBtn.addEventListener("click", () => {
+      const grids = document.querySelectorAll(".section-block .travel-grid");
+      const icons = document.querySelectorAll(".section-title span:last-child");
+
+      allCollapsed = !allCollapsed;
+      grids.forEach(grid => {
+        grid.style.display = allCollapsed ? "none" : "grid";
+      });
+      icons.forEach(icon => {
+        icon.textContent = allCollapsed ? " ►" : " ▼";
+      });
+
+      toggleBtn.textContent = allCollapsed ? "🔼 Expand All" : "🔽 Collapse All";
+    });
+  });
+</script>
+
 </html>
