@@ -24,13 +24,13 @@
 <!-- 🟢 Live & Upcoming Travels -->
 <!-- ========================= -->
 <% if (grouped.upcoming && grouped.upcoming.length > 0) { %>
-  <h2 class="section-title">🟢 Live & Upcoming Travels</h2>
-  <div class="travel-grid">
-    <% grouped.upcoming.forEach(function(m) { %>
-      <div class="travel-card" style="position:relative;">
+  <div class="section-block section-upcoming">
+    <h2 class="section-title">🟢 Live & Upcoming Travels</h2>
+    <div class="travel-grid">
+      <% grouped.upcoming.forEach(function(m) { %>
         <%- include('travel_card', { m, series, labels }) %>
-      </div>
-    <% }) %>
+      <% }) %>
+    </div>
   </div>
 <% } %>
 
@@ -38,13 +38,13 @@
 <!-- 🟠 Ongoing Travels -->
 <!-- ========================= -->
 <% if (grouped.ongoing && grouped.ongoing.length > 0) { %>
-  <h2 class="section-title">🟠 Ongoing Travels</h2>
-  <div class="travel-grid">
-    <% grouped.ongoing.forEach(function(m) { %>
-      <div class="travel-card" style="position:relative;">
+  <div class="section-block section-ongoing">
+    <h2 class="section-title">🟠 Ongoing Travels</h2>
+    <div class="travel-grid">
+      <% grouped.ongoing.forEach(function(m) { %>
         <%- include('travel_card', { m, series, labels }) %>
-      </div>
-    <% }) %>
+      <% }) %>
+    </div>
   </div>
 <% } %>
 
@@ -52,13 +52,13 @@
 <!-- ⚪ Completed Travels -->
 <!-- ========================= -->
 <% if (grouped.completed && grouped.completed.length > 0) { %>
-  <h2 class="section-title">⚪ Completed Travels</h2>
-  <div class="travel-grid">
-    <% grouped.completed.forEach(function(m) { %>
-      <div class="travel-card" style="position:relative;">
+  <div class="section-block section-completed">
+    <h2 class="section-title">⚪ Completed Travels</h2>
+    <div class="travel-grid">
+      <% grouped.completed.forEach(function(m) { %>
         <%- include('travel_card', { m, series, labels }) %>
-      </div>
-    <% }) %>
+      <% }) %>
+    </div>
   </div>
 <% } %>
 
@@ -66,13 +66,13 @@
 <!-- 🔴 Cancelled / Washed Out -->
 <!-- ========================= -->
 <% if (grouped.cancelled && grouped.cancelled.length > 0) { %>
-  <h2 class="section-title">🔴 Cancelled / Washed Out</h2>
-  <div class="travel-grid">
-    <% grouped.cancelled.forEach(function(m) { %>
-      <div class="travel-card" style="position:relative;">
+  <div class="section-block section-cancelled">
+    <h2 class="section-title">🔴 Cancelled / Washed Out</h2>
+    <div class="travel-grid">
+      <% grouped.cancelled.forEach(function(m) { %>
         <%- include('travel_card', { m, series, labels }) %>
-      </div>
-    <% }) %>
+      <% }) %>
+    </div>
   </div>
 <% } %>
 
