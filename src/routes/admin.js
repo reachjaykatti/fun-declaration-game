@@ -1,4 +1,4 @@
-import express from 'express';
+  import express from 'express';
 import bcrypt from 'bcrypt';
 import moment from 'moment-timezone';
 import multer from 'multer';
@@ -284,14 +284,27 @@ router.post('/series/:seriesId/matches/:matchId/delete', async (req, res) => {
   res.redirect(`/admin/series/${req.params.seriesId}/matches`);
 });
 
-// ✏️ Edit Match (GET)
+// ✏️ Edit Travel (GET)
 router.get('/series/:seriesId/matches/:matchId/edit', async (req, res) => {
   const db = await getDb();
-  const match = await db.get('SELECT * FROM matches WHERE id = ? AND series_id = ?', [req.params.matchId, req.params.seriesId]);
-  if (!match) return res.status(404).send('Match not found');
+  const match = await db.get(
+    'SELECT * FROM matches WHERE id = ? AND series_id = ?',
+    [req.params.matchId, req.params.seriesId]
+  );
+  if (!match) return res.status(404).send('Travel not found');
+
+  const moment = (await import('moment-timezone')).default;
+  const start_time_ist = match.start_time_utc
+    ? moment.utc(match.start_time_utc).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm')
+    : '';
 
   const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.seriesId]);
-  res.render('admin/match_edit', { title: 'Edit Travel', match, series });
+
+  res.render('admin/match_edit', {
+    title: `Edit Travel: ${match.name}`,
+    match: { ...match, start_time_ist },
+    series
+  });
 });
 
 // ✏️ Edit Match (POST)
