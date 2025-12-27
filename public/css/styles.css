@@ -527,52 +527,43 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
   background: #e9ecef;
 }
 /* --- Floating Status Chips (force high contrast) --- */
-/* --- FORCE CONTRAST & VISIBILITY FIX --- */
+/* 🔧 FINAL FIX — Force Floating Status Chips Visibility */
 .status-chip {
-  font-size: 0.95rem !important;
+  font-size: 1rem !important;
   font-weight: 700 !important;
-  padding: 0.5rem 0.7rem !important;
+  padding: 0.5rem 0.8rem !important;
   margin: 0.35rem 0 !important;
   border-radius: 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 0.5rem !important;
-  background: #ffffff !important;         /* Pure white background */
-  color: #000000 !important;              /* Force black readable text */
-  border: 1px solid rgba(0,0,0,0.15) !important;
+  background-color: #ffffff !important;   /* White background for visibility */
+  color: #000000 !important;              /* Black readable text */
+  border: 1px solid rgba(0,0,0,0.2) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15) !important;
   text-shadow: none !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease-in-out;
 }
 
-/* DARK THEME VERSION */
 body.dark-theme .status-chip {
-  background: #1c1f22 !important;
-  color: #f8f8f8 !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
+  background-color: #1c1f22 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4) !important;
 }
 
-/* Category icons */
+/* Icons before text */
 .status-chip.live::before { content: "🟢"; }
 .status-chip.ongoing::before { content: "🟠"; }
 .status-chip.completed::before { content: "⚪"; }
 .status-chip.cancelled::before { content: "🔴"; }
 
-/* Hover (light) */
+/* Hover Effects */
 .status-chip:hover {
   transform: scale(1.05);
-  background: #f4f4f4 !important;
+  background-color: #f8f8f8 !important;
 }
-
-/* Hover (dark) */
 body.dark-theme .status-chip:hover {
-  background: #2c3035 !important;
+  background-color: #2a2d33 !important;
 }
-
-@media (prefers-color-scheme: dark) {
-  .status-chip {
-    color: #fff !important;
-    background: rgba(40, 45, 50, 0.9) !important;
-  }
-}
-body { outline: 5px solid red !important; }
