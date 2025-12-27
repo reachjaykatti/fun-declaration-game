@@ -1,33 +1,40 @@
-<!-- 💼 ADMIN Travel Card -->
-<div class="travel-card" style="position:relative;">
-<form method="POST"
-      action="/admin/series/<%= series.id %>/matches/<%= m.id %>/delete"
-      class="delete-form"
-      data-matchname="<%= m.name %>"
-      style="position:absolute; top:8px; right:10px;">
-  <button type="submit"
-          class="btn btn-small btn-danger"
-          style="padding:2px 6px; font-size:0.8rem;">✖</button>
-</form>
+<!-- 🧭 Single Travel Card (Admin View) -->
 
-  <!-- 🟢 Admin Declaration Indicator -->
-  <div class="travel-card-header">
-    <span class="status-dot <%= m.adminDeclared ? 'status-green' : 'status-red' %>"
-      title="<%= m.adminDeclared ? 'Admin has declared this travel' : 'Travel not yet declared' %>"></span>
-    <h3><%= m.name %></h3>
-  </div>
+<div class="travel-card-header">
+  <h3><%= m.name %></h3>
+  <% if (m.adminDeclared) { %>
+    <span class="dot dot-ok" title="Admin has declared this travel"></span>
+  <% } else { %>
+    <span class="dot dot-red" title="Not declared yet"></span>
+  <% } %>
+</div>
 
-  <!-- 📅 Travel Details -->
-  <div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> OR <%= m.team_b %></div>
-  <div class="travel-meta"><strong>Start (IST):</strong> <%= m.startIstStr %></div>
-  <div class="travel-meta"><strong>Cutoff (IST):</strong> <%= m.cutoffIstStr %></div>
-  <div class="travel-meta"><strong>Time until cutoff:</strong> <%= m.timeLeftLabel %></div>
-  <div class="travel-meta"><strong>Entry:</strong> <%= m.entry_points %></div>
-  <div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
+<div class="travel-meta"><strong>Destinations:</strong> <%= m.team_a %> OR <%= m.team_b %></div>
+<div class="travel-meta"><strong>Start (IST):</strong> <%= m.startIstStr %></div>
+<div class="travel-meta"><strong>Cutoff (IST):</strong> <%= m.cutoffIstStr %></div>
+<div class="travel-meta"><strong>Time Left:</strong> <%= m.timeLeftLabel %></div>
+<div class="travel-meta"><strong>Points:</strong> <%= m.entry_points %></div>
+<div class="travel-meta"><strong>Status:</strong> <%= m.status %></div>
 
-  <!-- ⚙️ Action Buttons -->
-  <div class="travel-actions">
-    <a class="btn btn-small" href="/admin/series/<%= series.id %>/matches/<%= m.id %>/edit">Edit</a>
-    <a class="btn btn-small" href="/admin/series/<%= series.id %>/matches/<%= m.id %>">Planner</a>
-  </div>
+<!-- 🎯 Action Buttons -->
+<div class="travel-actions" style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+  <!-- 🧭 Planner -->
+  <a class="btn btn-small"
+     href="/admin/series/<%= series.id %>/matches/<%= m.id %>/planner">
+     🧭 Planner
+  </a>
+
+  <!-- ✏️ Edit -->
+  <a class="btn btn-small btn-outline"
+     href="/admin/matches/<%= m.id %>/edit">
+     ✏️ Edit
+  </a>
+
+  <!-- ❌ Delete -->
+  <form method="POST"
+        action="/admin/matches/<%= m.id %>/delete"
+        style="display:inline;"
+        onsubmit="return confirm('Are you sure you want to delete this travel? This action cannot be undone.');">
+    <button type="submit" class="btn btn-small btn-danger">🗑 Delete</button>
+  </form>
 </div>
