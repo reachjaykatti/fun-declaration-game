@@ -1,6 +1,4 @@
-function nowUtcISO() {
-  return new Date().toISOString();
-}
+import { nowUtcISO } from '../utils/time.js';
 import express from 'express';
 import bcrypt from 'bcrypt';
 import moment from 'moment-timezone';
@@ -8,7 +6,6 @@ import multer from 'multer';
 import { getDb } from '../config/db.js';
 import { ensureAdmin } from '../middleware/auth.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-import { nowUtcISO } from '../utils/time.js';
 import XLSX from 'xlsx';
 
 // Multer for CSV/TSV uploads (kept in memory)
