@@ -182,3 +182,14 @@ document.addEventListener('submit', function (e) {
     window.location.href = fallback;
   });
 })();
+// --- Admin: Confirm before deleting a travel ---
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.delete-form').forEach(form => {
+    form.addEventListener('submit', e => {
+      const travelName = form.dataset.matchname || 'this travel';
+      const confirmed = window.confirm(`⚠️ Are you sure you want to delete "${travelName}"?\nThis action cannot be undone.`);
+      if (!confirmed) e.preventDefault();
+    });
+  });
+});
+
