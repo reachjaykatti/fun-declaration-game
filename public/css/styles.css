@@ -526,65 +526,67 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 .nav-btn:hover {
   background: #e9ecef;
 }
-/* Floating status box styling */
+/* --- Floating Status Chips (force high contrast) --- */
 .floating-status-box {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 0.75rem;
-  z-index: 999;
-  width: 150px;
-  backdrop-filter: blur(4px);
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  padding: 0.6rem;
+  backdrop-filter: blur(6px);
+  width: 160px;
 }
 
-/* Chips */
 .status-chip {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  padding: 0.4rem 0.6rem;
-  margin: 0.25rem 0;
-  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  margin: 0.3rem 0;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.4rem;
-  color: #222; /* Default dark text for light mode */
+  gap: 0.5rem;
+  color: #000 !important;                /* Force black text */
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0,0,0,0.15);
+  text-shadow: none !important;
 }
 
-/* When dark theme is active */
+/* Distinct category colors */
+.status-chip.live::before { content: "🟢"; }
+.status-chip.ongoing::before { content: "🟠"; }
+.status-chip.completed::before { content: "⚪"; }
+.status-chip.cancelled::before { content: "🔴"; }
+
+/* --- DARK THEME OVERRIDE --- */
 body.dark-theme .floating-status-box {
-  background: rgba(20, 30, 35, 0.95);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(20, 25, 30, 0.9);
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
 body.dark-theme .status-chip {
-  color: #f2f2f2; /* bright text for dark theme */
+  color: #fff !important;                /* Force white text */
+  background: rgba(40, 45, 50, 0.9) !important;
+  border-color: rgba(255,255,255,0.2);
 }
 
-/* Specific category tones */
-.status-chip.live { background: rgba(0, 255, 0, 0.15); }
-.status-chip.ongoing { background: rgba(255, 165, 0, 0.15); }
-.status-chip.completed { background: rgba(200, 200, 255, 0.15); }
-.status-chip.cancelled { background: rgba(255, 0, 0, 0.15); }
-
-/* Slight hover to indicate active */
+/* Hover for both themes */
 .status-chip:hover {
-  transform: scale(1.03);
-  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.04);
   cursor: pointer;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-theme .status-chip:hover {
+  background: rgba(60, 65, 70, 0.95) !important;
 }
 @media (prefers-color-scheme: dark) {
-  .floating-status-box {
-    background: rgba(20, 30, 35, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
   .status-chip {
-    color: #f2f2f2;
+    color: #fff !important;
+    background: rgba(40, 45, 50, 0.9) !important;
   }
 }
-
