@@ -33,7 +33,7 @@
     <div class="travel-grid">
       <% grouped.upcoming.forEach(function(m) { %>
         <div class="travel-card" style="position:relative;">
-          <%- include('../series/travel_card', { m, series, labels }) %>
+          <%- include('travel_card_admin', { m, series, labels }) %>
         </div>
       <% }) %>
     </div>
@@ -49,7 +49,7 @@
     <div class="travel-grid">
       <% grouped.ongoing.forEach(function(m) { %>
         <div class="travel-card" style="position:relative;">
-          <%- include('../series/travel_card', { m, series, labels }) %>
+          <%- include('travel_card_admin', { m, series, labels }) %>
         </div>
       <% }) %>
     </div>
@@ -65,7 +65,7 @@
     <div class="travel-grid">
       <% grouped.completed.forEach(function(m) { %>
         <div class="travel-card" style="position:relative;">
-          <%- include('../series/travel_card', { m, series, labels }) %>
+          <%- include('travel_card_admin', { m, series, labels }) %>
         </div>
       <% }) %>
     </div>
@@ -81,7 +81,7 @@
     <div class="travel-grid">
       <% grouped.cancelled.forEach(function(m) { %>
         <div class="travel-card" style="position:relative;">
-          <%- include('../series/travel_card', { m, series, labels }) %>
+          <%- include('travel_card_admin', { m, series, labels }) %>
         </div>
       <% }) %>
     </div>
@@ -89,6 +89,7 @@
 <% } %>
 
 <%- include('../partials/foot') %>
+
 
 
 
