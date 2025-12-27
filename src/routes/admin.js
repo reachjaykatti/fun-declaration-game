@@ -1,4 +1,7 @@
-  import express from 'express';
+function nowUtcISO() {
+  return new Date().toISOString();
+}
+import express from 'express';
 import bcrypt from 'bcrypt';
 import moment from 'moment-timezone';
 import multer from 'multer';
@@ -653,7 +656,7 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
     if (!match) return res.status(404).send('Travel not found');
     const series = await db.get('SELECT * FROM series WHERE id = ?', [seriesId]);
 
-    // Fetch all predictions for this match
+    // Fetch predictions
     const predictions = await db.all(
       `SELECT p.*, u.display_name
        FROM predictions p
@@ -662,17 +665,45 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
       [matchId]
     );
 
+    // --- Compute Probable Win ---
+    const countA = predictions.filter(p => p.predicted_team === 'A').length;
+    const countB = predictions.filter(p => p.predicted_team === 'B').length;
+    const total = countA + countB;
+    const probable =
+      total > 0
+        ? (countA > countB
+            ? match.team_a
+            : countB > countA
+            ? match.team_b
+            : 'Tie')
+        : 'No predictions yet';
+
+    // --- Time logic ---
+    const cutoffMinutes =
+      typeof match.cutoff_minutes_before === 'number'
+        ? match.cutoff_minutes_before
+        : 30;
+    const cutoffMillis =
+      new Date(match.start_time_utc).getTime() - cutoffMinutes * 60000;
+    const nowMillis = Date.now();
+    const isCutoffPassed = nowMillis >= cutoffMillis;
+
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
       match,
       series,
       predictions,
-      moment // 👈 make moment available to EJS
+      probable,
+      countA,
+      countB,
+      isCutoffPassed,
+      moment
     });
   } catch (err) {
     console.error('❌ Planner load error:', err);
     res.status(500).send('Internal server error while loading planner.');
   }
 });
+
 
 export default router;
