@@ -575,3 +575,4 @@ body.dark-theme .status-chip:hover {
     background: rgba(40, 45, 50, 0.9) !important;
   }
 }
+body { outline: 5px solid red !important; }
