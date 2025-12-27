@@ -11,11 +11,11 @@
   <p>No planners yet.</p>
 <% } else { %>
   <table class="table">
-    <tr><th>Planner</th><th>Choice</th></tr>
+    <tr><th>Planner</th><th>Chosen Destination</th></tr>
     <% predictions.forEach(p => { %>
       <tr>
         <td><%= p.display_name %></td>
-        <td><%= p.predicted_team %></td>
+        <td><%= p.predicted_team === 'A' ? match.team_a : match.team_b %></td>
       </tr>
     <% }) %>
   </table>
