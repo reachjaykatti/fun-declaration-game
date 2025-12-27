@@ -272,6 +272,18 @@ router.post('/series/:id/matches/new', async (req, res) => {
     [req.params.id, name, sport, team_a, team_b, startUtc, cutoff_minutes_before || 30, entry_points || 50, 'scheduled']);
   res.redirect(`/admin/series/${req.params.id}/matches`);
 });
+// === Admin: Delete Match ===
+router.post('/series/:seriesId/matches/:matchId/delete', async (req, res) => {
+  const db = await getDb();
+
+  await db.run('DELETE FROM matches WHERE id = ? AND series_id = ?', [
+    req.params.matchId,
+    req.params.seriesId
+  ]);
+
+  res.redirect(`/admin/series/${req.params.seriesId}/matches`);
+});
+
 // -----------------------------
 // ✏️ Edit Match (GET)
 // -----------------------------
