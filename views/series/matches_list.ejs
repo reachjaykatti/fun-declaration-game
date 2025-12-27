@@ -3,6 +3,14 @@
 <h1><%= labels.matches %> — <%= series.name %></h1>
 <a class="btn btn-link js-back" data-fallback="/series">← Back</a>
 
+<!-- 🧭 Quick Section Navigator -->
+<div class="section-navigator">
+  <button data-target="upcoming" class="nav-btn">🟢 Live & Upcoming</button>
+  <button data-target="ongoing" class="nav-btn">🟠 Ongoing</button>
+  <button data-target="completed" class="nav-btn">⚪ Completed</button>
+  <button data-target="cancelled" class="nav-btn">🔴 Cancelled</button>
+</div>
+
 <!-- 📊 My Travel Summary -->
 <%
   let totalPoints = 0, plannedCount = 0, missedCount = 0;
@@ -97,5 +105,6 @@
 
 
 <%- include('../partials/foot') %>
+
 
 
