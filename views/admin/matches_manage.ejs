@@ -3,6 +3,14 @@
 <h1>Manage <%= labels.matches %> — <%= series.name %></h1>
 <a class="btn btn-link js-back" data-fallback="/admin">← Back</a>
 
+<!-- 🧭 Quick Section Navigator -->
+<div class="section-navigator">
+  <button data-target="upcoming" class="nav-btn">🟢 Live & Upcoming</button>
+  <button data-target="ongoing" class="nav-btn">🟠 Ongoing</button>
+  <button data-target="completed" class="nav-btn">⚪ Completed</button>
+  <button data-target="cancelled" class="nav-btn">🔴 Cancelled</button>
+</div>
+
 <div class="grid" style="margin: 1rem 0;">
   <div>
     <a class="btn" href="/admin/series/<%= series.id %>/matches/new">+ New <%= labels.match %></a>
@@ -81,6 +89,7 @@
 <% } %>
 
 <%- include('../partials/foot') %>
+
 
 
 
