@@ -15,16 +15,23 @@
 
 <hr>
 
-<%
-  const countA = predictions.filter(p => p.predicted_team === 'A').length;
-  const countB = predictions.filter(p => p.predicted_team === 'B').length;
-%>
+<!-- Probable Result -->
+<div class="card" style="margin:1rem 0;">
+  <h3>🔮 Probable Winning (After Cutoff)</h3>
+  <% if (isCutoffPassed) { %>
+    <p><strong><%= probable %></strong></p>
+  <% } else { %>
+    <p>Probable result will be shown after cutoff.</p>
+  <% } %>
+</div>
 
+<!-- Summary -->
 <div class="summary-box" style="display:flex;gap:1rem;margin:1rem 0;">
   <div class="chip chip-ok">🏕 <%= match.team_a %>: <%= countA %> planners</div>
   <div class="chip chip-warn">🏖 <%= match.team_b %>: <%= countB %> planners</div>
 </div>
 
+<!-- Travel Planners -->
 <div class="card">
   <h3>🧭 Travel Planners</h3>
   <% if (predictions.length === 0) { %>
@@ -45,5 +52,28 @@
     </table>
   <% } %>
 </div>
+
+<!-- Admin Declare Controls -->
+<% if (match.status !== 'completed' && match.status !== 'washed_out') { %>
+  <hr>
+  <div class="card" style="margin-top:1rem;">
+    <h3>⚖️ Declare Result</h3>
+    <form method="POST" action="/admin/matches/<%= match.id %>/declare" style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-success" name="winner" value="A" type="submit">
+        ✅ Declare <%= match.team_a %>
+      </button>
+      <button class="btn btn-success" name="winner" value="B" type="submit">
+        ✅ Declare <%= match.team_b %>
+      </button>
+      <button class="btn btn-warning" name="washed_out" value="true" type="submit">
+        🌧 Washed Out
+      </button>
+      <button class="btn btn-danger" name="cancelled" value="true" type="submit"
+              onclick="return confirm('Are you sure you want to cancel this travel?');">
+        ❌ Cancel Travel
+      </button>
+    </form>
+  </div>
+<% } %>
 
 <%- include('../partials/foot') %>
