@@ -1,5 +1,11 @@
 <!-- 💼 ADMIN Travel Card -->
 <div class="travel-card" style="position:relative;">
+<!-- ❌ Delete Button -->
+<form method="POST" action="/admin/series/<%= series.id %>/matches/<%= m.id %>/delete"
+      onsubmit="return confirm('Are you sure you want to delete <%= m.name %>? This action cannot be undone.');"
+      style="position:absolute; top:8px; right:10px;">
+  <button type="submit" class="btn btn-small btn-danger" style="padding:2px 6px; font-size:0.8rem;">✖</button>
+</form>
   <!-- 🟢 Admin Declaration Indicator -->
   <div class="travel-card-header">
     <span class="status-dot <%= m.adminDeclared ? 'status-green' : 'status-red' %>"
