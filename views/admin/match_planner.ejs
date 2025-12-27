@@ -1,0 +1,24 @@
+<%- include('../partials/head', { title: title }) %>
+
+<h1><%= title %></h1>
+<a href="/admin/series/<%= match.series_id %>/matches" class="btn btn-link">← Back</a>
+
+<p><strong>Destinations:</strong> <%= match.team_a %> OR <%= match.team_b %></p>
+<p><strong>Start Time (UTC):</strong> <%= match.start_time_utc %></p>
+
+<h3>🧭 Travel Planners</h3>
+<% if (predictions.length === 0) { %>
+  <p>No planners yet.</p>
+<% } else { %>
+  <table class="table">
+    <tr><th>Planner</th><th>Choice</th></tr>
+    <% predictions.forEach(p => { %>
+      <tr>
+        <td><%= p.display_name %></td>
+        <td><%= p.predicted_team %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } %>
+
+<%- include('../partials/foot') %>
