@@ -641,32 +641,38 @@ router.post('/matches/:matchId/declare', async (req, res) => {
 
   res.redirect(`/admin/matches/${req.params.matchId}`);
 });
-// 🧭 Admin Planner View (read-only)
+// 🧭 Admin Planner View (Match / Travel details + participant choices)
 router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
-  const db = await getDb();
+  try {
+    const db = await getDb();
+    const { seriesId, matchId } = req.params;
+    const moment = (await import('moment-timezone')).default;
 
-  // 1️⃣ Fetch match
-  const match = await db.get(
-    'SELECT * FROM matches WHERE id = ? AND series_id = ?',
-    [req.params.matchId, req.params.seriesId]
-  );
-  if (!match) return res.status(404).send('Travel not found');
+    // Fetch match & series
+    const match = await db.get('SELECT * FROM matches WHERE id = ? AND series_id = ?', [matchId, seriesId]);
+    if (!match) return res.status(404).send('Travel not found');
+    const series = await db.get('SELECT * FROM series WHERE id = ?', [seriesId]);
 
-  // 2️⃣ Fetch user predictions for this travel
-  const preds = await db.all(
-    `SELECT u.display_name, p.predicted_team
+    // Fetch all predictions for this match
+    const predictions = await db.all(
+      `SELECT p.*, u.display_name
        FROM predictions p
-       JOIN users u ON u.id = p.user_id
-      WHERE p.match_id = ?`,
-    [req.params.matchId]
-  );
+       JOIN users u ON p.user_id = u.id
+       WHERE p.match_id = ?`,
+      [matchId]
+    );
 
-  // 3️⃣ Render a simple view (you can improve this later)
-  res.render('admin/match_planner', {
-    title: `Planner — ${match.name}`,
-    match,
-    predictions: preds
-  });
+    res.render('admin/match_planner', {
+      title: `Planner — ${match.name}`,
+      match,
+      series,
+      predictions,
+      moment // 👈 make moment available to EJS
+    });
+  } catch (err) {
+    console.error('❌ Planner load error:', err);
+    res.status(500).send('Internal server error while loading planner.');
+  }
 });
 
 export default router;
