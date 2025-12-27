@@ -526,3 +526,65 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 .nav-btn:hover {
   background: #e9ecef;
 }
+/* Floating status box styling */
+.floating-status-box {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0.75rem;
+  z-index: 999;
+  width: 150px;
+  backdrop-filter: blur(4px);
+}
+
+/* Chips */
+.status-chip {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.4rem 0.6rem;
+  margin: 0.25rem 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  color: #222; /* Default dark text for light mode */
+}
+
+/* When dark theme is active */
+body.dark-theme .floating-status-box {
+  background: rgba(20, 30, 35, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .status-chip {
+  color: #f2f2f2; /* bright text for dark theme */
+}
+
+/* Specific category tones */
+.status-chip.live { background: rgba(0, 255, 0, 0.15); }
+.status-chip.ongoing { background: rgba(255, 165, 0, 0.15); }
+.status-chip.completed { background: rgba(200, 200, 255, 0.15); }
+.status-chip.cancelled { background: rgba(255, 0, 0, 0.15); }
+
+/* Slight hover to indicate active */
+.status-chip:hover {
+  transform: scale(1.03);
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+@media (prefers-color-scheme: dark) {
+  .floating-status-box {
+    background: rgba(20, 30, 35, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .status-chip {
+    color: #f2f2f2;
+  }
+}
+
