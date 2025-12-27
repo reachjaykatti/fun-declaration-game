@@ -242,6 +242,20 @@ router.get('/series/:id/matches/new', async (req, res) => {
 router.post('/series/:id/matches/new', async (req, res) => {
   const { name, sport, team_a, team_b, start_time_ist, start_time_utc, cutoff_minutes_before, entry_points } = req.body;
   const db = await getDb();
+    // 🧩 Prevent duplicate travel names in same series
+  const existing = await db.get(
+    'SELECT id FROM matches WHERE series_id = ? AND LOWER(name) = LOWER(?)',
+    [req.params.id, name.trim()]
+  );
+  if (existing) {
+    return res.status(400).send(`
+      <h3 style="color:red; font-family:sans-serif; padding:1rem;">
+        ⚠️ A travel named "${name}" already exists in this series.<br>
+        Please use a different name.
+      </h3>
+      <a href="/admin/series/${req.params.id}/matches" style="font-family:sans-serif;">← Back</a>
+    `);
+  }
 
   let startUtc = start_time_utc && start_time_utc.trim() ? start_time_utc.trim() : '';
   if (!startUtc && start_time_ist && start_time_ist.trim()) {
