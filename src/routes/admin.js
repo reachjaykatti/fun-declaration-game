@@ -628,5 +628,32 @@ router.post('/matches/:matchId/declare', async (req, res) => {
 
   res.redirect(`/admin/matches/${req.params.matchId}`);
 });
+// 🧭 Admin Planner View (read-only)
+router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
+  const db = await getDb();
+
+  // 1️⃣ Fetch match
+  const match = await db.get(
+    'SELECT * FROM matches WHERE id = ? AND series_id = ?',
+    [req.params.matchId, req.params.seriesId]
+  );
+  if (!match) return res.status(404).send('Travel not found');
+
+  // 2️⃣ Fetch user predictions for this travel
+  const preds = await db.all(
+    `SELECT u.display_name, p.predicted_team
+       FROM predictions p
+       JOIN users u ON u.id = p.user_id
+      WHERE p.match_id = ?`,
+    [req.params.matchId]
+  );
+
+  // 3️⃣ Render a simple view (you can improve this later)
+  res.render('admin/match_planner', {
+    title: `Planner — ${match.name}`,
+    match,
+    predictions: preds
+  });
+});
 
 export default router;
