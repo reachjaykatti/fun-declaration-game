@@ -527,63 +527,48 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
   background: #e9ecef;
 }
 /* --- Floating Status Chips (force high contrast) --- */
-.floating-status-box {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  z-index: 9999;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 1rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  padding: 0.6rem;
-  backdrop-filter: blur(6px);
-  width: 160px;
-}
-
+/* --- FORCE CONTRAST & VISIBILITY FIX --- */
 .status-chip {
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 0.5rem 0.7rem;
-  margin: 0.3rem 0;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  color: #000 !important;                /* Force black text */
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(0,0,0,0.15);
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 0.7rem !important;
+  margin: 0.35rem 0 !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.5rem !important;
+  background: #ffffff !important;         /* Pure white background */
+  color: #000000 !important;              /* Force black readable text */
+  border: 1px solid rgba(0,0,0,0.15) !important;
   text-shadow: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Distinct category colors */
+/* DARK THEME VERSION */
+body.dark-theme .status-chip {
+  background: #1c1f22 !important;
+  color: #f8f8f8 !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+/* Category icons */
 .status-chip.live::before { content: "🟢"; }
 .status-chip.ongoing::before { content: "🟠"; }
 .status-chip.completed::before { content: "⚪"; }
 .status-chip.cancelled::before { content: "🔴"; }
 
-/* --- DARK THEME OVERRIDE --- */
-body.dark-theme .floating-status-box {
-  background: rgba(20, 25, 30, 0.9);
-  border: 1px solid rgba(255,255,255,0.15);
-}
-
-body.dark-theme .status-chip {
-  color: #fff !important;                /* Force white text */
-  background: rgba(40, 45, 50, 0.9) !important;
-  border-color: rgba(255,255,255,0.2);
-}
-
-/* Hover for both themes */
+/* Hover (light) */
 .status-chip:hover {
-  transform: scale(1.04);
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.7) !important;
+  transform: scale(1.05);
+  background: #f4f4f4 !important;
 }
 
+/* Hover (dark) */
 body.dark-theme .status-chip:hover {
-  background: rgba(60, 65, 70, 0.95) !important;
+  background: #2c3035 !important;
 }
+
 @media (prefers-color-scheme: dark) {
   .status-chip {
     color: #fff !important;
