@@ -2,5 +2,25 @@
   </main>
   <script src="/public/js/main.js"></script>
   <script src="/public/js/collapseControl.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Scroll to each section when clicked
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetKey = btn.getAttribute("data-target");
+        const section = document.querySelector(`h2.section-title:has(span[data-key='${targetKey}'])`) 
+          || document.querySelector(`h2.section-title[data-key='${targetKey}']`);
+        
+        // If section found, scroll to it
+        if (section) {
+          window.scrollTo({
+            top: section.offsetTop - 80,
+            behavior: "smooth"
+          });
+        }
+      });
+    });
+  });
+</script>
 </body>       
 </html>
