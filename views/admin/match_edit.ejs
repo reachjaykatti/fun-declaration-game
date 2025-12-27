@@ -1,138 +1,92 @@
-<%- include('../partials/head', { title: labels.appTitle }) %>
+<%- include('../partials/head', { title: `Edit Travel: ${match.name}` }) %>
 
 <h1>Edit Travel: <%= match.name %> (<%= series.name %>)</h1>
 
 <a class="btn btn-link js-back"
    href="<%= prevUrl || ('/admin/series/' + series.id + '/matches') %>"
-   data-fallback="/admin/series/<%= series.id %>/matches">← Back to <%= labels.matches %></a>
+   data-fallback="/admin/series/<%= series.id %>/matches">
+   ← Back to Travels
+</a>
 
 <div class="card">
   <form method="POST" action="/admin/matches/<%= match.id %>/edit">
+    
+    <!-- ✅ Travel Name -->
     <div class="form-row">
       <label>Travel Name</label>
-      <input type="text" name="name" value="<%= match.name %>" required />
+      <input type="text" name="name" value="<%= match.name || '' %>" required />
     </div>
 
+    <!-- ✅ Type -->
     <div class="form-row">
       <label>Type</label>
-      <input type="text" name="sport" value="<%= match.sport %>" required />
+      <input type="text" name="sport" value="<%= match.sport || '' %>" required />
     </div>
 
+    <!-- ✅ Destinations -->
     <div class="form-row">
       <label>Destination A</label>
-      <input type="text" name="team_a" value="<%= match.team_a %>" required />
+      <input type="text" name="team_a" value="<%= match.team_a || '' %>" required />
     </div>
 
     <div class="form-row">
       <label>Destination B</label>
-      <input type="text" name="team_b" value="<%= match.team_b %>" required />
+      <input type="text" name="team_b" value="<%= match.team_b || '' %>" required />
     </div>
 
+    <!-- ✅ Start Time -->
     <div class="form-row">
       <label>Start Time (IST)</label>
-      <input type="text" name="start_time_ist" placeholder="YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm" />
+      <input
+        type="text"
+        name="start_time_ist"
+        value="<%= match.start_time_ist || '' %>"
+        placeholder="YYYY-MM-DD HH:mm"
+      />
       <div class="text-muted" style="font-size:.9em;">
-        Current (UTC): <code><%= match.start_time_utc %></code> — Enter IST above to change.
+        Current (UTC): <code><%= match.start_time_utc || 'Not set' %></code> — Enter IST above to change.
       </div>
     </div>
 
+    <!-- ✅ Cutoff -->
     <div class="form-row">
       <label>Cutoff Minutes Before</label>
-      <input type="number" name="cutoff_minutes_before" value="<%= match.cutoff_minutes_before %>" min="0" />
+      <input
+        type="number"
+        name="cutoff_minutes_before"
+        value="<%= match.cutoff_minutes_before || 30 %>"
+        min="0"
+      />
     </div>
 
+    <!-- ✅ Points -->
     <div class="form-row">
       <label>Travel Points</label>
-      <input type="number" name="entry_points" value="<%= match.entry_points %>" min="0" step="1" />
+      <input
+        type="number"
+        name="entry_points"
+        value="<%= match.entry_points || 0 %>"
+        min="0"
+        step="1"
+      />
     </div>
 
+    <!-- ✅ Status -->
     <div class="form-row">
       <label>Status</label>
       <select name="status">
         <option value="scheduled" <%= match.status === 'scheduled' ? 'selected' : '' %>>Scheduled</option>
         <option value="completed" <%= match.status === 'completed' ? 'selected' : '' %>>Completed</option>
-        <option value="cancelled" <%= match.status === 'washed_out' ? 'selected' : '' %>>Cancelled</option>
+        <option value="cancelled" <%= match.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
       </select>
     </div>
 
+    <!-- ✅ Save / Cancel -->
     <div class="form-row" style="display:flex;gap:.5rem;">
-      <button class="btn btn-primary" type="submit">Save Changes</button>
-      <a class="btn btn-link" href="/admin/matches/<%= match.id %>">Cancel</a>
+      <button class="btn btn-primary" type="submit">💾 Save Changes</button>
+      <a class="btn btn-link" href="/admin/series/<%= series.id %>/matches">Cancel</a>
     </div>
   </form>
 </div>
-<!-- Danger Zone -->
-<hr style="margin:1rem 0;">
-<form method="POST" action="/admin/matches/<%= match.id %>/edit">
-  <div class="form-row">
-    <label>Travel Name</label>
-    <input type="text" name="name" value="<%= match.name %>" required />
-  </div>
-
-  <div class="form-row">
-    <label>Type</label>
-    <input type="text" name="sport" value="<%= match.sport %>" required />
-  </div>
-
-  <div class="form-row">
-    <label>Destination A</label>
-    <input type="text" name="team_a" value="<%= match.team_a %>" required />
-  </div>
-
-  <div class="form-row">
-    <label>Destination B</label>
-    <input type="text" name="team_b" value="<%= match.team_b %>" required />
-  </div>
-
-  <div class="form-row">
-    <label>Start Time (IST)</label>
-    <input
-      type="text"
-      name="start_time_ist"
-      value="<%= match.start_time_ist || '' %>"
-      placeholder="YYYY-MM-DD HH:mm"
-    />
-    <small class="text-muted">
-      Current (UTC): <%= match.start_time_utc %>
-    </small>
-  </div>
-
-  <div class="form-row">
-    <label>Cutoff Minutes Before</label>
-    <input
-      type="number"
-      name="cutoff_minutes_before"
-      min="0"
-      value="<%= match.cutoff_minutes_before || 30 %>"
-    />
-  </div>
-
-  <div class="form-row">
-    <label>Travel Points</label>
-    <input
-      type="number"
-      name="entry_points"
-      min="0"
-      step="1"
-      value="<%= match.entry_points %>"
-    />
-  </div>
-
-  <div class="form-row">
-    <label>Status</label>
-    <select name="status">
-      <option value="scheduled" <%= match.status === 'scheduled' ? 'selected' : '' %>>Scheduled</option>
-      <option value="completed" <%= match.status === 'completed' ? 'selected' : '' %>>Completed</option>
-      <option value="cancelled" <%= match.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-    </select>
-  </div>
-
-  <div class="form-row" style="display:flex;gap:.5rem;">
-    <button class="btn btn-primary" type="submit">Save Changes</button>
-    <a class="btn btn-link" href="/admin/series/<%= series.id %>/matches">Cancel</a>
-  </div>
-</form>
-
 
 <%- include('../partials/foot') %>
-
