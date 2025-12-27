@@ -284,73 +284,62 @@ router.post('/series/:seriesId/matches/:matchId/delete', async (req, res) => {
   res.redirect(`/admin/series/${req.params.seriesId}/matches`);
 });
 
-// -----------------------------
 // ✏️ Edit Match (GET)
-// -----------------------------
-router.get('/matches/:matchId/edit', async (req, res) => {
+router.get('/series/:seriesId/matches/:matchId/edit', async (req, res) => {
   const db = await getDb();
-  const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
+  const match = await db.get('SELECT * FROM matches WHERE id = ? AND series_id = ?', [req.params.matchId, req.params.seriesId]);
   if (!match) return res.status(404).send('Match not found');
 
-  const series = await db.get('SELECT * FROM series WHERE id = ?', [match.series_id]);
-  res.render('admin/match_edit', { title: 'Edit Match', match, series });
+  const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.seriesId]);
+  res.render('admin/match_edit', { title: 'Edit Travel', match, series });
 });
 
-/* ---------------------------
-   Update (Edit) Travel / Match
----------------------------- */
-router.post('/matches/:matchId/edit', async (req, res) => {
+// ✏️ Edit Match (POST)
+router.post('/series/:seriesId/matches/:matchId/edit', async (req, res) => {
   try {
     const db = await getDb();
     const matchId = parseInt(req.params.matchId, 10);
     const body = req.body;
 
-    // 🔍 Fetch the existing record
-    const existing = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
-    if (!existing) {
-      return res.status(404).render('404', { title: 'Travel not found' });
+    // 🔍 Fetch existing record
+    const existing = await db.get('SELECT * FROM matches WHERE id = ? AND series_id = ?', [
+      matchId,
+      req.params.seriesId
+    ]);
+    if (!existing) return res.status(404).send('Travel not found');
+
+    let startUtc = body.start_time_utc?.trim() || '';
+
+    // Convert IST → UTC if UTC missing
+    if (!startUtc && body.start_time_ist?.trim()) {
+      const m = moment.tz(body.start_time_ist.trim(), ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
+      if (!m.isValid()) return res.status(400).send('Invalid IST format.');
+      startUtc = m.utc().toISOString();
     }
 
-    // 🕐 Convert IST input (if provided) → UTC ISO
-    let startTimeUtc = existing.start_time_utc;
-    if (body.start_time_ist && body.start_time_ist.trim() !== '') {
-      const istDate = new Date(body.start_time_ist.replace(' ', 'T') + ':00+05:30');
-      startTimeUtc = istDate.toISOString();
-    }
+    if (!startUtc) return res.status(400).send('Start time required.');
 
-    // 🧮 Compute cutoff (keep default if not changed)
-    const cutoffMinutes = body.cutoff_minutes_before
-      ? parseInt(body.cutoff_minutes_before, 10)
-      : existing.cutoff_minutes_before || 30;
+    await db.run(
+      `UPDATE matches SET
+        name = ?, sport = ?, team_a = ?, team_b = ?, start_time_utc = ?, cutoff_minutes_before = ?, entry_points = ?, status = ?
+       WHERE id = ?`,
+      [
+        body.name,
+        body.sport,
+        body.team_a,
+        body.team_b,
+        startUtc,
+        body.cutoff_minutes_before,
+        body.entry_points,
+        body.status,
+        matchId
+      ]
+    );
 
-    // ✅ Prepare fields to update
-    const updatedFields = {
-      name: body.name || existing.name,
-      sport: body.sport || existing.sport,
-      team_a: body.team_a || existing.team_a,
-      team_b: body.team_b || existing.team_b,
-      start_time_utc: startTimeUtc,
-      entry_points: body.entry_points ? parseFloat(body.entry_points) : existing.entry_points,
-      cutoff_minutes_before: cutoffMinutes,
-      status: body.status || existing.status,
-    };
-
-    // 🧾 Build dynamic SET clause only for changed fields
-    const setClause = Object.keys(updatedFields)
-      .map(k => `${k} = ?`)
-      .join(', ');
-    const values = Object.values(updatedFields);
-
-    // 🧱 Update query
-    await db.run(`UPDATE matches SET ${setClause} WHERE id = ?`, [...values, matchId]);
-
-    console.log(`✅ Travel updated: ${matchId} (${updatedFields.name})`);
-
-    // ✅ Redirect back to the series manage page
-    res.redirect(`/admin/series/${existing.series_id}/matches`);
+    res.redirect(`/admin/series/${req.params.seriesId}/matches`);
   } catch (err) {
-    console.error('❌ Error updating travel:', err);
-    res.status(500).render('404', { title: 'Update Failed' });
+    console.error('Error updating travel:', err);
+    res.status(500).send('Update failed.');
   }
 });
 
