@@ -15,7 +15,6 @@
 
 <hr>
 
-<!-- 📊 Summary of Planners -->
 <%
   const countA = predictions.filter(p => p.predicted_team === 'A').length;
   const countB = predictions.filter(p => p.predicted_team === 'B').length;
@@ -26,23 +25,23 @@
   <div class="chip chip-warn">🏖 <%= match.team_b %>: <%= countB %> planners</div>
 </div>
 
-<!-- 👥 List of Planners -->
 <div class="card">
   <h3>🧭 Travel Planners</h3>
   <% if (predictions.length === 0) { %>
     <p>No planners yet.</p>
   <% } else { %>
     <table class="table">
-      <tr>
-        <th>Planner</th>
-        <th>Chosen Destination</th>
-      </tr>
-      <% predictions.forEach(p => { %>
-        <tr>
-          <td><%= p.display_name %></td>
-          <td><%= p.predicted_team === 'A' ? match.team_a : match.team_b %></td>
-        </tr>
-      <% }) %>
+      <thead>
+        <tr><th>Planner</th><th>Chosen Destination</th></tr>
+      </thead>
+      <tbody>
+        <% predictions.forEach(p => { %>
+          <tr>
+            <td><%= p.display_name %></td>
+            <td><%= p.predicted_team === 'A' ? match.team_a : match.team_b %></td>
+          </tr>
+        <% }) %>
+      </tbody>
     </table>
   <% } %>
 </div>
