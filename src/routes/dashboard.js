@@ -49,19 +49,29 @@ router.get('/', async (req, res) => {
     : 0;
 
   // ----- Per-series stats for the user (for the table and for the dropdown) -----
-  const seriesStats = await db.all(`
-    SELECT s.id as series_id, s.name,
-           COALESCE(SUM(CASE WHEN p.predicted_team = m.winner THEN 1 ELSE 0 END),0) as wins,
-           COALESCE(SUM(CASE WHEN m.status = 'completed' THEN 1 ELSE 0 END),0) as completed,
-           COALESCE(SUM(CASE WHEN p.predicted_team != m.winner THEN 1 ELSE 0 END),0) as losses
-    FROM series s
-    LEFT JOIN matches m ON m.series_id = s.id
-    LEFT JOIN predictions p ON p.match_id = m.id AND p.user_id = ?
-    LEFT JOIN series_members sm ON sm.series_id = s.id AND sm.user_id = ?
-    WHERE sm.user_id IS NOT NULL
-    GROUP BY s.id, s.name
-    ORDER BY s.start_date_utc DESC
-  `, [uid, uid]);
+  const stats = await db.all(`
+  SELECT 
+    s.id AS series_id,
+    s.name AS seriesName,
+    COUNT(m.id) AS totalTravels,
+    SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) AS planned,
+    SUM(CASE WHEN p.predicted_team IS NULL THEN 1 ELSE 0 END) AS notInterested,
+    ROUND(100.0 * SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) / COUNT(m.id), 1) AS plannerPercent,
+    COALESCE(SUM(pl.points), 0) AS seriesPoints
+  FROM series s
+  LEFT JOIN matches m ON s.id = m.series_id
+  LEFT JOIN predictions p ON m.id = p.match_id AND p.user_id = ?
+  LEFT JOIN points_ledger pl ON pl.series_id = s.id AND pl.user_id = ?
+  GROUP BY s.id
+`, [req.user.id, req.user.id]);
+
+const totalPoints = stats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
+
+res.render('dashboard/index', {
+  title: 'My Dashboard',
+  totalPoints,
+  stats
+});
 
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
