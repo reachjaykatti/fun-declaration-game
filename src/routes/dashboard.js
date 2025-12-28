@@ -44,9 +44,9 @@ router.get('/', async (req, res) => {
     'SELECT COALESCE(SUM(points),0) as total_points FROM points_ledger WHERE user_id = ?',
     [uid]
   );
-  //const totalPoints = (totalRow && typeof totalRow.total_points === 'number')
+  /*const totalPoints = (totalRow && typeof totalRow.total_points === 'number')
     ? totalRow.total_points
-    : 0;
+    : 0;*/
 
   // ----- Per-series stats for the user (for the table and for the dropdown) -----
   const stats = await db.all(`
