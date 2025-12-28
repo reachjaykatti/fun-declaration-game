@@ -1,29 +1,22 @@
 <%- include('../partials/head', { title: labels.appTitle }) %>
 
 <h1><%= labels.appTitle %></h1>
-
-<div class="kpi">
-  <div class="tile">
-    <div class="title">Total Points</div>
-    <div class="value"><%= totalPoints.toFixed ? totalPoints.toFixed(2) : totalPoints %></div>
-  </div>
-  <div class="tile">
-    <div class="title">Travels Planned</div>
-    <div class="value"><%= seriesStats.length %></div>
-  </div>
-  <div class="tile">
-    <div class="title">Total Planners</div>
-    <div class="value">
-      <%
-        const totalWins = seriesStats.reduce((s,x)=>s+(x.wins||0),0);
-        const totalPlayed = seriesStats.reduce((s,x)=>s+(x.completed||0),0);
-      %>
-      <%= totalWins %>
-    </div>
-  </div>
-  <div class="tile">
-    <div class="title">Planner % (All Travels)</div>
-    <div class="value"><%= totalPlayed ? ((totalWins/totalPlayed)*100).toFixed(1) : '0.0' %>%</div>
+<!-- 🌍 Overall Summary Card -->
+<div style="
+  background: var(--card-bg, rgba(255,255,255,0.9));
+  color: var(--text-color, #0f2f28);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: 1.5rem;
+  margin: 1.5rem 0 2rem 0;
+  text-align: center;
+  transition: background 0.3s, color 0.3s;
+">
+  <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.75rem;">
+    🧭 Overall Travel Summary
+  </h1>
+  <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color, #00897b);">
+    <%= totalPoints ? totalPoints.toFixed(2) : 0 %> Points
   </div>
 </div>
 
@@ -40,11 +33,17 @@
 <div class="card">
   <table class="table">
     <tr>
-      <th>Travel</th><th>Planned</th><th>Planners</th><th>Not Interested</th><th>Planner %</th>
+      <th>Travel</th>
+      <th>Series Points</th>
+      <th>Planned</th>
+      <th>Planners</th>
+      <th>Not Interested</th>
+      <th>Planner %</th>
     </tr>
     <% seriesStats.forEach(s => { %>
       <tr>
         <td><%= s.name %></td>
+        <td><%= row.seriesPoints ? row.seriesPoints.toFixed(2) : 0 %></td>
         <td><%= s.completed %></td>
         <td><%= s.wins %></td>
         <td><%= s.losses %></td>
