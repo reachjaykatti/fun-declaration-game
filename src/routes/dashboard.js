@@ -118,11 +118,13 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   res.render('dashboard/index', {
   title: 'My Dashboard',
   totalPoints: totalPoints || 0,
-  stats: stats || [],
+  stats: stats || [], // ✅ added safety
+  seriesStats: stats || [], // ✅ alias for compatibility with dropdowns
   streaks: streaks || { currentStreak: 0, longestWin: 0, longestLoss: 0 },
   selectedSeriesId: selectedSeriesId || null,
   selectedSeriesName: selectedSeriesName || null
 });
+
 
 } catch (err) {
   console.error("🔴 Dashboard render failed:", err.message);
@@ -179,11 +181,14 @@ if (!hasSeriesFilter) {
 
   // Render with extra locals for the new filter
   res.render('dashboard/index', {
-    title: 'Dashboard',
-    totalPoints,
-    seriesStats,
-    leaderboard,
-    streaks: { currentStreak, longestWin, longestLoss },
+  title: 'Dashboard',
+  totalPoints: totalPoints || 0,
+  stats: seriesStats || [], // ✅ renamed for internal consistency
+  seriesStats: seriesStats || [],
+  leaderboard: leaderboard || [],
+  streaks: streaks || { currentStreak, longestWin, longestLoss },
+  selectedSeriesId: selectedSeriesId || null,
+  selectedSeriesName: selectedSeriesName || null,
 
     // New locals for the series-wise leaderboard
     selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
@@ -241,13 +246,14 @@ router.get('/player/:userId', ensureAuthenticated, async (req, res) => {
     const accuracy = totalPreds.total ? ((correct.wins / totalPreds.total) * 100).toFixed(1) : 0;
 
     res.render('dashboard/player', {
-      title: `${user.display_name} — Performance`,
-      user,
-      totalPoints: total.totalPoints,
-      rank,
-      perSeries,
-      accuracy
-    });
+  title: `${user.display_name} — Performance`,
+  user,
+  totalPoints: total?.totalPoints || 0,
+  rank: rank || null,
+  perSeries: perSeries || [],
+  accuracy: accuracy || { winRate: 0, lossRate: 0, totalMatches: 0 }
+});
+
   } catch (e) {
     console.error('Player stats error:', e);
     res.status(500).render('404', { title: 'Error' });
