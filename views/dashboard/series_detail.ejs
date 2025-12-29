@@ -1,8 +1,21 @@
 <%- include('../partials/header', { title: title }) %>
 
 <div class="container mt-4">
-  <h2><%= series.name %> — Travel Progress</h2>
-  <p class="text-muted">Detailed breakdown of each travel in this series.</p>
+  <!-- 🧭 Breadcrumb Navigation -->
+<div style="margin-bottom: 1rem;">
+  <a href="/dashboard" style="
+    text-decoration: none;
+    color: var(--accent-color, #00897b);
+    font-weight: 600;
+  ">
+    ← Back to Dashboard
+  </a>
+  <span style="color: #888;"> / </span>
+  <span style="font-weight: 700;"><%= series.name %></span>
+</div>
+
+<h2 style="margin-top: 0;"><%= series.name %> — Travel Progress</h2>
+<p class="text-muted">Detailed breakdown of all travels in this series.</p>
 
   <table class="table table-bordered mt-3">
     <thead class="table-light">
