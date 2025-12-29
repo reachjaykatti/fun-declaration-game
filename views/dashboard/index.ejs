@@ -83,13 +83,13 @@
   <form method="GET" action="/dashboard" class="inline-form" style="margin-bottom:.75rem">
   <label for="seriesId"><strong>Filter by Travel:</strong></label>
   <select name="seriesId" id="seriesId" onchange="this.form.submit()">
-    <option value="">All Travels</option>
-    <% seriesStats.forEach(s => { %>
-      <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
-        <%= s.name %>
-      </option>
-    <% }) %>
-  </select>
+  <option value="">All Travels</option>
+  <% (seriesStats || []).forEach(s => { %>
+    <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
+      <%= s.seriesName || s.name %>
+    </option>
+  <% }) %>
+</select>
 </form>
 
   <% if (seriesUnsupported) { %>
