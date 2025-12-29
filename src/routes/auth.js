@@ -1,4 +1,3 @@
-
 import express from 'express';
 import bcrypt from 'bcrypt';
 import { getDb } from '../config/db.js';
@@ -27,4 +26,4 @@ router.post('/logout', ensureAuthenticated, (req, res) => {
     res.redirect('/login');
   });
 });
-module.exports = router;
+export default router;
