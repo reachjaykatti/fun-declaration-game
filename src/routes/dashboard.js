@@ -80,14 +80,13 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     // your dashboard logic here...
     res.render('dashboard/index', {
-      title: 'My Dashboard',
-      totalPoints,
-      stats,
-      seriesStats,
-      streaks,
-      selectedSeriesId,
-      selectedSeriesName
-    });
+  title: 'My Dashboard',
+  totalPoints,
+  stats,
+  streaks,
+  selectedSeriesId,
+  selectedSeriesName
+});
   } catch (err) {
     console.error("🔴 Dashboard render failed:", err.message);
     console.error("Stack trace:", err.stack);
