@@ -67,10 +67,20 @@ router.get('/', async (req, res) => {
   
 const totalPoints = stats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
 
+const streaks = {
+  currentStreak: 0,
+  longestWin: 0,
+  longestLoss: 0
+};
+
+const seriesStats = stats; // reuse same data for dropdown/filter support
+
 res.render('dashboard/index', {
   title: 'My Dashboard',
   totalPoints,
-  stats
+  stats,
+  seriesStats,
+  streaks
 });
 
   // For heading when filtering
