@@ -8,17 +8,18 @@ import fs from "fs";
 dotenv.config();
 sqlite3.verbose();
 
-// 🔁 Detect environment
-const isRender = process.env.RENDER === "true" || process.env.NODE_ENV === "production";
+// Detect environment
+const isRender =
+  process.env.RENDER === "true" || process.env.NODE_ENV === "production";
 
-// ✅ DB path logic
-const persistentDir = "/opt/render/project/data"; // Render’s permanent disk mount
+// Directories
+const persistentDir = "/opt/render/project/data"; // Render’s permanent disk
 const localDir = path.join(process.cwd(), "data");
 
-// Decide correct path
+// Choose correct path
 const dbPath = isRender
-  ? path.join(persistentDir, "app.db") // Persistent DB file on Render
-  : path.join(localDir, "app.db");     // Local development
+  ? path.join(persistentDir, "app.db")
+  : path.join(localDir, "app.db");
 
 // Ensure directory exists
 try {
@@ -33,7 +34,7 @@ try {
 
 let dbInstance = null;
 
-// Helper: Promise wrapper around SQLite3
+// Promisified SQLite wrapper
 function wrapDb(db) {
   return {
     run(sql, params = []) {
@@ -62,53 +63,65 @@ function wrapDb(db) {
   };
 }
 
+// Lazy, safe connector
 export async function getDb() {
   if (!dbInstance) {
-    const native = new sqlite3.Database(dbPath);
-    native.exec("PRAGMA foreign_keys = ON;");
-    dbInstance = wrapDb(native);
-    console.log("✅ SQLite connected at", dbPath);
+    try {
+      const native = new sqlite3.Database(dbPath, (err) => {
+        if (err) console.error("❌ SQLite connection error:", err);
+      });
+      native.exec("PRAGMA foreign_keys = ON;");
+      dbInstance = wrapDb(native);
+      console.log("✅ SQLite connected at", dbPath);
+    } catch (err) {
+      console.error("❌ DB connection failed:", err);
+    }
   }
   return dbInstance;
 }
 
-// Migration helper
+// Optional migration for schema evolution
 async function ensureMatchesSchema(db) {
   const cols = await db.all(`PRAGMA table_info(matches);`);
   const names = cols.map((c) => c.name);
 
-  // cutoff column (existing)
   if (!names.includes("cutoff_minutes_before")) {
     await db.run(
       `ALTER TABLE matches ADD COLUMN cutoff_minutes_before INTEGER NOT NULL DEFAULT 30;`
     );
     console.log("[Migration] Added matches.cutoff_minutes_before");
   }
-
-  // new column for admin declaration timestamp
   if (!names.includes("admin_declared_at")) {
-    await db.run(
-      `ALTER TABLE matches ADD COLUMN admin_declared_at TEXT;`
-    );
+    await db.run(`ALTER TABLE matches ADD COLUMN admin_declared_at TEXT;`);
     console.log("[Migration] Added matches.admin_declared_at");
   }
 }
 
+// Safe init with async fallback
 export async function initDb() {
+  // Precheck directory readiness
+  const targetDir = path.dirname(dbPath);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
   const db = await getDb();
 
-  // ⚠️ Optional: Reset DB only if enabled via ENV
   if (process.env.RESET_DB_ON_START === "true") {
     try {
       if (fs.existsSync(dbPath)) {
         console.log("⚠️ Resetting DB on start");
         fs.unlinkSync(dbPath);
-        dbInstance = null; // force reconnect
+        dbInstance = null;
       }
     } catch (e) {
       console.error("DB reset failed:", e);
     }
   }
+
+  // Safety: timeout in case Render file system is slow
+  const timeout = (ms) => new Promise((r) => setTimeout(r, ms));
+  await timeout(300); // small async pause to let FS settle
 
   const freshDb = await getDb();
 
@@ -177,7 +190,6 @@ export async function initDb() {
 
   await ensureMatchesSchema(freshDb);
 
-  // Bootstrap admin user
   const count = await freshDb.get("SELECT COUNT(*) as c FROM users");
   if (!count || count.c === 0) {
     const username = process.env.BOOTSTRAP_ADMIN_USERNAME || "admin";
@@ -190,7 +202,8 @@ export async function initDb() {
       "INSERT INTO users (username, password_hash, display_name, is_admin, created_at) VALUES (?,?,?,?,?)",
       [username, hash, displayName, 1, now]
     );
-
     console.log("✅ Admin user created");
   }
+
+  console.log("✅ Database initialized successfully");
 }
