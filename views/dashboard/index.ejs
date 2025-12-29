@@ -50,6 +50,9 @@
     <td><%= s.plannerPercent || 0 %>%</td>
   </tr>
 <% }) %>
+<% } else { %>
+  <tr><td colspan="6" style="text-align:center;">No series data available</td></tr>
+<% } %>
 
   </table>
 </div>
