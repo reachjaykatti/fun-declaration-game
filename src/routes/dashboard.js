@@ -78,24 +78,57 @@ const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
-    // your dashboard logic here...
-    res.render('dashboard/index', {
-  title: 'My Dashboard',
-  totalPoints,
-  stats,
-  streaks,
-  selectedSeriesId,
-  selectedSeriesName
-});
-  } catch (err) {
-    console.error("🔴 Dashboard render failed:", err.message);
-    console.error("Stack trace:", err.stack);
+  const db = await getDb();
+  const userId = req.user.id;
 
-    if (!res.headersSent) {
-      res.status(500).send("Dashboard rendering error. Check logs for details.");
-    }
+  // ✅ 1. Total points for this specific user only
+  const totalRow = await db.get(
+    `SELECT COALESCE(SUM(points), 0) AS total_points 
+     FROM points_ledger 
+     WHERE user_id = ?`,
+    [userId]
+  );
+  const totalPoints = totalRow?.total_points || 0;
+
+  // ✅ 2. Per-series breakdown for this user
+  const stats = await db.all(`
+    SELECT 
+      s.id AS series_id,
+      s.name AS seriesName,
+      COALESCE(SUM(pl.points), 0) AS seriesPoints,
+      COUNT(m.id) AS totalTravels,
+      SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) AS planned,
+      SUM(CASE WHEN p.predicted_team IS NULL THEN 1 ELSE 0 END) AS notInterested,
+      ROUND(
+        100.0 * SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) / 
+        NULLIF(COUNT(m.id), 0),
+      1) AS plannerPercent
+    FROM series s
+    LEFT JOIN matches m ON s.id = m.series_id
+    LEFT JOIN predictions p ON m.id = p.match_id AND p.user_id = ?
+    LEFT JOIN points_ledger pl ON pl.series_id = s.id AND pl.user_id = ?
+    GROUP BY s.id
+    ORDER BY s.id DESC
+  `, [userId, userId]);
+
+  // ✅ 3. Safe render
+  res.render('dashboard/index', {
+    title: 'My Dashboard',
+    totalPoints,
+    stats,
+    streaks,
+    selectedSeriesId,
+    selectedSeriesName
+  });
+
+} catch (err) {
+  console.error("🔴 Dashboard render failed:", err.message);
+  console.error("Stack trace:", err.stack);
+
+  if (!res.headersSent) {
+    res.status(500).send("Dashboard rendering error. Check logs for details.");
   }
-});
+}
 
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
