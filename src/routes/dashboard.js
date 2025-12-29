@@ -249,6 +249,63 @@ router.get('/series/:seriesId', ensureAuthenticated, async (req, res) => {
     res.status(500).render('404', { title: 'Error Loading Series Detail' });
   }
 });
+// =======================================
+// 📊 Series Detail Page (Travel Breakdown)
+// =======================================
+router.get('/series/:seriesId', ensureAuthenticated, async (req, res) => {
+  try {
+    const db = await getDb();
+    const userId = req.session.user.id;
+    const seriesId = parseInt(req.params.seriesId, 10);
 
+    // Fetch the series
+    const series = await db.get(
+      `SELECT id, name, description FROM series WHERE id = ?`,
+      [seriesId]
+    );
+    if (!series) {
+      return res.status(404).render('404', { title: 'Series Not Found' });
+    }
 
+    // Fetch all travels (matches) inside this series for this user
+    const travels = await db.all(`
+      SELECT 
+        m.id AS match_id,
+        m.name AS matchName,
+        m.team_a AS teamA,
+        m.team_b AS teamB,
+        m.start_time_utc,
+        m.status,
+        COALESCE((
+          SELECT SUM(points)
+          FROM points_ledger pl
+          WHERE pl.match_id = m.id AND pl.user_id = ?
+        ), 0) AS travelPoints
+      FROM matches m
+      WHERE m.series_id = ?
+      ORDER BY m.start_time_utc ASC
+    `, [userId, seriesId]);
+
+    // Compute cumulative total points
+    let cumulative = 0;
+    const travelsWithCumulative = travels.map((t) => {
+      cumulative += t.travelPoints || 0;
+      return { ...t, cumulativePoints: cumulative };
+    });
+
+    // Render breakdown page
+    res.render('dashboard/series_detail', {
+      title: `${series.name} — Travel Breakdown`,
+      series,
+      travels: travelsWithCumulative,
+      totalPoints: cumulative
+    });
+
+  } catch (err) {
+    console.error('🔴 Series detail error:', err);
+    if (!res.headersSent) {
+      res.status(500).render('404', { title: 'Error Loading Series Detail' });
+    }
+  }
+});
 export default router;
