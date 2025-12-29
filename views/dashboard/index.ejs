@@ -43,7 +43,7 @@
     <% seriesStats.forEach(s => { %>
       <tr>
         <td><%= s.name %></td>
-        <td><%= row.seriesPoints ? row.seriesPoints.toFixed(2) : 0 %></td>
+        <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
         <td><%= s.completed %></td>
         <td><%= s.wins %></td>
         <td><%= s.losses %></td>
