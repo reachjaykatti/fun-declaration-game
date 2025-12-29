@@ -27,5 +27,4 @@ router.post('/logout', ensureAuthenticated, (req, res) => {
     res.redirect('/login');
   });
 });
-
-export default router;
+module.exports = router;
