@@ -1,12 +1,12 @@
 import express from 'express';
 import setupSession from "./src/middleware/session.js";
-import SQLiteStoreFactory from 'connect-sqlite3';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Routes and middleware
 import profileRoutes from './src/routes/profile.js';
 import { initDb } from './src/config/db.js';
 import authRoutes from './src/routes/auth.js';
@@ -15,37 +15,40 @@ import seriesRoutes from './src/routes/series.js';
 import dashboardRoutes from './src/routes/dashboard.js';
 import { ensureAuthenticated } from './src/middleware/auth.js';
 
-// Determine directory (still needed in ESM)
+// Determine directory (ESM-safe)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read labels.json manually
-const labelsPath = path.join(__dirname, 'src/config/labels.json');
-const labels = JSON.parse(fs.readFileSync(labelsPath, 'utf8'));
-
+// Load environment variables
 dotenv.config();
+
+// Read labels.json
+const labelsPath = path.join(__dirname, 'src/config/labels.json');
+let labels = {};
+try {
+  labels = JSON.parse(fs.readFileSync(labelsPath, 'utf8'));
+} catch (err) {
+  console.error('⚠️ Failed to read labels.json:', err.message);
+}
 
 const app = express();
 app.use(helmet());
 
-//use of profile routes
-app.use('/', profileRoutes);
-
-// Views (EJS)
+// Views
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// 🆕 Make labels available to all EJS templates
-app.locals.labels = labels || {};
+// Make labels available globally in EJS
+app.locals.labels = labels;
 
-// Static
+// Static files
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Body parsing
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.json({ limit: '2mb' }));
 
-// Capture previous URL (same-origin only) for Back link
+// Previous URL capture
 app.use((req, res, next) => {
   const ref = req.get('Referer') || '';
   let sameOriginRef = '';
@@ -59,14 +62,13 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // ================================
-// ✅ SESSION SETUP (Persistent Disk)
+// ✅ SESSION SETUP
 // ================================
 setupSession(app);
 
 // ================================
-// DB init
+// ✅ DATABASE INIT
 // ================================
 await initDb();
 
@@ -81,18 +83,21 @@ app.use((req, res, next) => {
 
 // Inject user into views
 app.use((req, res, next) => {
-  res.locals.currentUser = (req.session && req.session.user) ? req.session.user : null;
+  res.locals.currentUser = req.session?.user || null;
   next();
 });
 
 // Simple request logger
 app.use((req, res, next) => {
-  console.log('[REQ]', req.method, req.path);
+  console.log(`[REQ] ${req.method} ${req.path}`);
   next();
 });
 
-// Routes
+// ================================
+// ✅ ROUTES
+// ================================
 app.get('/', (req, res) => res.redirect('/login'));
+app.use('/', profileRoutes);
 app.use('/', authRoutes);
 app.use('/admin', ensureAuthenticated, adminRoutes);
 app.use('/series', ensureAuthenticated, seriesRoutes);
@@ -103,16 +108,11 @@ app.use((req, res) => {
   res.status(404).render('404', { title: 'Not Found' });
 });
 
-// =======================================
-// 🔍 Health check for Render load balancer
-// =======================================
+// Health check (Render)
 app.get("/healthz", (req, res) => res.status(200).send("ok"));
 
-// =======================================
-// 🧹 Session validation on every request
-// =======================================
+// Session validation
 app.use((req, res, next) => {
-  // if session exists but DB user no longer valid, clear cookie
   if (req.session?.user && !req.session.user.id) {
     console.log("⚠️ Invalid session detected, clearing cookie");
     req.session.destroy(() => {});
@@ -120,9 +120,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Start server
+// Server start
 const PORT = process.env.PORT || 3000;
-//import "./src/utils/backupToGitHub.js";
 app.listen(PORT, () => {
-  console.log(`TRAVEL PLAN app running on http://localhost:${PORT}`);
+  console.log(`🚀 Travel Plan app running on port ${PORT}`);
 });
