@@ -70,7 +70,7 @@ setupSession(app);
 // ================================
 // ✅ DATABASE INIT
 // ================================
-//await initDb();
+await initDb();
 
 // No-cache headers
 app.use((req, res, next) => {
