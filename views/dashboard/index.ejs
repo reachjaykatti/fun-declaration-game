@@ -45,8 +45,16 @@
       <% stats.forEach(s => { %>
         <tr>
           <td>
-  <a href="/dashboard/series/<%= s.series_id %>"><%= s.seriesName %></a>
+  <a 
+    href="/dashboard/series/<%= s.series_id %>" 
+    class="text-decoration-none fw-bold"
+    style="color: var(--accent-color, #00897b);"
+    title="View detailed travel breakdown for <%= s.seriesName %>"
+  >
+    <%= s.seriesName %>
+  </a>
 </td>
+
           <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
           <td><%= s.planned || 0 %></td>
           <td><%= s.totalTravels || 0 %></td>
