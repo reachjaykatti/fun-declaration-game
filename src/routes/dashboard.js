@@ -79,7 +79,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       : null;
 
     // ✅ Leaderboard
-    // ✅ Leaderboard Section
+    // ======================
+// 🏆 LEADERBOARD FIX
+// ======================
 let leaderboard = [];
 
 if (!hasSeriesFilter) {
@@ -95,7 +97,7 @@ if (!hasSeriesFilter) {
     ORDER BY points DESC
   `);
 } else {
-  // 🎯 Series-specific leaderboard (accurate)
+  // 🎯 Series-specific leaderboard (correct filtering)
   leaderboard = await db.all(`
     SELECT 
       u.id AS user_id,
@@ -107,8 +109,9 @@ if (!hasSeriesFilter) {
     GROUP BY u.id
     ORDER BY points DESC
   `, [selectedSeriesId]);
-}
 
+  console.log("📊 Series Filter Applied:", selectedSeriesId, leaderboard);
+}
     // ✅ W/L streaks
     const wlRows = await db.all(`
       SELECT m.start_time_utc, m.status, m.winner, p.predicted_team
