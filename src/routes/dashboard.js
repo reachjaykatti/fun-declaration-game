@@ -183,18 +183,14 @@ if (!hasSeriesFilter) {
   res.render('dashboard/index', {
   title: 'Dashboard',
   totalPoints: totalPoints || 0,
-  stats: seriesStats || [], // ✅ renamed for internal consistency
+  stats: seriesStats || [], // renamed for internal consistency
   seriesStats: seriesStats || [],
   leaderboard: leaderboard || [],
   streaks: streaks || { currentStreak, longestWin, longestLoss },
-  selectedSeriesId: selectedSeriesId || null,
+  // New locals for the series-wise leaderboard
+  selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
   selectedSeriesName: selectedSeriesName || null,
-
-    // New locals for the series-wise leaderboard
-    selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
-    selectedSeriesName,
-    seriesUnsupported
-  });
+  seriesUnsupported: seriesUnsupported || false
 });
 
 // -----------------------------------------
