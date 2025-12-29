@@ -90,8 +90,9 @@ try {
     selectedSeriesName
   });
 } catch (err) {
-  console.error("Dashboard render failed:", err);
-  res.status(500).send("Dashboard rendering error.");
+  console.error("🔴 Dashboard render failed:", err.message);
+  console.error("Stack trace:", err.stack);
+  res.status(500).send("Dashboard rendering error. Check server logs for details.");
 }
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
