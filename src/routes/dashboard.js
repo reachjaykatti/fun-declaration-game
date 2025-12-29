@@ -76,8 +76,8 @@ const streaks = {
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
 // Default placeholders (only if not already defined)
-let selectedSeriesId = selectedSeriesId || null;
-let selectedSeriesName = selectedSeriesName || '';
+if (typeof selectedSeriesId === 'undefined') var selectedSeriesId = null;
+if (typeof selectedSeriesName === 'undefined') var selectedSeriesName = '';
 
 res.render('dashboard/index', {
   title: 'My Dashboard',
@@ -88,6 +88,7 @@ res.render('dashboard/index', {
   selectedSeriesId,
   selectedSeriesName
 });
+
 
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
