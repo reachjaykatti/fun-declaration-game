@@ -77,7 +77,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     console.log("📊 DASHBOARD STATS:", JSON.stringify(stats, null, 2));
 
     const seriesStats = stats || [];
-    const totalPointsOverall = seriesStats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
+    //const totalPointsOverall = seriesStats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
 
     // ✅ Series name for filter
     const selectedSeriesName = hasSeriesFilter
