@@ -31,18 +31,24 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const db = await getDb();
     const userId = req.session.user.id;
-    const rawSid = (req.query.seriesId || '').trim();
-    const selectedSeriesId = rawSid ? parseInt(rawSid, 10) : NaN;
-    const hasSeriesFilter = !Number.isNaN(selectedSeriesId);
 
-    // ✅ Total points
+    // =============================
+    // ✅ SERIES FILTER HANDLING
+    // =============================
+    const rawSid = req.query.seriesId ? String(req.query.seriesId).trim() : '';
+    const selectedSeriesId = rawSid && !isNaN(rawSid) ? parseInt(rawSid, 10) : null;
+    const hasSeriesFilter = selectedSeriesId !== null;
+
+    console.log("🧭 Dashboard filter check →", { rawSid, selectedSeriesId, hasSeriesFilter });
+
+    // =============================
+    // TOTAL POINTS (all time)
+    // =============================
     const totalRow = await db.get(
-      `SELECT COALESCE(SUM(points), 0) AS total_points 
-       FROM points_ledger 
-       WHERE user_id = ?`,
+      `SELECT COALESCE(SUM(points), 0) AS total_points FROM points_ledger WHERE user_id = ?`,
       [userId]
     );
-    const totalPoints = totalRow?.total_points || 0;
+    const totalPointsOverall = totalRow?.total_points || 0;
 
     // ✅ Per-series stats
     const stats = await db.all(`
@@ -110,7 +116,7 @@ if (!hasSeriesFilter) {
     ORDER BY points DESC
   `, [selectedSeriesId]);
 
-  console.log("📊 Series Filter Applied:", selectedSeriesId, leaderboard);
+  console.log("📊 Leaderboard filtered for series:", selectedSeriesId, leaderboard.length);
 }
     // ✅ W/L streaks
     const wlRows = await db.all(`
