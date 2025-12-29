@@ -68,6 +68,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   ORDER BY s.id DESC
 `, [userId, userId]);
 
+    console.log("📊 DASHBOARD STATS:", JSON.stringify(stats, null, 2));
+
     const seriesStats = stats || [];
     const totalPointsOverall = seriesStats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
 
