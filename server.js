@@ -1,23 +1,24 @@
-import express from 'express';
-import setupSession from "./src/middleware/session.js";
-import SQLiteStoreFactory from 'connect-sqlite3';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const setupSession = require("./src/middleware/session.js");
+const SQLiteStoreFactory = require('connect-sqlite3');
+const dotenv = require('dotenv');
+const helmet = require('helmet');
+const fs = require('fs');
+const path = require('path');
+const { fileURLToPath } = require('url');
 
-import profileRoutes from './src/routes/profile.js';
-import { initDb } from './src/config/db.js';
-import authRoutes from './src/routes/auth.js';
-import adminRoutes from './src/routes/admin.js';
-import seriesRoutes from './src/routes/series.js';
-import dashboardRoutes from './src/routes/dashboard.js';
-import { ensureAuthenticated } from './src/middleware/auth.js';
+const profileRoutes = require('./src/routes/profile.js');
+const { initDb } = require('./src/config/db.js');
+const authRoutes = require('./src/routes/auth.js');
+const adminRoutes = require('./src/routes/admin.js');
+const seriesRoutes = require('./src/routes/series.js');
+const dashboardRoutes = require('./src/routes/dashboard.js');
+const { ensureAuthenticated } = require('./src/middleware/auth.js');
 
 // find your current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // Read labels.json manually
 const labelsPath = path.join(__dirname, 'src/config/labels.json');
