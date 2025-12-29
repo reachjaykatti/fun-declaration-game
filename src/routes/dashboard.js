@@ -79,26 +79,35 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       : null;
 
     // ✅ Leaderboard
-    let leaderboard = [];
-    if (!hasSeriesFilter) {
-      leaderboard = await db.all(`
-        SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
-        FROM users u
-        LEFT JOIN points_ledger pl ON pl.user_id = u.id
-        GROUP BY u.id
-        ORDER BY points DESC
-      `);
-    } else {
-      leaderboard = await db.all(`
-        SELECT u.display_name, COALESCE(SUM(pl.points), 0) AS points
-        FROM users u
-        LEFT JOIN points_ledger pl ON pl.user_id = u.id
-        LEFT JOIN matches m ON m.id = pl.match_id
-        WHERE m.series_id = ?
-        GROUP BY u.id
-        ORDER BY points DESC
-      `, [selectedSeriesId]);
-    }
+    // ✅ Leaderboard Section
+let leaderboard = [];
+
+if (!hasSeriesFilter) {
+  // 🌍 Global leaderboard
+  leaderboard = await db.all(`
+    SELECT 
+      u.id AS user_id,
+      u.display_name,
+      COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    GROUP BY u.id
+    ORDER BY points DESC
+  `);
+} else {
+  // 🎯 Series-specific leaderboard (accurate)
+  leaderboard = await db.all(`
+    SELECT 
+      u.id AS user_id,
+      u.display_name,
+      COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl ON pl.user_id = u.id
+    WHERE pl.series_id = ?
+    GROUP BY u.id
+    ORDER BY points DESC
+  `, [selectedSeriesId]);
+}
 
     // ✅ W/L streaks
     const wlRows = await db.all(`
