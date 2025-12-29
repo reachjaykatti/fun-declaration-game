@@ -73,9 +73,6 @@ const streaks = {
   longestWin: 0,
   longestLoss: 0
 };
-
-let selectedSeriesId = null;
-let selectedSeriesName = null;
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
 router.get('/', ensureAuthenticated, async (req, res) => {
