@@ -55,7 +55,11 @@
 
 <h2>
   Top Planners 
-  <%= selectedSeriesId ? `(Travel: ${selectedSeriesName || selectedSeriesId})` : '(All Travels)' %>
+  <% if (typeof selectedSeriesId !== 'undefined' && selectedSeriesId) { %>
+    (Travel: <%= selectedSeriesName || selectedSeriesId %>)
+  <% } else { %>
+    (All Travels)
+  <% } %>
 </h2>
 
 <div class="card">
