@@ -1,9 +1,10 @@
 import express from 'express';
 import { getDb } from '../config/db.js';
 import { ensureAuthenticated } from "../middleware/auth.js";
+const router = express.Router();
+// Default placeholders for series filter
 let selectedSeriesId = null;
 let selectedSeriesName = '';
-const router = express.Router();
 
 // compute streaks from an array of 'W'/'L' values
 function computeStreaks(seq) {
