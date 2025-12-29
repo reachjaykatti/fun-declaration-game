@@ -40,20 +40,23 @@
       <th>Not Interested</th>
       <th>Planner %</th>
     </tr>
-    <% stats.forEach(s => { %>
-  <tr>
-    <td><%= s.seriesName %></td>
-    <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
-    <td><%= s.planned %></td>
-    <td><%= s.totalTravels %></td>
-    <td><%= s.notInterested %></td>
-    <td><%= s.plannerPercent || 0 %>%</td>
-  </tr>
-<% }) %>
-<% } else { %>
-  <tr><td colspan="6" style="text-align:center;">No series data available</td></tr>
-<% } %>
 
+    <% if (stats && stats.length > 0) { %>
+      <% stats.forEach(s => { %>
+        <tr>
+          <td><%= s.seriesName %></td>
+          <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
+          <td><%= s.planned || 0 %></td>
+          <td><%= s.totalTravels || 0 %></td>
+          <td><%= s.notInterested || 0 %></td>
+          <td><%= s.plannerPercent ? s.plannerPercent.toFixed(1) : '0.0' %>%</td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="6" style="text-align:center;">No series data available</td>
+      </tr>
+    <% } %>
   </table>
 </div>
 
