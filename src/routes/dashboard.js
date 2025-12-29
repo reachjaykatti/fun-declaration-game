@@ -101,8 +101,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       SUM(CASE WHEN p.predicted_team IS NULL THEN 1 ELSE 0 END) AS notInterested,
       ROUND(
         100.0 * SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) / 
-        NULLIF(COUNT(m.id), 0),
-      1) AS plannerPercent
+        NULLIF(COUNT(m.id), 0), 1  
+      ) AS plannerPercent
     FROM series s
     LEFT JOIN matches m ON s.id = m.series_id
     LEFT JOIN predictions p ON m.id = p.match_id AND p.user_id = ?
@@ -112,6 +112,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   `, [userId, userId]);
 
   // ✅ 3. Safe render
+  const streaks = { currentStreak: 0, longestWin: 0, longestLoss: 0 };
+  const selectedSeriesId = null;
+  const selectedSeriesName = null;
   res.render('dashboard/index', {
     title: 'My Dashboard',
     totalPoints,
