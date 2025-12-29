@@ -79,5 +79,4 @@ router.post('/profile/change-password', ensureAuthenticated, async (req, res) =>
     success: 'Password changed successfully'
   });
 });
-
-export default router;
+module.exports = router;
