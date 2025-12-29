@@ -44,7 +44,9 @@
     <% if (stats && stats.length > 0) { %>
       <% stats.forEach(s => { %>
         <tr>
-          <td><%= s.seriesName %></td>
+          <td>
+  <a href="/dashboard/series/<%= s.series_id %>"><%= s.seriesName %></a>
+</td>
           <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
           <td><%= s.planned || 0 %></td>
           <td><%= s.totalTravels || 0 %></td>
