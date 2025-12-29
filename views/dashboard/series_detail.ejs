@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="container mt-4">
+  <h2><%= series.name %> — Travel Progress</h2>
+  <p class="text-muted">Detailed breakdown of each travel in this series.</p>
+
+  <table class="table table-bordered mt-3">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Travel Name</th>
+        <th>Destinations</th>
+        <th>Start Time (UTC)</th>
+        <th>Status</th>
+        <th>Points</th>
+        <th>Cumulative</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (travels.length === 0) { %>
+        <tr><td colspan="7" class="text-center text-muted">No travels available.</td></tr>
+      <% } else { %>
+        <% travels.forEach((t, idx) => { %>
+          <tr>
+            <td><%= idx + 1 %></td>
+            <td><%= t.matchName %></td>
+            <td><%= t.teamA %> OR <%= t.teamB %></td>
+            <td><%= new Date(t.start_time_utc).toLocaleString() %></td>
+            <td>
+              <% if (t.status === 'completed') { %>
+                ✅ Completed
+              <% } else if (t.status === 'scheduled') { %>
+                🕓 Scheduled
+              <% } else { %>
+                <%= t.status %>
+              <% } %>
+            </td>
+            <td><%= t.travelPoints.toFixed(2) %></td>
+            <td><%= t.cumulativePoints.toFixed(2) %></td>
+          </tr>
+        <% }); %>
+      <% } %>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info mt-3">
+    <strong>Total Points Earned:</strong> <%= totalPoints.toFixed(2) %>
+  </div>
+
+  <a href="/dashboard" class="btn btn-secondary mt-3">← Back to Dashboard</a>
+</div>
+
+<%- include('../partials/footer') %>
