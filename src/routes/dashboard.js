@@ -76,9 +76,13 @@ const streaks = {
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
 try {
-  // Assign defaults *without* redeclaring
-  if (typeof selectedSeriesId === 'undefined' || selectedSeriesId === null) selectedSeriesId = null;
-  if (typeof selectedSeriesName === 'undefined' || !selectedSeriesName) selectedSeriesName = '';
+  // ✅ Safely ensure defaults without triggering "before initialization" errors
+  if (typeof selectedSeriesId === 'undefined' || selectedSeriesId === null) {
+    selectedSeriesId = null;
+  }
+  if (typeof selectedSeriesName === 'undefined' || selectedSeriesName === null) {
+    selectedSeriesName = '';
+  }
 
   res.render('dashboard/index', {
     title: 'My Dashboard',
@@ -89,11 +93,16 @@ try {
     selectedSeriesId,
     selectedSeriesName
   });
+
 } catch (err) {
   console.error("🔴 Dashboard render failed:", err.message);
   console.error("Stack trace:", err.stack);
-  res.status(500).send("Dashboard rendering error. Check server logs for details.");
+
+  if (!res.headersSent) {
+    res.status(500).send("Dashboard rendering error. Check logs for details.");
+  }
 }
+
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
     ? ((seriesStats.find(s => s.series_id === selectedSeriesId) || {}).name || null)
