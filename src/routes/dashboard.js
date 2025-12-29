@@ -46,24 +46,27 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 
     // ✅ Per-series stats
     const stats = await db.all(`
-      SELECT 
-        s.id AS series_id,
-        s.name AS seriesName,
-        COUNT(m.id) AS totalTravels,
-        SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) AS planned,
-        SUM(CASE WHEN p.predicted_team IS NULL THEN 1 ELSE 0 END) AS notInterested,
-        ROUND(
-          100.0 * SUM(CASE WHEN p.predicted_team IS NOT NULL THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(m.id), 0), 1
-        ) AS plannerPercent,
-        COALESCE(SUM(pl.points), 0) AS seriesPoints
-      FROM series s
-      LEFT JOIN matches m ON s.id = m.series_id
-      LEFT JOIN predictions p ON m.id = p.match_id AND p.user_id = ?
-      LEFT JOIN points_ledger pl ON pl.series_id = s.id AND pl.user_id = ?
-      GROUP BY s.id
-      ORDER BY s.id DESC
-    `, [userId, userId]);
+  SELECT
+    s.id AS series_id,
+    s.name AS seriesName,
+    COUNT(DISTINCT m.id) AS totalTravels,
+    COUNT(DISTINCT CASE WHEN p.predicted_team IS NOT NULL THEN m.id END) AS planned,
+    COUNT(DISTINCT CASE WHEN p.predicted_team IS NULL THEN m.id END) AS notInterested,
+    ROUND(
+      100.0 * COUNT(DISTINCT CASE WHEN p.predicted_team IS NOT NULL THEN m.id END) /
+      NULLIF(COUNT(DISTINCT m.id), 0), 1
+    ) AS plannerPercent,
+    COALESCE((
+      SELECT SUM(points)
+      FROM points_ledger pl
+      WHERE pl.user_id = ? AND pl.series_id = s.id
+    ), 0) AS seriesPoints
+  FROM series s
+  LEFT JOIN matches m ON m.series_id = s.id
+  LEFT JOIN predictions p ON p.match_id = m.id AND p.user_id = ?
+  GROUP BY s.id
+  ORDER BY s.id DESC
+`, [userId, userId]);
 
     const seriesStats = stats || [];
     const totalPointsOverall = seriesStats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
