@@ -80,17 +80,27 @@
 </h2>
 
 <div class="card">
-  <form method="GET" action="/dashboard" class="inline-form" style="margin-bottom:.75rem">
+  <form id="seriesFilterForm" action="/dashboard" method="GET" class="inline-form" style="margin-bottom:.75rem">
   <label for="seriesId"><strong>Filter by Travel:</strong></label>
-  <select name="seriesId" id="seriesId" onchange="this.form.submit()">
-  <option value="">All Travels</option>
-  <% (seriesStats || []).forEach(s => { %>
-    <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
-      <%= s.seriesName || s.name %>
-    </option>
-  <% }) %>
-</select>
+  <select name="seriesId" id="seriesId">
+    <option value="">All Travels</option>
+    <% (seriesStats || []).forEach(s => { %>
+      <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
+        <%= s.seriesName || s.name %>
+      </option>
+    <% }) %>
+  </select>
 </form>
+
+<script>
+  // 👇 Force submit correctly with ?seriesId= value
+  document.getElementById('seriesId').addEventListener('change', function() {
+    const form = document.getElementById('seriesFilterForm');
+    const selected = this.value;
+    const url = selected ? `/dashboard?seriesId=${selected}` : '/dashboard';
+    window.location.href = url; // refresh page properly with query
+  });
+</script>
 
   <% if (seriesUnsupported) { %>
     <div class="chips" style="margin-bottom:.5rem">
