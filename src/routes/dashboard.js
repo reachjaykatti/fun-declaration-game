@@ -256,4 +256,4 @@ router.get('/player/:userId', ensureAuthenticated, async (req, res) => {
     res.status(500).render('404', { title: 'Error' });
   }
 });
-module.exports = router;
+export default router;
