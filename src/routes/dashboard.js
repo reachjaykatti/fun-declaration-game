@@ -75,10 +75,10 @@ const streaks = {
 
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
-const selectedSeriesId = null;
-const selectedSeriesName = '';
+// Default placeholders (only if not already defined)
+let selectedSeriesId = selectedSeriesId || null;
+let selectedSeriesName = selectedSeriesName || '';
 
-// Render dashboard safely
 res.render('dashboard/index', {
   title: 'My Dashboard',
   totalPoints,
