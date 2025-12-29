@@ -701,6 +701,4 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
     res.status(500).send('Internal server error while loading planner.');
   }
 });
-
-
-export default router;
+module.exports = router;
