@@ -74,6 +74,8 @@ const streaks = {
   longestLoss: 0
 };
 
+let selectedSeriesId = null;
+let selectedSeriesName = null;
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
 router.get('/', ensureAuthenticated, async (req, res) => {
@@ -112,17 +114,18 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   `, [userId, userId]);
 
   // ✅ 3. Safe render
+  const safeStats = stats || [];
   const streaks = { currentStreak: 0, longestWin: 0, longestLoss: 0 };
   const selectedSeriesId = null;
   const selectedSeriesName = null;
   res.render('dashboard/index', {
-    title: 'My Dashboard',
-    totalPoints,
-    stats,
-    streaks,
-    selectedSeriesId,
-    selectedSeriesName
-  });
+  title: 'My Dashboard',
+  totalPoints: totalPoints || 0,
+  stats: stats || [],
+  streaks: streaks || { currentStreak: 0, longestWin: 0, longestLoss: 0 },
+  selectedSeriesId: selectedSeriesId || null,
+  selectedSeriesName: selectedSeriesName || null
+});
 
 } catch (err) {
   console.error("🔴 Dashboard render failed:", err.message);
