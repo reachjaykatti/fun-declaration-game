@@ -124,15 +124,14 @@ if (!hasSeriesFilter) {
     res.render('dashboard/index', {
   title: 'My Dashboard',
   totalPoints: totalPointsOverall || 0,
-  seriesStats, // 👈 EJS expects this exact variable
-  stats: seriesStats, // (optional: keep alias for other templates)
+  seriesStats, // ✅ ensure this variable exists
+  stats: seriesStats, // optional alias
   leaderboard,
   streaks,
   selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
   selectedSeriesName,
   seriesUnsupported: false
 });
-
 
   } catch (err) {
     console.error("🔴 Dashboard render failed:", err);
