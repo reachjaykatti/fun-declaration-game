@@ -63,8 +63,8 @@ router.get('/', async (req, res) => {
   LEFT JOIN predictions p ON m.id = p.match_id AND p.user_id = ?
   LEFT JOIN points_ledger pl ON pl.series_id = s.id AND pl.user_id = ?
   GROUP BY s.id
-`, [req.user.id, req.user.id]);
-
+`, [req.session.user.id, req.session.user.id]);
+  
 const totalPoints = stats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
 
 res.render('dashboard/index', {
