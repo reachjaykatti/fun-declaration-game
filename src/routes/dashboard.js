@@ -1,7 +1,8 @@
 import express from 'express';
 import { getDb } from '../config/db.js';
 import { ensureAuthenticated } from "../middleware/auth.js";
-
+let selectedSeriesId = null;
+let selectedSeriesName = '';
 const router = express.Router();
 
 // compute streaks from an array of 'W'/'L' values
@@ -75,33 +76,27 @@ const streaks = {
 
 const seriesStats = stats; // reuse same data for dropdown/filter support
 // Default series filter placeholders (for template compatibility)
-try {
-  // ✅ Safely ensure defaults without triggering "before initialization" errors
-  if (typeof selectedSeriesId === 'undefined' || selectedSeriesId === null) {
-    selectedSeriesId = null;
-  }
-  if (typeof selectedSeriesName === 'undefined' || selectedSeriesName === null) {
-    selectedSeriesName = '';
-  }
+router.get('/', ensureAuthenticated, async (req, res) => {
+  try {
+    // your dashboard logic here...
+    res.render('dashboard/index', {
+      title: 'My Dashboard',
+      totalPoints,
+      stats,
+      seriesStats,
+      streaks,
+      selectedSeriesId,
+      selectedSeriesName
+    });
+  } catch (err) {
+    console.error("🔴 Dashboard render failed:", err.message);
+    console.error("Stack trace:", err.stack);
 
-  res.render('dashboard/index', {
-    title: 'My Dashboard',
-    totalPoints,
-    stats,
-    seriesStats,
-    streaks,
-    selectedSeriesId,
-    selectedSeriesName
-  });
-
-} catch (err) {
-  console.error("🔴 Dashboard render failed:", err.message);
-  console.error("Stack trace:", err.stack);
-
-  if (!res.headersSent) {
-    res.status(500).send("Dashboard rendering error. Check logs for details.");
+    if (!res.headersSent) {
+      res.status(500).send("Dashboard rendering error. Check logs for details.");
+    }
   }
-}
+});
 
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
