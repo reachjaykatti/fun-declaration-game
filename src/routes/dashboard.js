@@ -129,7 +129,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     res.status(500).send("Dashboard rendering error. Check logs for details.");
   }
 }
-
+});
   // For heading when filtering
   const selectedSeriesName = hasSeriesFilter
     ? ((seriesStats.find(s => s.series_id === selectedSeriesId) || {}).name || null)
