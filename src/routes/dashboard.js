@@ -51,46 +51,47 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     const totalPointsOverall = totalRow?.total_points || 0;
 
     // ✅ Per-series stats (corrected for A/B vs team name mapping)
+// ✅ Per-series stats — supports winner stored as 'A'/'B' or team name
 const stats = await db.all(`
   SELECT
     s.id AS series_id,
     s.name AS seriesName,
 
-    -- Completed travels in this series
+    -- Count completed travels in this series
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
-    -- Correct predictions (planners / wins)
+    -- Correct predictions (Planners / Wins)
     COUNT(DISTINCT CASE
       WHEN m.status = 'completed' AND (
-        (p.predicted_team = 'A' AND m.winner = m.team_a) OR
-        (p.predicted_team = 'B' AND m.winner = m.team_b)
+        (p.predicted_team = 'A' AND (m.winner = 'A' OR m.winner = m.team_a)) OR
+        (p.predicted_team = 'B' AND (m.winner = 'B' OR m.winner = m.team_b))
       )
       THEN m.id
     END) AS planners,
 
-    -- Missed or wrong (losses)
+    -- Wrong or missed (Not Interested / Loss)
     COUNT(DISTINCT CASE
       WHEN m.status = 'completed' AND (
         p.predicted_team IS NULL OR
-        (p.predicted_team = 'A' AND m.winner = m.team_b) OR
-        (p.predicted_team = 'B' AND m.winner = m.team_a)
+        (p.predicted_team = 'A' AND (m.winner = 'B' OR m.winner = m.team_b)) OR
+        (p.predicted_team = 'B' AND (m.winner = 'A' OR m.winner = m.team_a))
       )
       THEN m.id
     END) AS notInterested,
 
-    -- Win %
+    -- Winning percentage
     ROUND(
-      100.0 *
-      COUNT(DISTINCT CASE
+      100.0 * COUNT(DISTINCT CASE
         WHEN m.status = 'completed' AND (
-          (p.predicted_team = 'A' AND m.winner = m.team_a) OR
-          (p.predicted_team = 'B' AND m.winner = m.team_b)
+          (p.predicted_team = 'A' AND (m.winner = 'A' OR m.winner = m.team_a)) OR
+          (p.predicted_team = 'B' AND (m.winner = 'B' OR m.winner = m.team_b))
         )
-        THEN m.id END)
+        THEN m.id
+      END)
       / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
 
-    -- Series total points
+    -- Total points in that series
     COALESCE((
       SELECT SUM(points)
       FROM points_ledger pl
