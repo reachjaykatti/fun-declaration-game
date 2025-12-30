@@ -57,28 +57,42 @@ const stats = await db.all(`
     s.id AS series_id,
     s.name AS seriesName,
 
-    -- ✅ Total travels completed in series (played)
+    -- ✅ Total travels completed (played)
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
-    -- ✅ Planners = user’s wins
+    -- ✅ Planners (Wins): compare prediction vs actual winner correctly
     COUNT(DISTINCT CASE 
-      WHEN m.status = 'completed' 
-       AND p.predicted_team = m.winner 
+      WHEN m.status = 'completed'
+       AND (
+         (p.predicted_team = 'A' AND m.winner = m.team_a)
+         OR
+         (p.predicted_team = 'B' AND m.winner = m.team_b)
+       )
       THEN m.id END
     ) AS planners,
 
-    -- ✅ Not Interested = losses or missed
+    -- ✅ Not Interested (Loss or Missed)
     COUNT(DISTINCT CASE 
-      WHEN m.status = 'completed' 
-       AND (p.predicted_team IS NULL OR p.predicted_team != m.winner)
+      WHEN m.status = 'completed'
+       AND (
+         p.predicted_team IS NULL
+         OR
+         (p.predicted_team = 'A' AND m.winner != m.team_a)
+         OR
+         (p.predicted_team = 'B' AND m.winner != m.team_b)
+       )
       THEN m.id END
     ) AS notInterested,
 
-    -- ✅ Winning % = wins / completed
+    -- ✅ Planner % (Winning %)
     ROUND(
       100.0 * COUNT(DISTINCT CASE 
-        WHEN m.status = 'completed' 
-         AND p.predicted_team = m.winner 
+        WHEN m.status = 'completed'
+         AND (
+           (p.predicted_team = 'A' AND m.winner = m.team_a)
+           OR
+           (p.predicted_team = 'B' AND m.winner = m.team_b)
+         )
         THEN m.id END
       ) / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
