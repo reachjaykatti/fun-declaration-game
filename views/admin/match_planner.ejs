@@ -58,22 +58,78 @@
   <hr>
   <div class="card" style="margin-top:1rem;">
     <h3>⚖️ Declare Result</h3>
-    <form method="POST" action="/admin/matches/<%= match.id %>/declare" style="display:flex;gap:1rem;flex-wrap:wrap;">
-      <button class="btn btn-success" name="winner" value="A" type="submit">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+
+      <button class="btn btn-success"
+              onclick="declareResult('<%= match.id %>', '<%= match.team_a %>', false)">
         ✅ Declare <%= match.team_a %>
       </button>
-      <button class="btn btn-success" name="winner" value="B" type="submit">
+
+      <button class="btn btn-success"
+              onclick="declareResult('<%= match.id %>', '<%= match.team_b %>', false)">
         ✅ Declare <%= match.team_b %>
       </button>
-      <button class="btn btn-warning" name="washed_out" value="true" type="submit">
+
+      <button class="btn btn-warning"
+              onclick="declareResult('<%= match.id %>', null, true)">
         🌧 Washed Out
       </button>
-      <button class="btn btn-danger" name="cancelled" value="true" type="submit"
-              onclick="return confirm('Are you sure you want to cancel this travel?');">
+
+      <button class="btn btn-danger"
+              onclick="confirmCancel('<%= match.id %>')">
         ❌ Cancel Travel
       </button>
-    </form>
+    </div>
   </div>
 <% } %>
+
+<script>
+  async function declareResult(matchId, winner, washed_out = false) {
+    // Step 1: First confirmation
+    const firstConfirm = confirm(`Are you sure you want to declare ${washed_out ? 'Washed Out' : winner}?`);
+    if (!firstConfirm) return;
+
+    // Step 2: Second confirmation
+    const secondConfirm = confirm(`Final confirmation — Proceed to declare ${washed_out ? 'Washed Out' : winner}?`);
+    if (!secondConfirm) return;
+
+    try {
+      const response = await fetch(`/admin/matches/${matchId}/declare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ winner, washed_out })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`✅ ${data.message}`);
+        location.reload();
+      } else {
+        alert(`⚠️ ${data.error || 'Declaration failed.'}`);
+      }
+    } catch (err) {
+      console.error('Error declaring result:', err);
+      alert('❌ Something went wrong.');
+    }
+  }
+
+  async function confirmCancel(matchId) {
+    const confirm1 = confirm('Are you sure you want to cancel this travel?');
+    if (!confirm1) return;
+    const confirm2 = confirm('Final confirmation: Cancel this travel?');
+    if (!confirm2) return;
+
+    try {
+      const res = await fetch(`/admin/matches/${matchId}/reset-ledger`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+      if (data.success) location.reload();
+    } catch (err) {
+      alert('❌ Failed to cancel travel.');
+    }
+  }
+</script>
 
 <%- include('../partials/foot') %>
