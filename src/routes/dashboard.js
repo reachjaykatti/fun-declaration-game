@@ -57,41 +57,33 @@ const stats = await db.all(`
     s.id AS series_id,
     s.name AS seriesName,
 
-    -- Count completed travels in this series
+    -- ✅ Total travels completed in series (played)
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
-    -- Correct predictions (Planners / Wins)
-    COUNT(DISTINCT CASE
-      WHEN m.status = 'completed' AND (
-        (p.predicted_team = 'A' AND (m.winner = 'A' OR m.winner = m.team_a)) OR
-        (p.predicted_team = 'B' AND (m.winner = 'B' OR m.winner = m.team_b))
-      )
-      THEN m.id
-    END) AS planners,
+    -- ✅ Planners = user’s wins
+    COUNT(DISTINCT CASE 
+      WHEN m.status = 'completed' 
+       AND p.predicted_team = m.winner 
+      THEN m.id END
+    ) AS planners,
 
-    -- Wrong or missed (Not Interested / Loss)
-    COUNT(DISTINCT CASE
-      WHEN m.status = 'completed' AND (
-        p.predicted_team IS NULL OR
-        (p.predicted_team = 'A' AND (m.winner = 'B' OR m.winner = m.team_b)) OR
-        (p.predicted_team = 'B' AND (m.winner = 'A' OR m.winner = m.team_a))
-      )
-      THEN m.id
-    END) AS notInterested,
+    -- ✅ Not Interested = losses or missed
+    COUNT(DISTINCT CASE 
+      WHEN m.status = 'completed' 
+       AND (p.predicted_team IS NULL OR p.predicted_team != m.winner)
+      THEN m.id END
+    ) AS notInterested,
 
-    -- Winning percentage
+    -- ✅ Winning % = wins / completed
     ROUND(
-      100.0 * COUNT(DISTINCT CASE
-        WHEN m.status = 'completed' AND (
-          (p.predicted_team = 'A' AND (m.winner = 'A' OR m.winner = m.team_a)) OR
-          (p.predicted_team = 'B' AND (m.winner = 'B' OR m.winner = m.team_b))
-        )
-        THEN m.id
-      END)
-      / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
+      100.0 * COUNT(DISTINCT CASE 
+        WHEN m.status = 'completed' 
+         AND p.predicted_team = m.winner 
+        THEN m.id END
+      ) / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
 
-    -- Total points in that series
+    -- ✅ Total points in that series
     COALESCE((
       SELECT SUM(points)
       FROM points_ledger pl
