@@ -510,57 +510,60 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 }
 });
 
-// Admin match view / reset / declare
+// ==============================
+// 🧭 ADMIN MATCH VIEW + DECLARATION
+// ==============================
 router.get('/matches/:matchId', async (req, res) => {
   const db = await getDb();
+  const matchId = req.params.matchId;
 
-  const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
-  if (!match) {
-    return res.status(404).render('404', { title: 'Not Found' });
-  }
+  const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+  if (!match) return res.status(404).render('404', { title: 'Not Found' });
 
   const series = await db.get('SELECT * FROM series WHERE id = ?', [match.series_id]);
 
-  const preds = await db.all(
-    `SELECT p.*, u.display_name
-       FROM predictions p
-       JOIN users u ON p.user_id = u.id
-      WHERE p.match_id = ?`,
-    [req.params.matchId]
-  );
+  const preds = await db.all(`
+    SELECT p.*, u.display_name
+    FROM predictions p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.match_id = ?
+  `, [matchId]);
 
   const row = await db.get('SELECT COUNT(*) AS c FROM series_members WHERE series_id = ?', [match.series_id]);
-  const membersCount = (row && typeof row.c === 'number') ? row.c : 0;
+  const membersCount = row?.c || 0;
 
   const aCount = preds.filter(p => p.predicted_team === 'A').length;
   const bCount = preds.filter(p => p.predicted_team === 'B').length;
-  const missed = Math.max(0, membersCount - (aCount + bCount));
 
+  const members = await db.all(`
+    SELECT u.id, u.display_name 
+    FROM series_members sm 
+    JOIN users u ON sm.user_id = u.id 
+    WHERE sm.series_id = ?
+  `, [match.series_id]);
+
+  const votedIds = preds.map(p => p.user_id);
+  const missedTravellers = members.filter(m => !votedIds.includes(m.id));
+
+  const missed = Math.max(0, membersCount - (aCount + bCount));
   const entry = match.entry_points || 0;
 
-  // --- 🧭 Determine Missed Travellers ---
-const members = await db.all('SELECT u.id, u.display_name FROM series_members sm JOIN users u ON sm.user_id = u.id WHERE sm.series_id = ?', [match.series_id]);
-const votedIds = preds.map(p => p.user_id);
-const missedTravellers = members.filter(m => !votedIds.includes(m.id));
-
-  // Determine cutoff status
   const cutoffMins = match.cutoff_minutes_before || 30;
   const cutoffTime = moment.utc(match.start_time_utc).subtract(cutoffMins, 'minutes');
   const isCutoffOver = moment.utc().isAfter(cutoffTime);
 
-  // 💡 Distinct pot and perPlanner calculations
   const probable = {
     A: {
       winners: aCount,
       losers: bCount + missed,
-      totalPot: (bCount + missed ) * entry, // full pot size
-      perPlanner: aCount > 0 ? ((bCount + missed ) * entry) / aCount : 0
+      totalPot: (bCount + missed) * entry,
+      perPlanner: aCount > 0 ? ((bCount + missed) * entry) / aCount : 0
     },
     B: {
       winners: bCount,
       losers: aCount + missed,
-      totalPot: (aCount + missed ) * entry,
-      perPlanner: bCount > 0 ? ((aCount + missed ) * entry) / bCount : 0
+      totalPot: (aCount + missed) * entry,
+      perPlanner: bCount > 0 ? ((aCount + missed) * entry) / bCount : 0
     }
   };
 
@@ -580,67 +583,97 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
   });
 });
 
+// ==============================
+// 🔄 RESET MATCH + LEDGER
+// ==============================
 router.post('/matches/:matchId/reset-ledger', async (req, res) => {
   const db = await getDb();
   const matchId = req.params.matchId;
   try {
     await db.run('DELETE FROM points_ledger WHERE match_id = ?', [matchId]);
     await db.run('UPDATE matches SET status = ?, winner = NULL, admin_declared_at = NULL WHERE id = ?', ['scheduled', matchId]);
-    res.redirect(`/admin/matches/${matchId}`);
+    res.json({ success: true, message: 'Match reset successfully.' });
   } catch (e) {
-    res.status(500).send('Failed to reset match: ' + e.message);
+    console.error('❌ Failed to reset match:', e);
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 
+// ==============================
+// 🏁 DECLARE WINNER (AJAX-based, stays on same page)
+// ==============================
 router.post('/matches/:matchId/declare', async (req, res) => {
-  const { winner, washed_out } = req.body;
-  const db = await getDb();
-  const match = await db.get('SELECT * FROM matches WHERE id = ?', [req.params.matchId]);
-  const seriesId = match.series_id;
+  try {
+    const { winner, washed_out } = req.body;
+    const db = await getDb();
+    const matchId = req.params.matchId;
+    const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+    if (!match) return res.status(404).json({ success: false, error: 'Match not found.' });
 
-  if (match.status === 'completed' || match.status === 'washed_out') {
-    return res.redirect(`/admin/matches/${req.params.matchId}`);
+    const seriesId = match.series_id;
+    const now = nowUtcISO();
+
+    // 🧭 Guard clause to prevent redeclaration
+    if (match.status === 'completed' || match.status === 'washed_out') {
+      return res.json({ success: false, error: 'Already declared.' });
+    }
+
+    // 🧹 Handle washed-out case
+    if (washed_out) {
+      await db.run(
+        'UPDATE matches SET status = ?, winner = NULL, admin_declared_at = ? WHERE id = ?',
+        ['washed_out', now, matchId]
+      );
+      return res.json({ success: true, message: 'Declared as washed out.' });
+    }
+
+    // 🏁 Standard declaration path
+    await db.run(
+      'UPDATE matches SET status = ?, winner = ?, admin_declared_at = ? WHERE id = ?',
+      ['completed', winner, now, matchId]
+    );
+
+    const preds = await db.all('SELECT * FROM predictions WHERE match_id = ?', [matchId]);
+    const winnersPred = preds.filter(p => p.predicted_team === winner).map(p => p.user_id);
+    const losersPred = preds.filter(p => p.predicted_team !== winner).map(p => p.user_id);
+
+    const membersRows = await db.all('SELECT user_id FROM series_members WHERE series_id = ?', [seriesId]);
+    const memberIds = membersRows.map(r => r.user_id);
+    const predictedIds = preds.map(p => p.user_id);
+    const missedIds = memberIds.filter(id => !predictedIds.includes(id));
+
+    const entryPoints = match.entry_points;
+    const losersTotal = losersPred.length + missedIds.length;
+    const totalPot = losersTotal * entryPoints;
+    const perWinner = winnersPred.length > 0 ? totalPot / winnersPred.length : 0;
+
+    for (const uid of winnersPred) {
+      await db.run(
+        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
+        [uid, match.id, seriesId, perWinner, `Win: ${match.name}`, now]
+      );
+    }
+    for (const uid of losersPred) {
+      await db.run(
+        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
+        [uid, match.id, seriesId, -entryPoints, `Loss: ${match.name}`, now]
+      );
+    }
+    for (const uid of missedIds) {
+      await db.run(
+        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
+        [uid, match.id, seriesId, -entryPoints, `Missed: ${match.name}`, now]
+      );
+    }
+
+    res.json({ success: true, message: `Declared ${winner} successfully.` });
+
+  } catch (err) {
+    console.error('🔴 Error declaring winner:', err);
+    res.status(500).json({ success: false, error: 'Failed to declare result.' });
   }
-
-  if (washed_out) {
-    await db.run('UPDATE matches SET status = ?, winner = NULL, admin_declared_at = ? WHERE id = ?',
-      ['washed_out', nowUtcISO(), req.params.matchId]);
-    return res.redirect(`/admin/matches/${req.params.matchId}`);
-  }
-
-  await db.run('UPDATE matches SET status = ?, winner = ?, admin_declared_at = ? WHERE id = ?',
-    ['completed', winner, nowUtcISO(), req.params.matchId]);
-
-  const preds = await db.all('SELECT * FROM predictions WHERE match_id = ?', [req.params.matchId]);
-  const winnersPred = preds.filter(p => p.predicted_team === winner).map(p => p.user_id);
-  const losersPred = preds.filter(p => p.predicted_team !== winner).map(p => p.user_id);
-
-  const membersRows = await db.all('SELECT user_id FROM series_members WHERE series_id = ?', [seriesId]);
-  const memberIds = membersRows.map(r => r.user_id);
-  const predictedIds = preds.map(p => p.user_id);
-  const missedIds = memberIds.filter(id => predictedIds.indexOf(id) === -1);
-
-  const entryPoints = match.entry_points;
-  const losersTotal = losersPred.length + missedIds.length;
-  const totalPot = losersTotal * entryPoints;
-  const perWinner = winnersPred.length > 0 ? totalPot / winnersPred.length : 0;
-  const now = nowUtcISO();
-
-  for (const uid of winnersPred) {
-    await db.run('INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-      [uid, match.id, seriesId, perWinner, `Win: ${match.name}`, now]);
-  }
-  for (const uid of losersPred) {
-    await db.run('INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-      [uid, match.id, seriesId, -entryPoints, `Loss: ${match.name}`, now]);
-  }
-  for (const uid of missedIds) {
-    await db.run('INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-      [uid, match.id, seriesId, -entryPoints, `Missed: ${match.name}`, now]);
-  }
-
-  res.redirect(`/admin/matches/${req.params.matchId}`);
 });
+
 // 🧭 Admin Planner View (Match / Travel details + participant choices)
 router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
   try {
