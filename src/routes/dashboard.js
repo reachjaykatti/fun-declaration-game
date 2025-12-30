@@ -50,34 +50,47 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     );
     const totalPointsOverall = totalRow?.total_points || 0;
 
-    // ✅ Per-series stats
-    // ✅ Per-series stats (theme words retained, logic corrected)
+    // ✅ Per-series stats (corrected for A/B vs team name mapping)
 const stats = await db.all(`
   SELECT
     s.id AS series_id,
     s.name AS seriesName,
 
-    -- Total travels completed under this series
+    -- Completed travels in this series
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
-    -- Correct predictions = planners (won)
-    COUNT(DISTINCT CASE 
-      WHEN m.status = 'completed' AND p.predicted_team = m.winner THEN m.id 
+    -- Correct predictions (planners / wins)
+    COUNT(DISTINCT CASE
+      WHEN m.status = 'completed' AND (
+        (p.predicted_team = 'A' AND m.winner = m.team_a) OR
+        (p.predicted_team = 'B' AND m.winner = m.team_b)
+      )
+      THEN m.id
     END) AS planners,
 
-    -- Wrong or missed = not interested (lost)
-    COUNT(DISTINCT CASE 
-      WHEN m.status = 'completed' AND (p.predicted_team IS NULL OR p.predicted_team != m.winner) THEN m.id 
+    -- Missed or wrong (losses)
+    COUNT(DISTINCT CASE
+      WHEN m.status = 'completed' AND (
+        p.predicted_team IS NULL OR
+        (p.predicted_team = 'A' AND m.winner = m.team_b) OR
+        (p.predicted_team = 'B' AND m.winner = m.team_a)
+      )
+      THEN m.id
     END) AS notInterested,
 
-    -- Winning percentage
+    -- Win %
     ROUND(
-      100.0 * COUNT(DISTINCT CASE 
-        WHEN m.status = 'completed' AND p.predicted_team = m.winner THEN m.id 
-      END) / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0), 
+      100.0 *
+      COUNT(DISTINCT CASE
+        WHEN m.status = 'completed' AND (
+          (p.predicted_team = 'A' AND m.winner = m.team_a) OR
+          (p.predicted_team = 'B' AND m.winner = m.team_b)
+        )
+        THEN m.id END)
+      / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
 
-    -- Points total for series
+    -- Series total points
     COALESCE((
       SELECT SUM(points)
       FROM points_ledger pl
@@ -90,7 +103,6 @@ const stats = await db.all(`
   GROUP BY s.id
   ORDER BY s.id DESC
 `, [userId, userId]);
-
 
     console.log("📊 DASHBOARD STATS:", JSON.stringify(stats, null, 2));
 
