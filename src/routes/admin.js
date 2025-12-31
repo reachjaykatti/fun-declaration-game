@@ -631,89 +631,87 @@ router.post('/matches/:matchId/declare', async (req, res) => {
     const db = await getDb();
     const matchId = req.params.matchId;
 
-    // 🧩 Support both JSON and form submissions
-    let winner, washed_out;
-    if (req.is('application/json')) {
-      ({ winner, washed_out } = req.body);
-    } else {
-      winner = req.body.winner;
-      washed_out = req.body.washed_out === 'true';
-    }
+    let { winner, washed_out } = req.is('application/json') ? req.body : req.body;
+    washed_out = washed_out === true || washed_out === 'true';
 
     const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
-    if (!match) {
-      return res.json({ success: false, error: 'Match not found' });
+    if (!match) return res.json({ success: false, error: 'Match not found.' });
+
+    // Prevent re-declare
+    if (['completed', 'washed_out', 'cancelled'].includes(match.status)) {
+      return res.json({ success: false, error: 'Already declared or closed.' });
     }
 
-    const seriesId = match.series_id;
+    // Normalize winner
+    let winnerKey = null;
+    if (winner === match.team_a) winnerKey = 'A';
+    else if (winner === match.team_b) winnerKey = 'B';
+    else winnerKey = winner;
 
-    // ✅ Prevent redeclaration
-    if (match.status === 'completed' || match.status === 'washed_out') {
-      return res.json({ success: false, error: 'Match already declared.' });
-    }
-
-    // 🌀 Handle washed out
+    // Handle washed-out
     if (washed_out) {
       await db.run(
         'UPDATE matches SET status = ?, winner = NULL, admin_declared_at = ? WHERE id = ?',
         ['washed_out', nowUtcISO(), matchId]
       );
-      return res.json({ success: true, message: 'Travel declared as Washed Out.' });
+      return res.json({ success: true, message: 'Declared as washed out.' });
     }
-// 🔁 Normalize winner to team key
-let winnerKey = null;
-if (winner === match.team_a) winnerKey = 'A';
-else if (winner === match.team_b) winnerKey = 'B';
-else winnerKey = winner; // fallback if already 'A' or 'B'
 
-    // ✅ Regular declaration
+    // Update match
     await db.run(
       'UPDATE matches SET status = ?, winner = ?, admin_declared_at = ? WHERE id = ?',
-      ['completed', winner, winnerkey, nowUtcISO(), matchId]
+      ['completed', winnerKey, nowUtcISO(), matchId]
     );
 
+    // Ledger update
     const preds = await db.all('SELECT * FROM predictions WHERE match_id = ?', [matchId]);
-    const winnersPred = preds.filter(p => p.predicted_team === winnerkey).map(p => p.user_id);
-    const losersPred = preds.filter(p => p.predicted_team !== winnerkey).map(p => p.user_id);
+    const winnersPred = preds.filter(p => p.predicted_team === winnerKey).map(p => p.user_id);
+    const losersPred = preds.filter(p => p.predicted_team !== winnerKey).map(p => p.user_id);
 
-    const membersRows = await db.all('SELECT user_id FROM series_members WHERE series_id = ?', [seriesId]);
-    const memberIds = membersRows.map(r => r.user_id);
+    const members = await db.all('SELECT user_id FROM series_members WHERE series_id = ?', [match.series_id]);
+    const memberIds = members.map(m => m.user_id);
     const predictedIds = preds.map(p => p.user_id);
     const missedIds = memberIds.filter(id => !predictedIds.includes(id));
 
-    const entryPoints = match.entry_points;
+    const entry = match.entry_points;
     const losersTotal = losersPred.length + missedIds.length;
-    const totalPot = losersTotal * entryPoints;
+    const totalPot = losersTotal * entry;
     const perWinner = winnersPred.length > 0 ? totalPot / winnersPred.length : 0;
     const now = nowUtcISO();
 
-    // 💾 Update ledger
-    for (const uid of winnersPred) {
+    for (const uid of winnersPred)
       await db.run(
         'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-        [uid, match.id, seriesId, perWinner, `Win: ${match.name}`, now]
+        [uid, match.id, match.series_id, perWinner, `Win: ${match.name}`, now]
       );
-    }
-    for (const uid of losersPred) {
-      await db.run(
-        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-        [uid, match.id, seriesId, -entryPoints, `Loss: ${match.name}`, now]
-      );
-    }
-    for (const uid of missedIds) {
-      await db.run(
-        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
-        [uid, match.id, seriesId, -entryPoints, `Missed: ${match.name}`, now]
-      );
-    }
 
-    // 🟢 Success response for frontend JS
-    return res.json({ success: true, message: `${winner} declared successfully.` });
+    for (const uid of losersPred)
+      await db.run(
+        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
+        [uid, match.id, match.series_id, -entry, `Loss: ${match.name}`, now]
+      );
+
+    for (const uid of missedIds)
+      await db.run(
+        'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
+        [uid, match.id, match.series_id, -entry, `Missed: ${match.name}`, now]
+      );
+
+    // ✅ Reload match for fresh status
+    const updatedMatch = await db.get('SELECT status, winner FROM matches WHERE id = ?', [matchId]);
+
+    return res.json({
+      success: true,
+      message: `${winner} declared successfully.`,
+      status: updatedMatch.status,
+      winner: updatedMatch.winner
+    });
 
   } catch (err) {
     console.error('❌ Declare error:', err);
     return res.json({ success: false, error: err.message });
   }
 });
+
 
 export default router;
