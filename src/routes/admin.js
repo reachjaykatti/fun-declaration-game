@@ -511,9 +511,9 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 });
 
 // ==============================
-// 🧭 ADMIN MATCH VIEW (Modern Planner Layout)
+// 🧭 ADMIN MATCH PLANNER VIEW (Modern Layout)
 // ==============================
-router.get('/matches/:matchId', async (req, res) => {
+router.get('/matches/:matchId/planner', async (req, res) => {
   try {
     const db = await getDb();
     const matchId = req.params.matchId;
@@ -523,7 +523,6 @@ router.get('/matches/:matchId', async (req, res) => {
 
     const series = await db.get('SELECT * FROM series WHERE id = ?', [match.series_id]);
 
-    // 🧩 All predictions with user names
     const preds = await db.all(`
       SELECT p.*, u.display_name
       FROM predictions p
@@ -537,20 +536,19 @@ router.get('/matches/:matchId', async (req, res) => {
     const aCount = preds.filter(p => p.predicted_team === 'A').length;
     const bCount = preds.filter(p => p.predicted_team === 'B').length;
 
-    // 🧍‍♂️ Identify missed travellers
     const members = await db.all(`
       SELECT u.id, u.display_name 
       FROM series_members sm 
       JOIN users u ON sm.user_id = u.id 
       WHERE sm.series_id = ?
     `, [match.series_id]);
+
     const votedIds = preds.map(p => p.user_id);
     const missedTravellers = members.filter(m => !votedIds.includes(m.id));
 
     const missed = Math.max(0, membersCount - (aCount + bCount));
     const entry = match.entry_points || 0;
 
-    // 🕒 Determine cutoff and probable winning side
     const cutoffMins = match.cutoff_minutes_before || 30;
     const cutoffTime = moment.utc(match.start_time_utc).subtract(cutoffMins, 'minutes');
     const isCutoffOver = moment.utc().isAfter(cutoffTime);
@@ -570,7 +568,6 @@ router.get('/matches/:matchId', async (req, res) => {
       }
     };
 
-    // ✅ Render modern match planner view
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
       match,
@@ -591,7 +588,6 @@ router.get('/matches/:matchId', async (req, res) => {
     res.status(500).render('404', { title: 'Error Loading Planner' });
   }
 });
-
 
 // ==============================
 // 🔄 RESET MATCH + LEDGER
