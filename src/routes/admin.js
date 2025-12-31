@@ -9,6 +9,8 @@ import { ensureAdmin } from '../middleware/auth.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import XLSX from 'xlsx';
 
+console.log("🧭 admin.js routes initialized");
+
 // Multer for CSV/TSV uploads (kept in memory)
 const upload = multer({
   storage: multer.memoryStorage(),
