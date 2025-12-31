@@ -18,22 +18,50 @@
 <!-- Probable Result -->
 <div class="card" style="margin:1rem 0;">
   <h3>🔮 Probable Winning (After Cutoff)</h3>
+
   <% if (isCutoffOver) { %>
-    <p>
-      <strong>
-        <% if (probable.A.perPlanner > probable.B.perPlanner) { %>
-          <%= match.team_a %>
-        <% } else if (probable.B.perPlanner > probable.A.perPlanner) { %>
-          <%= match.team_b %>
-        <% } else { %>
-          🟰 Equal Potential
-        <% } %>
-      </strong>
-    </p>
+    <div style="margin-top:0.5rem;">
+      <% if (probable.A.perPlanner > probable.B.perPlanner) { %>
+        <p><strong><%= match.team_a %></strong> (Higher Payout)</p>
+      <% } else if (probable.B.perPlanner > probable.A.perPlanner) { %>
+        <p><strong><%= match.team_b %></strong> (Higher Payout)</p>
+      <% } else { %>
+        <p><strong>Even Odds</strong> — Equal Payout</p>
+      <% } %>
+
+      <table class="table" style="margin-top:0.5rem;">
+        <thead>
+          <tr>
+            <th>Destination</th>
+            <th>Planners</th>
+            <th>Opposing + Missed</th>
+            <th>Total Pot</th>
+            <th>Per Planner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><%= match.team_a %></td>
+            <td><%= probable.A.winners %></td>
+            <td><%= probable.A.losers %></td>
+            <td><%= probable.A.totalPot %></td>
+            <td><%= probable.A.perPlanner.toFixed(2) %></td>
+          </tr>
+          <tr>
+            <td><%= match.team_b %></td>
+            <td><%= probable.B.winners %></td>
+            <td><%= probable.B.losers %></td>
+            <td><%= probable.B.totalPot %></td>
+            <td><%= probable.B.perPlanner.toFixed(2) %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   <% } else { %>
-    <p>Probable result will be shown after cutoff.</p>
+    <p>Probable result will be available after cutoff.</p>
   <% } %>
 </div>
+
 
 <!-- Summary -->
 <div class="summary-box" style="display:flex;gap:1rem;margin:1rem 0;">
