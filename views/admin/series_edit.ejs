@@ -12,5 +12,10 @@
   <label>End Date (UTC) <input name="end_date_utc" value="<%= series.end_date_utc || '' %>" /></label>
   <button class="btn">Save</button>
 </form>
+<form action="/admin/series/<%= series.id %>/delete" method="POST" onsubmit="return confirm('Are you sure? This will permanently remove all travels and stats in this series!');">
+  <button class="btn btn-danger">🗑 Delete Series</button>
+</form>
+
 <%- include('../partials/foot') %>
+
 
