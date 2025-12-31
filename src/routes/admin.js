@@ -737,7 +737,7 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
     const cutoffMillis =
       new Date(match.start_time_utc).getTime() - cutoffMinutes * 60000;
     const nowMillis = Date.now();
-    const isCutoffPassed = nowMillis >= cutoffMillis;
+    const isCutoffover = nowMillis >= cutoffMillis;
 
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
@@ -747,7 +747,7 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
       probable,
       countA,
       countB,
-      isCutoffPassed,
+      isCutoffover,
       moment
     });
   } catch (err) {
