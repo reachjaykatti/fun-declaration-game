@@ -137,17 +137,44 @@ router.post('/series/:id/lock', async (req, res) => {
   await db.run('UPDATE series SET is_locked = 1 WHERE id = ?', [req.params.id]);
   res.redirect('/admin');
 });
+// =============================================
+// 🧹 Delete Series + Cleanup Related Data
+// =============================================
 router.post('/series/:id/delete', async (req, res) => {
   const db = await getDb();
-  const sid = req.params.id;
+  const seriesId = req.params.id;
+
   try {
-    await db.run('DELETE FROM points_ledger WHERE series_id = ?', [sid]);
-    await db.run('DELETE FROM series WHERE id = ?', [sid]); // cascades to matches & members
+    // 1️⃣ Find all matches in this series
+    const matches = await db.all('SELECT id FROM matches WHERE series_id = ?', [seriesId]);
+    const matchIds = matches.map(m => m.id);
+
+    if (matchIds.length > 0) {
+      // 2️⃣ Delete all predictions linked to these matches
+      await db.run(`DELETE FROM predictions WHERE match_id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
+
+      // 3️⃣ Delete all ledger entries for these matches
+      await db.run(`DELETE FROM points_ledger WHERE match_id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
+
+      // 4️⃣ Delete matches themselves
+      await db.run(`DELETE FROM matches WHERE id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
+    }
+
+    // 5️⃣ Delete members and ledger rows linked to this series
+    await db.run('DELETE FROM series_members WHERE series_id = ?', [seriesId]);
+    await db.run('DELETE FROM points_ledger WHERE series_id = ?', [seriesId]);
+
+    // 6️⃣ Finally, delete the series
+    await db.run('DELETE FROM series WHERE id = ?', [seriesId]);
+
+    console.log(`🧹 Series ${seriesId} and all related data deleted successfully.`);
     res.redirect('/admin');
-  } catch (e) {
-    res.status(500).send('Failed to delete series: ' + e.message);
+  } catch (err) {
+    console.error('❌ Error deleting series:', err);
+    res.status(500).send('Failed to delete series and its related data.');
   }
 });
+
 
 // Matches: manage/create/edit
 
