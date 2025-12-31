@@ -604,33 +604,43 @@ router.post('/matches/:matchId/reset-ledger', async (req, res) => {
 // ==============================
 router.post('/matches/:matchId/declare', async (req, res) => {
   try {
-    const { winner, washed_out } = req.body;
     const db = await getDb();
     const matchId = req.params.matchId;
-    const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
-    if (!match) return res.status(404).json({ success: false, error: 'Match not found.' });
 
-    const seriesId = match.series_id;
-    const now = nowUtcISO();
-
-    // 🧭 Guard clause to prevent redeclaration
-    if (match.status === 'completed' || match.status === 'washed_out') {
-      return res.json({ success: false, error: 'Already declared.' });
+    // 🧩 Support both JSON and form submissions
+    let winner, washed_out;
+    if (req.is('application/json')) {
+      ({ winner, washed_out } = req.body);
+    } else {
+      winner = req.body.winner;
+      washed_out = req.body.washed_out === 'true';
     }
 
-    // 🧹 Handle washed-out case
+    const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+    if (!match) {
+      return res.json({ success: false, error: 'Match not found' });
+    }
+
+    const seriesId = match.series_id;
+
+    // ✅ Prevent redeclaration
+    if (match.status === 'completed' || match.status === 'washed_out') {
+      return res.json({ success: false, error: 'Match already declared.' });
+    }
+
+    // 🌀 Handle washed out
     if (washed_out) {
       await db.run(
         'UPDATE matches SET status = ?, winner = NULL, admin_declared_at = ? WHERE id = ?',
-        ['washed_out', now, matchId]
+        ['washed_out', nowUtcISO(), matchId]
       );
-      return res.json({ success: true, message: 'Declared as washed out.' });
+      return res.json({ success: true, message: 'Travel declared as Washed Out.' });
     }
 
-    // 🏁 Standard declaration path
+    // ✅ Regular declaration
     await db.run(
       'UPDATE matches SET status = ?, winner = ?, admin_declared_at = ? WHERE id = ?',
-      ['completed', winner, now, matchId]
+      ['completed', winner, nowUtcISO(), matchId]
     );
 
     const preds = await db.all('SELECT * FROM predictions WHERE match_id = ?', [matchId]);
@@ -646,7 +656,9 @@ router.post('/matches/:matchId/declare', async (req, res) => {
     const losersTotal = losersPred.length + missedIds.length;
     const totalPot = losersTotal * entryPoints;
     const perWinner = winnersPred.length > 0 ? totalPot / winnersPred.length : 0;
+    const now = nowUtcISO();
 
+    // 💾 Update ledger
     for (const uid of winnersPred) {
       await db.run(
         'INSERT INTO points_ledger (user_id, match_id, series_id, points, reason, created_at) VALUES (?,?,?,?,?,?)',
@@ -666,11 +678,12 @@ router.post('/matches/:matchId/declare', async (req, res) => {
       );
     }
 
-    res.json({ success: true, message: `Declared ${winner} successfully.` });
+    // 🟢 Success response for frontend JS
+    return res.json({ success: true, message: `${winner} declared successfully.` });
 
   } catch (err) {
-    console.error('🔴 Error declaring winner:', err);
-    res.status(500).json({ success: false, error: 'Failed to declare result.' });
+    console.error('❌ Declare error:', err);
+    return res.json({ success: false, error: err.message });
   }
 });
 
