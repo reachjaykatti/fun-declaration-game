@@ -70,73 +70,107 @@
     <h3>⚖️ Declare Result</h3>
     <div style="display:flex;gap:1rem;flex-wrap:wrap;">
 
-      <button class="btn btn-success"
-              onclick="declareResult('<%= match.id %>', '<%= match.team_a %>', false)">
-        ✅ Declare <%= match.team_a %>
-      </button>
+      <button class="btn btn-success declare-btn"
+        data-match-id="<%= match.id %>"
+        data-winner="<%= match.team_a %>">
+  ✅ Declare <%= match.team_a %>
+</button>
 
-      <button class="btn btn-success"
-              onclick="declareResult('<%= match.id %>', '<%= match.team_b %>', false)">
-        ✅ Declare <%= match.team_b %>
-      </button>
+<button class="btn btn-success declare-btn"
+        data-match-id="<%= match.id %>"
+        data-winner="<%= match.team_b %>">
+  ✅ Declare <%= match.team_b %>
+</button>
 
-      <button class="btn btn-warning"
-              onclick="declareResult('<%= match.id %>', null, true)">
-        🌧 Washed Out
-      </button>
+<button class="btn btn-warning declare-btn-washout"
+        data-match-id="<%= match.id %>">
+  🌧 Washed Out
+</button>
 
-      <button class="btn btn-danger"
-              onclick="confirmCancel('<%= match.id %>')">
-        ❌ Cancel Travel
-      </button>
+<button class="btn btn-danger cancel-btn"
+        data-match-id="<%= match.id %>">
+  ❌ Cancel Travel
+</button>
     </div>
   </div>
 <% } %>
 
 <script>
-  async function declareResult(matchId, winner, washed_out = false) {
-    // Step 1: Confirmation prompts
-    const firstConfirm = confirm(`Are you sure you want to declare ${washed_out ? 'Washed Out' : winner}?`);
-    if (!firstConfirm) return;
-    const secondConfirm = confirm(`Final confirmation — Proceed to declare ${washed_out ? 'Washed Out' : winner}?`);
-    if (!secondConfirm) return;
+document.addEventListener('DOMContentLoaded', () => {
 
-    try {
-      const response = await fetch(`/admin/matches/${matchId}/declare`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ winner, washed_out })
-      });
+  // 🟢 Normal declare buttons
+  document.querySelectorAll('.declare-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.dataset.matchId;
+      const winner = btn.dataset.winner;
 
-      const data = await response.json();
-      if (data.success) {
-        alert(`✅ ${data.message}`);
-        location.reload();
-      } else {
-        alert(`⚠️ ${data.error || 'Declaration failed.'}`);
+      const c1 = confirm(`Are you sure you want to declare ${winner}?`);
+      if (!c1) return;
+      const c2 = confirm(`Final confirmation — Proceed to declare ${winner}?`);
+      if (!c2) return;
+
+      try {
+        const res = await fetch(`/admin/matches/${matchId}/declare`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ winner, washed_out: false })
+        });
+        const data = await res.json();
+        alert(data.message || data.error);
+        if (data.success) location.reload();
+      } catch (err) {
+        alert('❌ Something went wrong.');
+        console.error(err);
       }
-    } catch (err) {
-      console.error('Error declaring result:', err);
-      alert('❌ Something went wrong.');
-    }
-  }
+    });
+  });
 
-  async function confirmCancel(matchId) {
-    const confirm1 = confirm('Are you sure you want to cancel this travel?');
-    if (!confirm1) return;
-    const confirm2 = confirm('Final confirmation: Cancel this travel?');
-    if (!confirm2) return;
+  // 🌧 Washout button
+  document.querySelectorAll('.declare-btn-washout').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.dataset.matchId;
+      const c1 = confirm('Are you sure you want to declare Washed Out?');
+      if (!c1) return;
+      const c2 = confirm('Final confirmation — Proceed to declare Washed Out?');
+      if (!c2) return;
 
-    try {
-      const res = await fetch(`/admin/matches/${matchId}/reset-ledger`, {
-        method: 'POST'
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-      if (data.success) location.reload();
-    } catch (err) {
-      alert('❌ Failed to cancel travel.');
-    }
-  }
+      try {
+        const res = await fetch(`/admin/matches/${matchId}/declare`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ washed_out: true })
+        });
+        const data = await res.json();
+        alert(data.message || data.error);
+        if (data.success) location.reload();
+      } catch (err) {
+        alert('❌ Something went wrong.');
+        console.error(err);
+      }
+    });
+  });
+
+  // ❌ Cancel button
+  document.querySelectorAll('.cancel-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.dataset.matchId;
+      const c1 = confirm('Are you sure you want to cancel this travel?');
+      if (!c1) return;
+      const c2 = confirm('Final confirmation: Cancel this travel?');
+      if (!c2) return;
+
+      try {
+        const res = await fetch(`/admin/matches/${matchId}/reset-ledger`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || data.error);
+        if (data.success) location.reload();
+      } catch (err) {
+        alert('❌ Failed to cancel travel.');
+      }
+    });
+  });
+
+});
 </script>
+
 <%- include('../partials/foot') %>
