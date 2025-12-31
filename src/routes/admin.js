@@ -1,3 +1,4 @@
+console.log("✅ Admin planner route loaded into memory");
 import { nowUtcISO } from '../utils/time.js';
 import express from 'express';
 import bcrypt from 'bcrypt';
