@@ -19,7 +19,7 @@ const upload = multer({
 
 const router = express.Router();
 router.use(ensureAdmin);
-
+router.use(express.json());
 // Users
 router.get('/users/new', (req, res) => res.render('admin/user_new', { title: 'Add User' }));
 router.post('/users/new', async (req, res) => {
