@@ -19,21 +19,20 @@
 <div class="card" style="margin:1rem 0;">
   <h3>🔮 Probable Winning (After Cutoff)</h3>
   <% if (isCutoffOver) { %>
-  <p>
-    <strong>
-      <% if (probable.A.perPlanner > probable.B.perPlanner) { %>
-        <%= match.team_a %>
-      <% } else if (probable.B.perPlanner > probable.A.perPlanner) { %>
-        <%= match.team_b %>
-      <% } else { %>
-        No clear winner yet.
-      <% } %>
-    </strong>
-  </p>
-<% } else { %>
-  <p>Probable result will be shown after cutoff.</p>
-<% } %>
-
+    <p>
+      <strong>
+        <% if (probable.A.perPlanner > probable.B.perPlanner) { %>
+          <%= match.team_a %>
+        <% } else if (probable.B.perPlanner > probable.A.perPlanner) { %>
+          <%= match.team_b %>
+        <% } else { %>
+          🟰 Equal Potential
+        <% } %>
+      </strong>
+    </p>
+  <% } else { %>
+    <p>Probable result will be shown after cutoff.</p>
+  <% } %>
 </div>
 
 <!-- Summary -->
@@ -96,11 +95,9 @@
 
 <script>
   async function declareResult(matchId, winner, washed_out = false) {
-    // Step 1: First confirmation
+    // Step 1: Confirmation prompts
     const firstConfirm = confirm(`Are you sure you want to declare ${washed_out ? 'Washed Out' : winner}?`);
     if (!firstConfirm) return;
-
-    // Step 2: Second confirmation
     const secondConfirm = confirm(`Final confirmation — Proceed to declare ${washed_out ? 'Washed Out' : winner}?`);
     if (!secondConfirm) return;
 
@@ -142,5 +139,4 @@
     }
   }
 </script>
-
 <%- include('../partials/foot') %>
