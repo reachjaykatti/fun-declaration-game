@@ -597,11 +597,6 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
   }
 });
 
-  } catch (err) {
-    console.error('🔴 Error loading match planner:', err);
-    res.status(500).render('404', { title: 'Error Loading Planner' });
-  }
-});
 
 // ==============================
 // 🔄 RESET MATCH + LEDGER
