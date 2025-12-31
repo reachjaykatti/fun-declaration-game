@@ -660,16 +660,21 @@ router.post('/matches/:matchId/declare', async (req, res) => {
       );
       return res.json({ success: true, message: 'Travel declared as Washed Out.' });
     }
+// 🔁 Normalize winner to team key
+let winnerKey = null;
+if (winner === match.team_a) winnerKey = 'A';
+else if (winner === match.team_b) winnerKey = 'B';
+else winnerKey = winner; // fallback if already 'A' or 'B'
 
     // ✅ Regular declaration
     await db.run(
       'UPDATE matches SET status = ?, winner = ?, admin_declared_at = ? WHERE id = ?',
-      ['completed', winner, nowUtcISO(), matchId]
+      ['completed', winner, winnerkey, nowUtcISO(), matchId]
     );
 
     const preds = await db.all('SELECT * FROM predictions WHERE match_id = ?', [matchId]);
-    const winnersPred = preds.filter(p => p.predicted_team === winner).map(p => p.user_id);
-    const losersPred = preds.filter(p => p.predicted_team !== winner).map(p => p.user_id);
+    const winnersPred = preds.filter(p => p.predicted_team === winnerkey).map(p => p.user_id);
+    const losersPred = preds.filter(p => p.predicted_team !== winnerkey).map(p => p.user_id);
 
     const membersRows = await db.all('SELECT user_id FROM series_members WHERE series_id = ?', [seriesId]);
     const memberIds = membersRows.map(r => r.user_id);
