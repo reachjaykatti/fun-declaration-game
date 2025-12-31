@@ -43,25 +43,17 @@
 
     <% if (stats && stats.length > 0) { %>
       <% stats.forEach(s => { %>
-        <tr>
-          <td>
-  <a 
-    href="/dashboard/series/<%= s.series_id %>" 
-    class="text-decoration-none fw-bold"
-    style="color: var(--accent-color, #00897b);"
-    title="View detailed travel breakdown for <%= s.seriesName %>"
-  >
-    <%= s.seriesName %>
-  </a>
-</td>
-
-          <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
-          <td><%= s.planned || 0 %></td>
-          <td><%= s.totalTravels || 0 %></td>
-          <td><%= s.notInterested || 0 %></td>
-          <td><%= s.plannerPercent ? s.plannerPercent.toFixed(1) : '0.0' %>%</td>
-        </tr>
-      <% }) %>
+  <tr>
+    <td>
+      <a href="/dashboard/series/<%= s.series_id %>"><%= s.seriesName %></a>
+    </td>
+    <td><%= s.seriesPoints ? s.seriesPoints.toFixed(2) : 0 %></td>
+    <td><%= s.planned || 0 %></td>
+    <td><%= s.planners || 0 %></td>
+    <td><%= s.notInterested || 0 %></td>
+    <td><%= s.plannerPercent ? s.plannerPercent.toFixed(1) : '0.0' %>%</td>
+  </tr>
+<% }) %>
     <% } else { %>
       <tr>
         <td colspan="6" style="text-align:center;">No series data available</td>
