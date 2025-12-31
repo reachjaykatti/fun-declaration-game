@@ -45,7 +45,7 @@
 <!-- Travel Planners -->
 <div class="card">
   <h3>🧭 Travel Planners</h3>
-  <% if (predictions.length === 0) { %>
+  <% if (preds.length === 0) { %>
     <p>No planners yet.</p>
   <% } else { %>
     <table class="table">
@@ -53,7 +53,7 @@
         <tr><th>Planner</th><th>Chosen Destination</th></tr>
       </thead>
       <tbody>
-        <% predictions.forEach(p => { %>
+        <% preds.forEach(p => { %>
           <tr>
             <td><%= p.display_name %></td>
             <td><%= p.predicted_team === 'A' ? match.team_a : match.team_b %></td>
