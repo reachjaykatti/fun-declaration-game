@@ -588,7 +588,8 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
       missed,
       missedTravellers,
       isCutoffOver,
-      labels: req.app.locals.labels || {}
+      labels: req.app.locals.labels || {},
+      moment
     });
 
   } catch (err) {
