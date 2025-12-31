@@ -18,11 +18,22 @@
 <!-- Probable Result -->
 <div class="card" style="margin:1rem 0;">
   <h3>🔮 Probable Winning (After Cutoff)</h3>
-  <% if (isCutoffPassed) { %>
-    <p><strong><%= probable %></strong></p>
-  <% } else { %>
-    <p>Probable result will be shown after cutoff.</p>
-  <% } %>
+  <% if (isCutoffOver) { %>
+  <p>
+    <strong>
+      <% if (probable.A.perPlanner > probable.B.perPlanner) { %>
+        <%= match.team_a %>
+      <% } else if (probable.B.perPlanner > probable.A.perPlanner) { %>
+        <%= match.team_b %>
+      <% } else { %>
+        No clear winner yet.
+      <% } %>
+    </strong>
+  </p>
+<% } else { %>
+  <p>Probable result will be shown after cutoff.</p>
+<% } %>
+
 </div>
 
 <!-- Summary -->
