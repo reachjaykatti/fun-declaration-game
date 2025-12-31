@@ -30,6 +30,15 @@ function computeStreaks(seq) {
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const db = await getDb();
+    // 🧩 DEBUG — log how winners are stored
+const winnerRows = await db.all(`
+  SELECT id, team_a, team_b, winner, status
+  FROM matches
+  WHERE status = 'completed'
+  LIMIT 5
+`);
+console.log("🏁 SAMPLE WINNER ROWS:", winnerRows);
+
     const userId = req.session.user.id;
 
     // =============================
