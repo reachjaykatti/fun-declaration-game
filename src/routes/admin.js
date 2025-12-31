@@ -575,6 +575,14 @@ router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
     };
 
     console.log("✅ Rendering match_planner with cutoff:", { isCutoffOver });
+console.log("🧮 Probable check:", {
+  isCutoffOver,
+  probable,
+  aCount,
+  bCount,
+  missed,
+  entry
+});
 
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
