@@ -75,47 +75,36 @@ const stats = await db.all(`
     s.id AS series_id,
     s.name AS seriesName,
 
-    -- ✅ Total travels completed (played)
+    -- ✅ Total completed (played)
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
-    -- ✅ Planners (Wins): compare prediction vs actual winner correctly
+    -- ✅ Wins (Planners)
     COUNT(DISTINCT CASE 
       WHEN m.status = 'completed'
-       AND (
-         (p.predicted_team = 'A' AND m.winner = m.team_a)
-         OR
-         (p.predicted_team = 'B' AND m.winner = m.team_b)
-       )
+       AND p.predicted_team = m.winner
       THEN m.id END
     ) AS planners,
 
-    -- ✅ Not Interested (Loss or Missed)
+    -- ✅ Losses or Missed (Not Interested)
     COUNT(DISTINCT CASE 
       WHEN m.status = 'completed'
        AND (
          p.predicted_team IS NULL
-         OR
-         (p.predicted_team = 'A' AND m.winner != m.team_a)
-         OR
-         (p.predicted_team = 'B' AND m.winner != m.team_b)
+         OR p.predicted_team != m.winner
        )
       THEN m.id END
     ) AS notInterested,
 
-    -- ✅ Planner % (Winning %)
+    -- ✅ Win %
     ROUND(
       100.0 * COUNT(DISTINCT CASE 
         WHEN m.status = 'completed'
-         AND (
-           (p.predicted_team = 'A' AND m.winner = m.team_a)
-           OR
-           (p.predicted_team = 'B' AND m.winner = m.team_b)
-         )
+         AND p.predicted_team = m.winner
         THEN m.id END
       ) / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
 
-    -- ✅ Total points in that series
+    -- ✅ Series points
     COALESCE((
       SELECT SUM(points)
       FROM points_ledger pl
