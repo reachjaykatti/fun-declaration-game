@@ -509,6 +509,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
   });
 }
 });
+console.log("🧭 Loaded modern planner route for admin.js");
 
 // ==============================
 // 🧭 ADMIN MATCH PLANNER VIEW (Modern Layout)
@@ -567,6 +568,7 @@ router.get('/matches/:matchId/planner', async (req, res) => {
         perPlanner: bCount > 0 ? ((aCount + missed) * entry) / bCount : 0
       }
     };
+console.log("➡️ Rendering modern match_planner for match", matchId, { isCutoffOver });
 
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
