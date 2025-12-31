@@ -38,6 +38,15 @@ const winnerRows = await db.all(`
   LIMIT 5
 `);
 console.log("🏁 SAMPLE WINNER ROWS:", winnerRows);
+    // 🧩 DEBUG — log prediction formats
+const predRows = await db.all(`
+  SELECT match_id, predicted_team
+  FROM predictions
+  WHERE predicted_team IS NOT NULL
+  LIMIT 5
+`);
+console.log("🧠 SAMPLE PREDICTIONS:", predRows);
+
 
     const userId = req.session.user.id;
 
