@@ -517,15 +517,16 @@ console.log("🧭 Loaded modern planner route for admin.js");
 // ==============================
 // 🧭 ADMIN MATCH PLANNER VIEW (Modern Layout)
 // ==============================
-router.get('/matches/:matchId/planner', async (req, res) => {
+router.get('/series/:seriesId/matches/:matchId/planner', async (req, res) => {
+  console.log("🧭 Loaded modern planner route for admin.js");
   try {
     const db = await getDb();
-    const matchId = req.params.matchId;
+    const { seriesId, matchId } = req.params;
 
     const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
     if (!match) return res.status(404).render('404', { title: 'Not Found' });
 
-    const series = await db.get('SELECT * FROM series WHERE id = ?', [match.series_id]);
+    const series = await db.get('SELECT * FROM series WHERE id = ?', [seriesId]);
 
     const preds = await db.all(`
       SELECT p.*, u.display_name
@@ -534,7 +535,7 @@ router.get('/matches/:matchId/planner', async (req, res) => {
       WHERE p.match_id = ?
     `, [matchId]);
 
-    const row = await db.get('SELECT COUNT(*) AS c FROM series_members WHERE series_id = ?', [match.series_id]);
+    const row = await db.get('SELECT COUNT(*) AS c FROM series_members WHERE series_id = ?', [seriesId]);
     const membersCount = row?.c || 0;
 
     const aCount = preds.filter(p => p.predicted_team === 'A').length;
@@ -545,7 +546,7 @@ router.get('/matches/:matchId/planner', async (req, res) => {
       FROM series_members sm 
       JOIN users u ON sm.user_id = u.id 
       WHERE sm.series_id = ?
-    `, [match.series_id]);
+    `, [seriesId]);
 
     const votedIds = preds.map(p => p.user_id);
     const missedTravellers = members.filter(m => !votedIds.includes(m.id));
@@ -554,8 +555,9 @@ router.get('/matches/:matchId/planner', async (req, res) => {
     const entry = match.entry_points || 0;
 
     const cutoffMins = match.cutoff_minutes_before || 30;
-    const cutoffTime = moment.utc(match.start_time_utc).subtract(cutoffMins, 'minutes');
-    const isCutoffOver = moment.utc().isAfter(cutoffTime);
+    const cutoffTime = new Date(match.start_time_utc).getTime() - cutoffMins * 60000;
+    const now = Date.now();
+    const isCutoffOver = now >= cutoffTime;
 
     const probable = {
       A: {
@@ -571,7 +573,8 @@ router.get('/matches/:matchId/planner', async (req, res) => {
         perPlanner: bCount > 0 ? ((aCount + missed) * entry) / bCount : 0
       }
     };
-console.log("➡️ Rendering modern match_planner for match", matchId, { isCutoffOver });
+
+    console.log("✅ Rendering match_planner with cutoff:", { isCutoffOver });
 
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
@@ -587,6 +590,12 @@ console.log("➡️ Rendering modern match_planner for match", matchId, { isCuto
       isCutoffOver,
       labels: req.app.locals.labels || {}
     });
+
+  } catch (err) {
+    console.error('🔴 Error loading planner:', err);
+    res.status(500).render('404', { title: 'Error Loading Planner' });
+  }
+});
 
   } catch (err) {
     console.error('🔴 Error loading match planner:', err);
