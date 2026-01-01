@@ -11,6 +11,31 @@ import XLSX from 'xlsx';
 
 console.log("🧭 admin.js routes initialized");
 
+// ==============================
+// 🧹 ADMIN: Full Cleanup of Old Streaks / Ledgers
+// ==============================
+router.get('/cleanup/all', async (req, res) => {
+  const db = await getDb();
+
+  try {
+    // Delete all predictions, ledgers, matches, and series except admin users
+    await db.run('DELETE FROM predictions');
+    await db.run('DELETE FROM matches');
+    await db.run('DELETE FROM series_members');
+    await db.run('DELETE FROM series');
+    await db.run('DELETE FROM points_ledger');
+
+    // Optional: keep all users but reset their streaks
+    await db.run('DELETE FROM user_streaks');
+
+    console.log("🧹 Full cleanup complete. All series and streak data removed.");
+    res.send('✅ Cleanup complete. All travel/streak data deleted, users preserved.');
+  } catch (err) {
+    console.error('❌ Cleanup error:', err);
+    res.status(500).send('Failed to clean up.');
+  }
+});
+
 // Multer for CSV/TSV uploads (kept in memory)
 const upload = multer({
   storage: multer.memoryStorage(),
