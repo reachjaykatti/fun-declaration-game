@@ -147,7 +147,7 @@ if (!hasSeriesFilter || !selectedSeriesId) {
     ORDER BY points DESC
   `);
 
-  console.log("📊 Global leaderboard loaded:", leaderboard.length);
+  console.log("📊 Loaded Global Leaderboard:", leaderboard.length);
 
 } else {
   // 🎯 Series-specific leaderboard (only members of that series)
@@ -167,11 +167,12 @@ if (!hasSeriesFilter || !selectedSeriesId) {
     ORDER BY points DESC
   `, [selectedSeriesId]);
 
-  console.log("📊 Leaderboard filtered for series:", selectedSeriesId, leaderboard.length);
+  console.log("📊 Loaded Series Leaderboard:", selectedSeriesId, leaderboard.length);
 }
 
 // 🧩 Safety: ensure leaderboard is always an array
 if (!Array.isArray(leaderboard)) leaderboard = [];
+  
 
     // 🚫 Hide leaderboard if no series or empty data
 let hideLeaderboard = false;
