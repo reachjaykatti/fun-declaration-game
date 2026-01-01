@@ -62,79 +62,70 @@
   </table>
 </div>
 
-<h2>
-  Top Planners 
-  <% if (typeof selectedSeriesId !== 'undefined' && selectedSeriesId) { %>
-    (Travel: <%= selectedSeriesName || selectedSeriesId %>)
-  <% } else { %>
-    (All Travels)
-  <% } %>
-</h2>
+<% if (!hideLeaderboard) { %>
+  <h2>
+    Top Planners 
+    <% if (typeof selectedSeriesId !== 'undefined' && selectedSeriesId) { %>
+      (Selected Series)
+    <% } else { %>
+      (All Travels)
+    <% } %>
+  </h2>
 
-<div class="card">
-  <form id="seriesFilterForm" action="/dashboard" method="GET" class="inline-form" style="margin-bottom:.75rem;">
-  <label for="seriesId"><strong>Filter by Travel Series:</strong></label>
-  <select name="seriesId" id="seriesId" onchange="document.getElementById('seriesFilterForm').submit()">
-    <option value="">All Travels</option>
-    <% (seriesStats || []).forEach(s => { %>
-      <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
-        <%= s.seriesName || s.name %>
-      </option>
-    <% }) %>
-  </select>
-</form>
+  <div class="card">
+    <form id="seriesFilterForm" action="/dashboard" method="GET" class="inline-form" style="margin-bottom:.75rem;">
+      <label for="seriesId"><strong>Filter by Travel Series:</strong></label>
+      <select name="seriesId" id="seriesId" onchange="document.getElementById('seriesFilterForm').submit()">
+        <option value="">Select Series</option>
+        <% (seriesStats || []).forEach(s => { %>
+          <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
+            <%= s.seriesName || s.name %>
+          </option>
+        <% }) %>
+      </select>
+    </form>
 
-<script>
-  // 👇 Force submit correctly with ?seriesId= value
-  document.getElementById('seriesId').addEventListener('change', function() {
-    const form = document.getElementById('seriesFilterForm');
-    const selected = this.value;
-    const url = selected ? `/dashboard?seriesId=${selected}` : '/dashboard';
-    window.location.href = url; // refresh page properly with query
-  });
-</script>
-
-  <% if (seriesUnsupported) { %>
-    <div class="chips" style="margin-bottom:.5rem">
-      <div class="chip"><span class="dot dot-info"></span>
-        Travel filtering is not supported by the current data schema; showing global totals.
-      </div>
-    </div>
-  <% } else { %>
     <div class="chips" style="margin-bottom:.5rem">
       <div class="chip"><span class="dot dot-ok"></span> Top 3 planners are highlighted</div>
       <div class="chip"><span class="dot dot-info"></span>
         Points are <%= selectedSeriesId ? 'for the selected travel only' : 'cumulative across all travels' %>
       </div>
     </div>
-  <% } %>
 
-  <table class="table">
-    <tr><th>#</th><th>Planner</th><th>Recent Form</th>
-<th>Points</th></tr>
-    <% leaderboard.forEach((l, idx) => { 
-         const medal = idx===0 ? '🥇' : idx===1 ? '🥈' : idx===2 ? '🥉' : '—'; %>
-      <tr>
-        <td><%= idx+1 %></td>
-        <td><a href="/dashboard/player/<%= l.user_id %>"><%= l.display_name %></a></td>
-        <td>
-  <div style="display:flex;gap:4px;">
-    <% (l.recentForm || []).forEach(result => { %>
-      <% if (result === 'W') { %>
-        <span style="color:#0f9d58;">●</span>
-      <% } else if (result === 'L') { %>
-        <span style="color:#db4437;">●</span>
-      <% } else { %>
-        <span style="color:#999;">●</span>
-      <% } %>
-    <% }) %>
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>Planner</th><th>Recent Form</th><th>Points</th></tr>
+      </thead>
+      <tbody>
+        <% leaderboard.forEach((l, idx) => { %>
+          <tr class="<%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
+            <td><%= idx + 1 %></td>
+            <td><a href="/dashboard/player/<%= l.user_id %>"><%= l.display_name %></a></td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                <% (l.recentForm || []).forEach(result => { %>
+                  <% if (result === 'W') { %>
+                    <span style="color:#0f9d58;">●</span>
+                  <% } else if (result === 'L') { %>
+                    <span style="color:#db4437;">●</span>
+                  <% } else { %>
+                    <span style="color:#999;">●</span>
+                  <% } %>
+                <% }) %>
+              </div>
+            </td>
+            <td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
   </div>
-</td>
 
-        <td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
-      </tr>
-    <% }) %>
-  </table>
-</div>
+<% } else { %>
+  <div class="card" style="text-align:center; margin-top:1rem; padding:1rem;">
+    <p>📊 No leaderboard available yet.<br>
+       Select a valid travel series above to view top planners.</p>
+  </div>
+<% } %>
 
 <%- include('../partials/foot') %>
