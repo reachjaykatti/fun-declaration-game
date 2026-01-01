@@ -203,16 +203,15 @@ for (const user of leaderboard) {
     return r.predicted_team === r.winner ? 'W' : 'L';
   });
 }
-
     // ✅ Render EJS
-    res.render('dashboard/index', {
+res.render('dashboard/index', {
   title: 'My Dashboard',
   totalPoints: totalPointsOverall || 0,
-  seriesStats, // ✅ ensure this variable exists
-  stats: seriesStats, // optional alias
+  seriesStats,              // ✅ ensure this variable exists
+  stats: seriesStats,       // optional alias
   leaderboard,
   streaks,
-  hideLeaderboard
+  hideLeaderboard,          // 🟢 added missing comma here
   selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
   selectedSeriesName,
   seriesUnsupported: false
