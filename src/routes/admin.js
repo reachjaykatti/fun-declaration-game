@@ -14,6 +14,9 @@ console.log("🧭 admin.js routes initialized");
 // ==============================
 // 🧹 ADMIN: Full Cleanup of Old Streaks / Ledgers
 // ==============================
+// ==============================
+// 🧹 ADMIN: Full Cleanup of Old Streaks / Ledgers
+// ==============================
 router.get('/cleanup/all', async (req, res) => {
   const db = await getDb();
   console.log("🧹 Cleanup endpoint hit!");
@@ -24,7 +27,14 @@ router.get('/cleanup/all', async (req, res) => {
     await db.run('DELETE FROM series_members');
     await db.run('DELETE FROM series');
     await db.run('DELETE FROM points_ledger');
-    await db.run('DELETE FROM user_streaks');
+
+    // Remove optional streak table only if it exists
+    try {
+      await db.run('DELETE FROM user_streaks');
+    } catch (e) {
+      console.log("⚠️ No user_streaks table found — skipping...");
+    }
+
     console.log("🧹 Full cleanup complete. All series and streak data removed.");
     res.send('<h2>✅ Cleanup complete!</h2><p>All travel/streak data deleted, users preserved.</p>');
   } catch (err) {
