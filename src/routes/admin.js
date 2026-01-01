@@ -64,35 +64,47 @@ router.get('/users/:id/edit', async (req, res) => {
   });
 });
 
-// ==============================
-// 🗑 DELETE USER (Admin Only)
-// ==============================
-router.post('/users/:id/delete', async (req, res) => {
+// 🗑️ Delete User (Admin only, safe version)
+router.post('/users/:id/delete', ensureAdmin, async (req, res) => {
   const db = await getDb();
   const userId = req.params.id;
 
   try {
-    // Don’t allow deleting the main admin account
-    const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
-    if (!user) return res.status(404).send('User not found');
-    if (user.is_admin) return res.status(403).send('Cannot delete admin account');
+    // Prevent deleting your own account
+    if (req.session.user && req.session.user.id == userId) {
+      const users = await db.all('SELECT id, username, display_name, is_admin FROM users ORDER BY created_at DESC');
+      return res.render('admin/users', {
+        title: 'Users',
+        users,
+        error: '⚠️ You cannot delete your own account.'
+      });
+    }
 
-    // Clean related data for that user
-    await db.run('DELETE FROM predictions WHERE user_id = ?', [userId]);
-    await db.run('DELETE FROM points_ledger WHERE user_id = ?', [userId]);
-    await db.run('DELETE FROM series_members WHERE user_id = ?', [userId]);
-    await db.run('DELETE FROM user_streaks WHERE user_id = ?', [userId]);
+    console.log(`🗑️ Attempting to delete user ID: ${userId}`);
 
-    // Finally delete the user
+    // List of related tables that might contain user_id
+    const tables = ['points_ledger', 'predictions', 'series_members', 'user_streaks'];
+
+    for (const table of tables) {
+      try {
+        await db.run(`DELETE FROM ${table} WHERE user_id = ?`, [userId]);
+        console.log(`✅ Cleaned from table: ${table}`);
+      } catch (err) {
+        console.log(`⚠️ Skipped table ${table}: ${err.message}`);
+      }
+    }
+
+    // Delete user last
     await db.run('DELETE FROM users WHERE id = ?', [userId]);
+    console.log(`✅ User ${userId} deleted successfully`);
 
-    console.log(`🗑 User ${user.display_name} deleted successfully.`);
     res.redirect('/admin/users');
   } catch (err) {
-    console.error('❌ Error deleting user:', err);
-    res.status(500).send('Failed to delete user.');
+    console.error('❌ User delete failed:', err);
+    res.status(500).send('Failed to delete user. ' + err.message);
   }
 });
+
 
 // Update user (name + password)
 router.post('/users/:id/edit', async (req, res) => {
