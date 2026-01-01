@@ -75,7 +75,7 @@
   <div class="card">
     <form id="seriesFilterForm" action="/dashboard" method="GET" class="inline-form" style="margin-bottom:.75rem;">
       <label for="seriesId"><strong>Filter by Travel Series:</strong></label>
-      <select name="seriesId" id="seriesId" onchange="document.getElementById('seriesFilterForm').submit()">
+      <select name="seriesId" id="seriesId">
         <option value="">Select Series</option>
         <% (seriesStats || []).forEach(s => { %>
           <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
