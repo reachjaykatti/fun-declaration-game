@@ -8,7 +8,7 @@ import { getDb } from '../config/db.js';
 import { ensureAdmin } from '../middleware/auth.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import XLSX from 'xlsx';
-
+const router = express.Router();
 console.log("🧭 admin.js routes initialized");
 
 // ==============================
@@ -42,7 +42,6 @@ const upload = multer({
   limits: { fileSize: 2 * 1024 * 1024 } // 2 MB
 });
 
-const router = express.Router();
 router.use(ensureAdmin);
 router.use(express.json());
 // Users
