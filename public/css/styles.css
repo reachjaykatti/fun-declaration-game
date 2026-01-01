@@ -567,3 +567,13 @@ body.dark-theme .status-chip {
 body.dark-theme .status-chip:hover {
   background-color: #2a2d33 !important;
 }
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #c0392b;
+  font-weight: bold;
+}
+button:hover {
+  text-decoration: underline;
+}
