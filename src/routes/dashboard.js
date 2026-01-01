@@ -128,14 +128,13 @@ const stats = await db.all(`
       ? ((seriesStats.find(s => s.series_id === selectedSeriesId) || {}).seriesName || null)
       : null;
 
-    // ✅ Leaderboard
     // ======================
-// 🏆 LEADERBOARD FIX
+// 🏆 LEADERBOARD (Series Filtered + Members Only)
 // ======================
 let leaderboard = [];
 
 if (!hasSeriesFilter) {
-  // 🌍 Global leaderboard
+  // 🌍 Global leaderboard (all users)
   leaderboard = await db.all(`
     SELECT 
       u.id AS user_id,
@@ -147,15 +146,16 @@ if (!hasSeriesFilter) {
     ORDER BY points DESC
   `);
 } else {
-  // 🎯 Series-specific leaderboard (correct filtering)
+  // 🎯 Series-specific leaderboard (only members of that series)
   leaderboard = await db.all(`
     SELECT 
       u.id AS user_id,
       u.display_name,
       COALESCE(SUM(pl.points), 0) AS points
     FROM users u
-    LEFT JOIN points_ledger pl ON pl.user_id = u.id
-    WHERE pl.series_id = ?
+    JOIN series_members sm ON sm.user_id = u.id AND sm.series_id = ?
+    LEFT JOIN points_ledger pl 
+      ON pl.user_id = u.id AND pl.series_id = sm.series_id
     GROUP BY u.id
     ORDER BY points DESC
   `, [selectedSeriesId]);
