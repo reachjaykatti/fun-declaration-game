@@ -145,36 +145,34 @@ router.post('/series/:id/delete', async (req, res) => {
   const seriesId = req.params.id;
 
   try {
-    // 1️⃣ Find all matches in this series
+    // Find all matches linked to this series
     const matches = await db.all('SELECT id FROM matches WHERE series_id = ?', [seriesId]);
     const matchIds = matches.map(m => m.id);
 
     if (matchIds.length > 0) {
-      // 2️⃣ Delete all predictions linked to these matches
       await db.run(`DELETE FROM predictions WHERE match_id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
-
-      // 3️⃣ Delete all ledger entries for these matches
       await db.run(`DELETE FROM points_ledger WHERE match_id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
-
-      // 4️⃣ Delete matches themselves
       await db.run(`DELETE FROM matches WHERE id IN (${matchIds.map(() => '?').join(',')})`, matchIds);
     }
 
-    // 5️⃣ Delete members and ledger rows linked to this series
     await db.run('DELETE FROM series_members WHERE series_id = ?', [seriesId]);
     await db.run('DELETE FROM points_ledger WHERE series_id = ?', [seriesId]);
-
-    // 6️⃣ Finally, delete the series
     await db.run('DELETE FROM series WHERE id = ?', [seriesId]);
 
-    console.log(`🧹 Series ${seriesId} and all related data deleted successfully.`);
+    console.log(`🧹 Series ${seriesId} and related data deleted successfully.`);
+
+    // 🧠 Optional: cleanup orphaned streaks or old ledgers with no matching series
+    await db.run(`
+      DELETE FROM points_ledger
+      WHERE series_id NOT IN (SELECT id FROM series)
+    `);
+
     res.redirect('/admin');
   } catch (err) {
     console.error('❌ Error deleting series:', err);
     res.status(500).send('Failed to delete series and its related data.');
   }
 });
-
 
 // Matches: manage/create/edit
 
