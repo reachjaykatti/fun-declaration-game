@@ -162,6 +162,15 @@ if (!hasSeriesFilter) {
 
   console.log("📊 Leaderboard filtered for series:", selectedSeriesId, leaderboard.length);
 }
+    // 🚫 Hide leaderboard if no series or empty data
+let hideLeaderboard = false;
+
+if (!seriesStats || seriesStats.length === 0) {
+  hideLeaderboard = true;
+} else if (hasSeriesFilter && (!leaderboard || leaderboard.length === 0)) {
+  hideLeaderboard = true;
+}
+
     // ✅ W/L streaks
     const wlRows = await db.all(`
       SELECT m.start_time_utc, m.status, m.winner, p.predicted_team
@@ -203,6 +212,7 @@ for (const user of leaderboard) {
   stats: seriesStats, // optional alias
   leaderboard,
   streaks,
+  hideLeaderboard
   selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
   selectedSeriesName,
   seriesUnsupported: false
