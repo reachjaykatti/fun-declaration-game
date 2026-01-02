@@ -42,7 +42,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.locals.labels = labels;
 
 // Static files
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parsing
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
