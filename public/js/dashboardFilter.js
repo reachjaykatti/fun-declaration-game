@@ -1,9 +1,15 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function () {
   const dropdown = document.getElementById("seriesId");
-  if (!dropdown) return;
+  if (!dropdown) {
+    console.warn("⚠️ No seriesId dropdown found on page.");
+    return;
+  }
 
-  dropdown.addEventListener("change", () => {
-    const selected = dropdown.value;
+  console.log("✅ dashboardFilter.js active");
+
+  dropdown.addEventListener("change", function () {
+    const selected = this.value;
+    console.log("🎯 Series selected:", selected);
     const url = selected ? `/dashboard?seriesId=${selected}` : '/dashboard';
     window.location.href = url;
   });
