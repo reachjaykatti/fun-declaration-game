@@ -84,6 +84,21 @@
       </ul>
     </div>
   </div>
+<!-- Yet to Declare Travellers -->
+<% if (typeof notDeclared !== 'undefined' && notDeclared.length > 0) { %>
+  <div class="card" style="margin-top:1rem;">
+    <h3>🕒 Travellers Yet to Declare</h3>
+    <ul>
+      <% notDeclared.forEach(u => { %>
+        <li><%= u.display_name %></li>
+      <% }) %>
+    </ul>
+  </div>
+<% } else if (typeof notDeclared !== 'undefined') { %>
+  <div class="card" style="margin-top:1rem;">
+    <h3>🕒 Travellers Yet to Declare</h3>
+    <p>✅ Everyone has declared their plan.</p>
+  </div>
 <% } %>
 
 <% if (showAll && probable && match.status !== 'completed') { %>
