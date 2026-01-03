@@ -354,6 +354,16 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
     );
     myMatchPoints = row ? row.pts : 0;
   }
+// ✅ Travellers who haven't declared yet
+const notDeclared = await db.all(`
+  SELECT u.display_name
+  FROM users u
+  JOIN series_members sm ON sm.user_id = u.id
+  WHERE sm.series_id = ?
+  AND u.id NOT IN (
+    SELECT p.user_id FROM predictions p WHERE p.match_id = ?
+  )
+`, [seriesId, matchId]);
 
   // --- 🔟 Render page ---
   res.render('series/match', {
@@ -371,6 +381,7 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
     showAll,
     myMatchPoints,
     missedTravellers,
+    notDeclared
   });
 });
 export default router;
