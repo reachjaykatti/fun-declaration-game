@@ -354,17 +354,23 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
     );
     myMatchPoints = row ? row.pts : 0;
   }
-// ✅ Travellers who haven't declared yet
-const notDeclared = await db.all(`
-  SELECT u.display_name
-  FROM users u
-  JOIN series_members sm ON sm.user_id = u.id
-  WHERE sm.series_id = ?
-  AND u.id NOT IN (
-    SELECT p.user_id FROM predictions p WHERE p.match_id = ?
-  )
-`, [seriesId, matchId]);
-
+// ✅ Fetch users who haven't declared yet
+let notDeclared = [];
+try {
+  notDeclared = await db.all(`
+    SELECT u.display_name
+    FROM users u
+    JOIN series_members sm ON sm.user_id = u.id
+    WHERE sm.series_id = ?
+    AND u.id NOT IN (
+      SELECT p.user_id FROM predictions p WHERE p.match_id = ?
+    )
+  `, [seriesId, matchId]);
+} catch (err) {
+  console.error("❌ Failed to fetch undeclared users:", err.message);
+  notDeclared = [];
+}
+console.log("🧭 notDeclared users:", notDeclared);
   // --- 🔟 Render page ---
   res.render('series/match', {
     title: match.name,
