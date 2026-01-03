@@ -650,6 +650,16 @@ console.log("🧮 Probable check:", {
   missed,
   entry
 });
+// ✅ Fetch users who haven’t declared yet
+const notDeclared = await db.all(`
+  SELECT u.display_name
+  FROM users u
+  JOIN series_members sm ON sm.user_id = u.id
+  WHERE sm.series_id = ?
+  AND u.id NOT IN (
+    SELECT p.user_id FROM predictions p WHERE p.match_id = ?
+  )
+`, [seriesId, matchId]);
 
     res.render('admin/match_planner', {
       title: `Planner — ${match.name}`,
@@ -664,7 +674,8 @@ console.log("🧮 Probable check:", {
       missedTravellers,
       isCutoffOver,
       labels: req.app.locals.labels || {},
-      moment
+      moment,
+      notDeclared
     });
 
   } catch (err) {
