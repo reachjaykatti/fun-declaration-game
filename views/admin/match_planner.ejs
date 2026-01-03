@@ -69,6 +69,20 @@
 <div class="chip chip-warn">🏖 <%= match.team_b %>: <%= bCount %> planners</div>
 </div>
 
+<!-- Undeclared Travellers -->
+<div class="card" style="margin-top:1rem;">
+  <h3>🕒 Yet to Declare</h3>
+  <% if (notDeclared && notDeclared.length > 0) { %>
+    <ul>
+      <% notDeclared.forEach(u => { %>
+        <li><%= u.display_name %></li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>✅ All travellers have declared.</p>
+  <% } %>
+</div>
+
 <!-- Travel Planners -->
 <div class="card">
   <h3>🧭 Travel Planners</h3>
