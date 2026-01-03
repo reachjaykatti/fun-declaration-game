@@ -357,6 +357,9 @@ const missedTravellers = members.filter(m => !votedIds.includes(m.id));
 // ✅ Fetch users who haven't declared yet
 let notDeclared = [];
 try {
+  const seriesId = req.params.id;         // 👈 Correct param name
+  const matchId = req.params.matchId;     // 👈 Correct param name
+
   notDeclared = await db.all(`
     SELECT u.display_name
     FROM users u
@@ -371,6 +374,7 @@ try {
   notDeclared = [];
 }
 console.log("🧭 notDeclared users:", notDeclared);
+
   // --- 🔟 Render page ---
   res.render('series/match', {
     title: match.name,
