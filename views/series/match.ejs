@@ -84,7 +84,9 @@
       </ul>
     </div>
   </div>
-<!-- Yet to Declare Travellers -->
+<% } %>  <!-- ✅ This closes your earlier ELSE block properly -->
+
+<!-- ✅ Yet to Declare Travellers -->
 <% if (typeof notDeclared !== 'undefined' && notDeclared.length > 0) { %>
   <div class="card" style="margin-top:1rem;">
     <h3>🕒 Travellers Yet to Declare</h3>
