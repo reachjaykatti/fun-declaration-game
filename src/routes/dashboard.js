@@ -53,6 +53,28 @@ console.log("🧠 SAMPLE PREDICTIONS:", predRows);
     // =============================
     // ✅ SERIES FILTER HANDLING
     // =============================
+    // 🧭 PRIVACY FILTER — Only show series the logged-in user belongs to
+const memberSeriesRows = await db.all(
+  `SELECT series_id FROM series_members WHERE user_id = ?`,
+  [userId]
+);
+const allowedSeriesIds = memberSeriesRows.map(r => r.series_id);
+const allowedSeriesIdsStr = allowedSeriesIds.join(',');
+
+// If a specific series filter is chosen but the user isn't part of it, block it
+if (hasSeriesFilter && !allowedSeriesIds.includes(selectedSeriesId)) {
+  console.warn(`⛔ User ${userId} tried to view unauthorized series ${selectedSeriesId}`);
+  return res.render('dashboard/index', {
+    title: 'My Dashboard',
+    seriesStats: [],
+    leaderboard: [],
+    hideLeaderboard: true,
+    selectedSeriesId,
+    selectedSeriesName: null,
+    seriesUnsupported: false,
+    totalPoints: 0,
+  });
+}
     const rawSid = req.query.seriesId ? String(req.query.seriesId).trim() : '';
     const selectedSeriesId = rawSid && !isNaN(rawSid) ? parseInt(rawSid, 10) : null;
     const hasSeriesFilter = selectedSeriesId !== null;
