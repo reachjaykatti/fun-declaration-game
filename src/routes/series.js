@@ -14,20 +14,30 @@ import {
 const router = express.Router();
 
 /* ---------------------------
-   My Series (the ones user is in)
+   My Series — show only series the user belongs to
 ---------------------------- */
 router.get('/', async (req, res) => {
-  const db = await getDb();
-  const seriesAllowed = await db.all(
-    `
-    SELECT s.* FROM series s
-    JOIN series_members sm ON sm.series_id = s.id
-    WHERE sm.user_id = ?
-    ORDER BY s.start_date_utc DESC
-    `,
-    [req.session.user.id]
-  );
-  res.render('series/index', { title: 'My Series', series: seriesAllowed });
+  try {
+    const db = await getDb();
+    const userId = req.session.user.id;
+
+    // 🔒 fetch only the series where the user is a member
+    const mySeries = await db.all(`
+      SELECT s.*
+      FROM series s
+      JOIN series_members sm ON sm.series_id = s.id
+      WHERE sm.user_id = ?
+      ORDER BY s.start_date_utc DESC
+    `, [userId]);
+
+    res.render('series/index', {
+      title: 'My Series',
+      series: mySeries
+    });
+  } catch (err) {
+    console.error('❌ Error loading user series:', err);
+    res.status(500).send('Server error while loading series');
+  }
 });
 
 /* ---------------------------
