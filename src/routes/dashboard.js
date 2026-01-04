@@ -60,6 +60,14 @@ const memberSeriesRows = await db.all(
 );
 const allowedSeriesIds = memberSeriesRows.map(r => r.series_id);
 const allowedSeriesIdsStr = allowedSeriesIds.join(',');
+    // =============================
+// ✅ SERIES FILTER HANDLING (must be defined early)
+// =============================
+const rawSid = req.query.seriesId ? String(req.query.seriesId).trim() : '';
+const selectedSeriesId = rawSid && !isNaN(rawSid) ? parseInt(rawSid, 10) : null;
+const hasSeriesFilter = selectedSeriesId !== null;
+
+console.log("🧭 Dashboard filter check →", { rawSid, selectedSeriesId, hasSeriesFilter });
 
 // If a specific series filter is chosen but the user isn't part of it, block it
 if (hasSeriesFilter && !allowedSeriesIds.includes(selectedSeriesId)) {
@@ -75,12 +83,7 @@ if (hasSeriesFilter && !allowedSeriesIds.includes(selectedSeriesId)) {
     totalPoints: 0,
   });
 }
-    const rawSid = req.query.seriesId ? String(req.query.seriesId).trim() : '';
-    const selectedSeriesId = rawSid && !isNaN(rawSid) ? parseInt(rawSid, 10) : null;
-    const hasSeriesFilter = selectedSeriesId !== null;
-
-    console.log("🧭 Dashboard filter check →", { rawSid, selectedSeriesId, hasSeriesFilter });
-
+    
     // =============================
     // TOTAL POINTS (all time)
     // =============================
