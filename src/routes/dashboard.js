@@ -101,14 +101,14 @@ const stats = await db.all(`
     COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END) AS planned,
 
     -- ✅ Wins (Planners)
-    COUNT(DISTINCT CASE 
+    COUNT(DISTINCT CASE
       WHEN m.status = 'completed'
        AND p.predicted_team = m.winner
       THEN m.id END
     ) AS planners,
 
     -- ✅ Losses or Missed (Not Interested)
-    COUNT(DISTINCT CASE 
+    COUNT(DISTINCT CASE
       WHEN m.status = 'completed'
        AND (
          p.predicted_team IS NULL
@@ -119,14 +119,14 @@ const stats = await db.all(`
 
     -- ✅ Win %
     ROUND(
-      100.0 * COUNT(DISTINCT CASE 
+      100.0 * COUNT(DISTINCT CASE
         WHEN m.status = 'completed'
          AND p.predicted_team = m.winner
         THEN m.id END
       ) / NULLIF(COUNT(DISTINCT CASE WHEN m.status = 'completed' THEN m.id END), 0),
     1) AS plannerPercent,
 
-    -- ✅ Series points
+    -- ✅ Series points (for this user only)
     COALESCE((
       SELECT SUM(points)
       FROM points_ledger pl
@@ -134,13 +134,17 @@ const stats = await db.all(`
     ), 0) AS seriesPoints
 
   FROM series s
+  -- 🔒 Only include series where the user is a member
+  JOIN series_members sm ON sm.series_id = s.id AND sm.user_id = ?
+
   LEFT JOIN matches m ON m.series_id = s.id
   LEFT JOIN predictions p ON p.match_id = m.id AND p.user_id = ?
+  WHERE sm.user_id = ?
   GROUP BY s.id
   ORDER BY s.id DESC
-`, [userId, userId]);
+`, [userId, userId, userId, userId]);
 
-    console.log("📊 DASHBOARD STATS:", JSON.stringify(stats, null, 2));
+console.log("📊 DASHBOARD STATS (privacy-filtered):", JSON.stringify(stats, null, 2));
 
     const seriesStats = stats || [];
     //const totalPointsOverall = seriesStats.reduce((sum, s) => sum + (s.seriesPoints || 0), 0);
