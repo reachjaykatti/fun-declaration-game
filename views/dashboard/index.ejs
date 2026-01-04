@@ -62,7 +62,7 @@
   </table>
 </div>
 
-<% if (!hideLeaderboard) { %>
+<% if (!hideLeaderboard && leaderboard && leaderboard.length > 0) { %>
   <h2>
     Top Planners 
     <% if (typeof selectedSeriesId !== 'undefined' && selectedSeriesId) { %>
@@ -75,7 +75,7 @@
   <div class="card">
     <form id="seriesFilterForm" action="/dashboard" method="GET" class="inline-form" style="margin-bottom:.75rem;">
       <label for="seriesId"><strong>Filter by Travel Series:</strong></label>
-      <select name="seriesId" id="seriesId">
+      <select name="seriesId" id="seriesId" onchange="document.getElementById('seriesFilterForm').submit()">
         <option value="">Select Series</option>
         <% (seriesStats || []).forEach(s => { %>
           <option value="<%= s.series_id %>" <%= (selectedSeriesId == s.series_id) ? 'selected' : '' %>>
@@ -123,8 +123,13 @@
 
 <% } else { %>
   <div class="card" style="text-align:center; margin-top:1rem; padding:1rem;">
-    <p>📊 No leaderboard available yet.<br>
-       Select a valid travel series above to view top planners.</p>
+    <% if (hideLeaderboard) { %>
+      <p>🔒 You are not part of this travel group.<br>
+         Join this series to see its leaderboard and live travels.</p>
+    <% } else { %>
+      <p>📊 No leaderboard available yet.<br>
+         Select a valid travel series above to view top planners.</p>
+    <% } %>
   </div>
 <% } %>
 <script src="/js/dashboardFilter.js"></script>
