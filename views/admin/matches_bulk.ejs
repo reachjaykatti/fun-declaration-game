@@ -11,6 +11,10 @@
   <p style="margin:.5rem 0">
     <a href="/admin/series/<%= series.id %>/matches/bulk/template" class="btn btn-link">Download Template (CSV)</a>
   </p>
+<div style="margin-top:1rem;">
+  <button type="submit" name="preview" value="true" class="btn btn-outline">👁 Preview</button>
+  <button type="submit" class="btn btn-success">🚀 Import</button>
+</div>
 
   <form method="POST" action="/admin/series/<%= series.id %>/matches/bulk" enctype="multipart/form-data">
     <div style="margin: .5rem 0;">
@@ -54,8 +58,31 @@
     <% } %>
   </div>
 <% } %>
+<% if (preview) { %>
+  <hr>
+  <h3>📋 Preview of First 5 Rows</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <% preview.headers.forEach(h => { %>
+          <th><%= h %></th>
+        <% }) %>
+      </tr>
+    </thead>
+    <tbody>
+      <% preview.rows.forEach(row => { %>
+        <tr>
+          <% preview.headers.forEach(h => { %>
+            <td><%= row[h.toLowerCase()] || '' %></td>
+          <% }) %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
 
 <%- include('../partials/foot') %>
+
 
 
 
