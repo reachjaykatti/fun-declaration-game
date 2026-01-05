@@ -474,10 +474,11 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
   if (!series) return res.status(404).render('404', { title: 'Not Found' });
 
   res.render('admin/matches_bulk', {
-    title: 'Bulk Import Matches',
-    series,
-    result: null
-  });
+  title: 'Bulk Import Matches',
+  series,
+  result: null,
+  preview: null   // 👈 Added safe default
+});
 });
 
 // =========================
