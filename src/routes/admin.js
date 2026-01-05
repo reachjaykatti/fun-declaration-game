@@ -481,48 +481,69 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
 });
 
 // =========================
-// BULK IMPORT – TEMPLATE (TSV)
-// =========================
-router.get('/series/:id/matches/bulk/template', (req, res) => {
-  const rows = [
-    'name\tsport\tteam_a\tteam_b\tstart_time_ist\tcutoff_minutes_before\tentry_points',
-    'Travel01\tTrain\tPuducherry\tTamilnadu\t24-12-2025 09:00\t30\t50'
-  ];
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="matches_template.tsv"');
-  res.send(rows.join('\n'));
-});
-
-// =========================
-// BULK IMPORT – SUBMIT (TSV ONLY)
+// BULK IMPORT – SUBMIT (Excel safer parser + Preview)
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.json({
-  ok: 0,
-  skipped: 0,
-  errors: ['Please upload an Excel (.xlsx) file']
-});
+      ok: 0,
+      skipped: 0,
+      errors: ['Please upload an Excel (.xlsx) file']
+    });
   }
 
+  const db = await getDb();
   let ok = 0;
   let skipped = 0;
   const errors = [];
 
   try {
+    // ✅ Read workbook
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
+    // ✅ Safe header normalization
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', header: 1 }); // raw arrays
+    if (!rows.length) {
+      return res.json({ ok: 0, skipped: 0, errors: ['Empty Excel file'] });
+    }
 
+    const headers = rows[0].map(h => String(h || '').trim());
+    const dataRows = rows.slice(1);
+
+    // ✅ Convert to normalized lowercase-key objects
+    const safeRows = dataRows.map(row => {
+      const obj = {};
+      headers.forEach((h, i) => {
+        if (h) obj[h.toLowerCase()] = row[i];
+      });
+      return obj;
+    });
+
+    // ✅ PREVIEW MODE (step 1)
+    if (req.body.preview === 'true') {
+      // Limit to first 5 rows for preview
+      const previewRows = safeRows.slice(0, 5);
+      return res.render('admin/matches_bulk', {
+        title: 'Bulk Import Preview',
+        series: { id: req.params.id },
+        result: null,
+        preview: {
+          headers,
+          rows: previewRows
+        }
+      });
+    }
+
+    // ✅ FINAL IMPORT MODE (step 2)
+    for (let i = 0; i < safeRows.length; i++) {
+      const r = safeRows[i];
       try {
-        const name = String(r.name).trim();
+        const name = String(r.name || '').trim();
         const sport = String(req.body.sport || 'Travels').trim();
-        const team_a = String(r.team_a).trim();
-        const team_b = String(r.team_b).trim();
-        const ist = String(r.start_time_ist).trim();
+        const team_a = String(r.team_a || '').trim();
+        const team_b = String(r.team_b || '').trim();
+        const ist = String(r.start_time_ist || '').trim();
         const cutoff = parseInt(r.cutoff_minutes_before || 30, 10);
         const entry = parseFloat(r.entry_points || 50);
 
@@ -547,7 +568,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
         await db.run(
           `INSERT INTO matches
-           (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+             (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
            VALUES (?,?,?,?,?,?,?,?,?)`,
           [
             req.params.id,
@@ -569,17 +590,17 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       }
     }
 
+    // ✅ Return structured JSON
     res.json({ ok, skipped, errors });
-
   } catch (e) {
-  res.json({
-    ok: 0,
-    skipped: 0,
-    errors: ['Invalid Excel file']
-  });
-}
+    console.error('❌ Bulk import failed:', e);
+    res.json({
+      ok: 0,
+      skipped: 0,
+      errors: ['Invalid Excel file or unsupported format']
+    });
+  }
 });
-console.log("🧭 Loaded modern planner route for admin.js");
 
 // ==============================
 // 🧭 ADMIN MATCH PLANNER VIEW (Modern Layout)
