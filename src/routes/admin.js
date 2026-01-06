@@ -482,83 +482,83 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
 });
 
 // =========================
-// BULK IMPORT – SUBMIT (Excel safer parser + Preview)
+// BULK IMPORT – SUBMIT (EXCEL OR TEXT)
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.json({
-      ok: 0,
-      skipped: 0,
-      errors: ['Please upload an Excel (.xlsx) file']
-    });
-  }
-
   const db = await getDb();
+
   let ok = 0;
   let skipped = 0;
   const errors = [];
+  let preview = null;
 
   try {
-    // ✅ Read workbook
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    let dataRows = [];
 
-    // ✅ Parse as array of arrays (no auto header parsing)
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-    if (!rows.length) {
-      return res.json({ ok: 0, skipped: 0, errors: ['Empty Excel file'] });
+    // ✅ 1. If Excel file uploaded
+    if (req.file) {
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      dataRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     }
 
-    // ✅ Normalize headers safely (prevents .toLowerCase crash)
-const headers = rows[0].map(h => {
-  if (typeof h === 'string') return h.trim().toLowerCase();
-  if (typeof h === 'number') return String(h).trim().toLowerCase();
-  return '';
-});
-    // ✅ Convert each row to object with normalized keys
-    const safeRows = dataRows.map(row => {
-      const obj = {};
-      headers.forEach((key, i) => {
-        if (key) obj[key] = row[i];
+    // ✅ 2. If pasted text provided instead
+    else if (req.body.text && req.body.text.trim()) {
+      const lines = req.body.text.trim().split('\n').filter(l => l.trim());
+      const headers = lines[0].split(/[\t,]/).map(h => h.trim().toLowerCase());
+      dataRows = lines.slice(1).map(line => {
+        const cols = line.split(/[\t,]/);
+        const obj = {};
+        headers.forEach((h, i) => (obj[h] = cols[i] || ''));
+        return obj;
       });
-      return obj;
-    });
+    }
 
-    // ✅ PREVIEW MODE
-    if (req.body.preview === 'true') {
-      const previewRows = safeRows.slice(0, 5);
+    if (!dataRows.length) {
+      return res.json({
+        ok: 0,
+        skipped: 0,
+        errors: ['No data found in upload or text input.']
+      });
+    }
+
+    // ✅ 3. If only Preview requested
+    if (req.body.preview) {
+      preview = {
+        headers: Object.keys(dataRows[0] || {}),
+        rows: dataRows.slice(0, 5)
+      };
       return res.render('admin/matches_bulk', {
         title: 'Bulk Import Preview',
-        series: { id: req.params.id },
+        series: await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]),
         result: null,
-        preview: {
-          headers,
-          rows: previewRows
-        }
+        preview
       });
     }
 
-    // ✅ FINAL IMPORT
-    for (let i = 0; i < safeRows.length; i++) {
-      const r = safeRows[i];
+    // ✅ 4. Process import
+    for (let i = 0; i < dataRows.length; i++) {
+      const r = dataRows[i];
       try {
         const name = String(r.name || '').trim();
-        const sport = String(req.body.sport || 'Travels').trim();
+        const sport = String(r.sport || 'Travels').trim();
         const team_a = String(r.team_a || '').trim();
         const team_b = String(r.team_b || '').trim();
+
+        // 🕓 Convert Excel date serials to readable IST datetime
+        let ist = r.start_time_ist;
+        if (typeof ist === 'number') {
+          const jsDate = XLSX.SSF.parse_date_code(ist);
+          ist = moment.tz(
+            `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
+            'Asia/Kolkata'
+          ).format('YYYY-MM-DD HH:mm');
+        } else {
+          ist = String(ist || '').trim();
+        }
+
         const cutoff = parseInt(r.cutoff_minutes_before || 30, 10);
         const entry = parseFloat(r.entry_points || 50);
-        let ist = r.start_time_ist;
-if (typeof ist === 'number') {
-  // Convert Excel serial to readable datetime in IST
-  const jsDate = XLSX.SSF.parse_date_code(ist);
-  ist = moment.tz(
-    `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
-    'Asia/Kolkata'
-  ).format('YYYY-MM-DD HH:mm');
-} else {
-  ist = String(ist).trim();
-}
 
         if (!name || !team_a || !team_b || !ist) {
           skipped++;
@@ -566,16 +566,10 @@ if (typeof ist === 'number') {
           continue;
         }
 
-        const m = moment.tz(
-          ist,
-          ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm', 'DD/MM/YYYY HH:mm'],
-          'Asia/Kolkata',
-          true
-        );
-
+        const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
         if (!m.isValid()) {
           skipped++;
-          errors.push(`Row ${i + 2}: Invalid IST time`);
+          errors.push(`Row ${i + 2}: Invalid IST date/time`);
           continue;
         }
 
@@ -597,19 +591,20 @@ if (typeof ist === 'number') {
         );
 
         ok++;
-      } catch (e) {
+      } catch (err) {
         skipped++;
-        errors.push(`Row ${i + 2}: ${e.message}`);
+        errors.push(`Row ${i + 2}: ${err.message}`);
       }
     }
 
     res.json({ ok, skipped, errors });
-  } catch (e) {
-    console.error('❌ Bulk import failed:', e);
+
+  } catch (err) {
+    console.error('❌ Bulk import failed:', err);
     res.json({
       ok: 0,
       skipped: 0,
-      errors: ['Invalid Excel file or unsupported format']
+      errors: [err.message || 'Unexpected server error']
     });
   }
 });
