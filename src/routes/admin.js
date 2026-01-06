@@ -503,27 +503,29 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-    // ✅ Safe header normalization
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', header: 1 }); // raw arrays
+    // ✅ Parse as array of arrays (no auto header parsing)
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
     if (!rows.length) {
       return res.json({ ok: 0, skipped: 0, errors: ['Empty Excel file'] });
     }
 
-    const headers = rows[0].map(h => String(h || '').trim());
+    // ✅ Normalize headers safely
+    const headers = rows[0].map(h =>
+      typeof h === 'string' ? h.trim().toLowerCase() : ''
+    );
     const dataRows = rows.slice(1);
 
-    // ✅ Convert to normalized lowercase-key objects
+    // ✅ Convert each row to object with normalized keys
     const safeRows = dataRows.map(row => {
       const obj = {};
-      headers.forEach((h, i) => {
-        if (h) obj[h.toLowerCase()] = row[i];
+      headers.forEach((key, i) => {
+        if (key) obj[key] = row[i];
       });
       return obj;
     });
 
-    // ✅ PREVIEW MODE (step 1)
+    // ✅ PREVIEW MODE
     if (req.body.preview === 'true') {
-      // Limit to first 5 rows for preview
       const previewRows = safeRows.slice(0, 5);
       return res.render('admin/matches_bulk', {
         title: 'Bulk Import Preview',
@@ -536,7 +538,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       });
     }
 
-    // ✅ FINAL IMPORT MODE (step 2)
+    // ✅ FINAL IMPORT
     for (let i = 0; i < safeRows.length; i++) {
       const r = safeRows[i];
       try {
@@ -556,7 +558,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
         const m = moment.tz(
           ist,
-          ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
+          ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm', 'DD/MM/YYYY HH:mm'],
           'Asia/Kolkata',
           true
         );
@@ -569,7 +571,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
 
         await db.run(
           `INSERT INTO matches
-             (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+           (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
            VALUES (?,?,?,?,?,?,?,?,?)`,
           [
             req.params.id,
@@ -591,7 +593,6 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       }
     }
 
-    // ✅ Return structured JSON
     res.json({ ok, skipped, errors });
   } catch (e) {
     console.error('❌ Bulk import failed:', e);
