@@ -594,10 +594,28 @@ dataRows = dataRows.map(row => {
     for (let i = 0; i < dataRows.length; i++) {
       const r = dataRows[i];
       try {
-        const name = String(r.name || '').trim();
-        const sport = String(r.sport || 'Travels').trim();
-        const team_a = String(r.team_a || '').trim();
-        const team_b = String(r.team_b || '').trim();
+        // ✅ Fully sanitize incoming values before using them
+function safeStr(value, fallback = '') {
+  if (value == null) return fallback;
+  if (typeof value === 'object') {
+    try {
+      // handle nested Excel richText or similar objects
+      if (Array.isArray(value.richText)) return value.richText.map(t => t.text || '').join('').trim();
+      if ('text' in value) return String(value.text).trim();
+      if ('v' in value) return String(value.v).trim();
+      return JSON.stringify(value).trim();
+    } catch {
+      return fallback;
+    }
+  }
+  return String(value).trim();
+}
+
+const name = safeStr(r.name);
+const sport = safeStr(r.sport, 'Travels');
+const team_a = safeStr(r.team_a);
+const team_b = safeStr(r.team_b);
+
 
         // 🕓 Convert Excel date serials to readable IST datetime
         let ist = r.start_time_ist;
