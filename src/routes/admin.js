@@ -603,9 +603,9 @@ dataRows = dataRows.map(row => {
     }
 
     // ✅ 4. Process import
-    for (let i = 0; i < dataRows.length; i++) {
-      const r = dataRows[i];
-      try {
+for (let i = 0; i < dataRows.length; i++) {
+  const r = dataRows[i];
+
   // ✅ Utility: Clean every incoming value safely
   function normalizeValue(val, fallback = '') {
     if (val == null) return fallback;
@@ -622,82 +622,88 @@ dataRows = dataRows.map(row => {
     return String(val).trim();
   }
 
-  // ✅ Safely extract all fields as clean text
-  const name = normalizeValue(r.name);
-  const sport = normalizeValue(r.sport, 'Travels');
-  const team_a = normalizeValue(r.team_a);
-  const team_b = normalizeValue(r.team_b);
-  let ist = normalizeValue(r.start_time_ist);
-  const cutoff = parseInt(normalizeValue(r.cutoff_minutes_before) || 30, 10);
-  const entry = parseFloat(normalizeValue(r.entry_points) || 50);
+  try {
+    // ✅ Safely extract all fields as clean text
+    const name = normalizeValue(r.name);
+    const sport = normalizeValue(r.sport, 'Travels');
+    const team_a = normalizeValue(r.team_a);
+    const team_b = normalizeValue(r.team_b);
+    let ist = normalizeValue(r.start_time_ist);
+    const cutoff = parseInt(normalizeValue(r.cutoff_minutes_before) || 30, 10);
+    const entry = parseFloat(normalizeValue(r.entry_points) || 50);
 
-  console.log("✅ CLEANED ROW:", { name, team_a, team_b, ist });
+    console.log("✅ CLEANED ROW:", { name, team_a, team_b, ist });
 
-  // 🕓 Convert Excel date serials to readable IST datetime
-  if (!isNaN(ist) && ist !== '') {
-    const jsDate = XLSX.SSF.parse_date_code(Number(ist));
-    if (jsDate) {
-      ist = moment.tz(
-        `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
-        'Asia/Kolkata'
-      ).format('YYYY-MM-DD HH:mm');
-    }
-  } else {
-    ist = String(ist || '').trim();
-  }
-        if (!name || !team_a || !team_b || !ist) {
-          skipped++;
-          errors.push(`Row ${i + 2}: Missing required fields`);
-          continue;
-        }
-
-        const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
-        if (!m.isValid()) {
-          skipped++;
-          errors.push(`Row ${i + 2}: Invalid IST date/time`);
-          continue;
-        }
-
-        // ✅ Ensure values are plain text before inserting
-const insertData = [
-  req.params.id,
-  String(name ?? ''),       // force TEXT
-  String(sport ?? ''),
-  String(team_a ?? ''),
-  String(team_b ?? ''),
-  m.utc().toISOString(),
-  Number(cutoff) || 30,
-  Number(entry) || 50,
-  'scheduled'
-];
-
-try {
-  if (typeof name !== 'string') console.warn("⚠️ Name is not string:", name);
-  await db.run(
-    `INSERT INTO matches
-     (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    insertData
-  );
-  ok++;
-} catch (err) {
-  console.error("❌ DB Insert failed for:", insertData);
-  console.error("🔍 Exact DB Error:", err.message);
-  skipped++;
-  errors.push(`Row ${i + 2}: ${err.message}`);
-}
+    // 🕓 Convert Excel date serials → readable IST datetime
+    if (!isNaN(ist) && ist !== '') {
+      const jsDate = XLSX.SSF.parse_date_code(Number(ist));
+      if (jsDate) {
+        ist = moment.tz(
+          `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
+          'Asia/Kolkata'
+        ).format('YYYY-MM-DD HH:mm');
+      }
+    } else {
+      ist = String(ist || '').trim();
     }
 
-    res.json({ ok, skipped, errors });
+    if (!name || !team_a || !team_b || !ist) {
+      skipped++;
+      errors.push(`Row ${i + 2}: Missing required fields`);
+      continue;
+    }
+
+    const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
+    if (!m.isValid()) {
+      skipped++;
+      errors.push(`Row ${i + 2}: Invalid IST date/time`);
+      continue;
+    }
+
+    // ✅ Ensure plain-text values before insert
+    const insertData = [
+      req.params.id,
+      String(name ?? ''),
+      String(sport ?? ''),
+      String(team_a ?? ''),
+      String(team_b ?? ''),
+      m.utc().toISOString(),
+      Number(cutoff) || 30,
+      Number(entry) || 50,
+      'scheduled'
+    ];
+
+    try {
+      await db.run(
+        `INSERT INTO matches
+         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        insertData
+      );
+      ok++;
+    } catch (err) {
+      console.error("❌ DB Insert failed for:", insertData);
+      console.error("🔍 Exact DB Error:", err.message);
+      skipped++;
+      errors.push(`Row ${i + 2}: ${err.message}`);
+    }
 
   } catch (err) {
-    console.error('❌ Bulk import failed:', err);
-    res.json({
-      ok: 0,
-      skipped: 0,
-      errors: [err.message || 'Unexpected server error']
-    });
+    skipped++;
+    errors.push(`Row ${i + 2}: ${err.message}`);
   }
+}
+
+res.json({ ok, skipped, errors });
+} catch (err) {        // 👈 this closes the big outer try correctly
+  console.error('❌ Bulk import failed:', err);
+  res.json({
+    ok: 0,
+    skipped: 0,
+    errors: [err.message || 'Unexpected server error']
+  });
+}
+
 });
 
 // ==============================
