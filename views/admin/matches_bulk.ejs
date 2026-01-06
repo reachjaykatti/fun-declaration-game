@@ -4,42 +4,39 @@
 
 <div class="card">
   <p>
-    You can either <strong>upload a CSV/TSV file</strong> or <strong>paste</strong> the travel details below.  
-    Time must be provided in <strong>IST</strong> (we’ll convert to UTC internally).
+    You can either <strong>upload an Excel (.xlsx) file</strong> or 
+    <strong>paste travel details below</strong>.  
+    Time must be provided in <strong>IST</strong> (it’ll convert internally to UTC).
   </p>
 
   <p style="margin:.5rem 0">
-    <a href="/admin/series/<%= series.id %>/matches/bulk/template" class="btn btn-link">Download Template (CSV)</a>
+    <a href="/admin/series/<%= series.id %>/matches/bulk/template" class="btn btn-link">
+      📄 Download Excel Template
+    </a>
   </p>
-<div style="margin-top:1rem;">
-  <button type="submit" name="preview" value="true" class="btn btn-outline">👁 Preview</button>
-  <button type="submit" class="btn btn-success">🚀 Import</button>
-</div>
 
+  <!-- ✅ Upload Form (with Preview + Import buttons) -->
   <form method="POST" action="/admin/series/<%= series.id %>/matches/bulk" enctype="multipart/form-data">
-    <div style="margin: .5rem 0;">
-      <label for="file"><strong>Upload Travel CSV/TSV file (optional):</strong></label><br/>
-      <input type="file" id="file" name="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" />
+    <div style="margin: .75rem 0;">
+      <label for="file"><strong>Select Excel (.xlsx):</strong></label><br/>
+      <input type="file" id="file" name="file" accept=".xlsx,.xls" required />
       <div class="text-muted" style="font-size:.9em;margin-top:.25rem;">
-        If you choose a file, it will be used instead of the pasted text.
+        The Excel must include columns: 
+        <em>name, sport, team_a, team_b, start_time_ist, cutoff_minutes_before, entry_points</em>.
       </div>
     </div>
 
-    <div style="margin: .5rem 0;">
-      <label for="text"><strong>Or paste CSV/TSV here:</strong></label><br/>
-      <textarea id="text" name="text" rows="10" style="width:100%; font-family: monospace;"
-        placeholder="name,sport,location_a,location_b,start_time_ist,cutoff_minutes_before,entry_points&#10;Travel 01,flight,DEL,MUM,2025-12-31 20:00,30,50"></textarea>
-    </div>
-
-    <div style="margin: .5rem 0;">
-      <button class="btn btn-primary" type="submit">Import Travels</button>
-      <a class="btn btn-link" href="/admin/series/<%= series.id %>/matches">Back to Travels</a>
+    <div style="margin-top:1rem;">
+      <button type="submit" name="preview" value="true" class="btn btn-outline">👁 Preview</button>
+      <button type="submit" class="btn btn-success">🚀 Import</button>
+      <a class="btn btn-link" href="/admin/series/<%= series.id %>/matches">← Back to Travels</a>
     </div>
   </form>
 </div>
 
+<!-- ✅ Import Results -->
 <% if (result) { %>
-  <div class="card" style="margin-top:1rem">
+  <div class="card" style="margin-top:1rem;">
     <h3>Import Result</h3>
     <div class="chips" style="margin-bottom:.5rem">
       <div class="chip"><span class="dot dot-ok"></span> Inserted: <strong><%= result.ok %></strong></div>
@@ -58,6 +55,8 @@
     <% } %>
   </div>
 <% } %>
+
+<!-- ✅ Preview Table -->
 <% if (preview) { %>
   <hr>
   <h3>📋 Preview of First 5 Rows</h3>
@@ -73,7 +72,7 @@
       <% preview.rows.forEach(row => { %>
         <tr>
           <% preview.headers.forEach(h => { %>
-            <td><%= row[h.toLowerCase()] || '' %></td>
+            <td><%= row[h] || row[h.toLowerCase()] || '' %></td>
           <% }) %>
         </tr>
       <% }) %>
@@ -82,7 +81,3 @@
 <% } %>
 
 <%- include('../partials/foot') %>
-
-
-
-
