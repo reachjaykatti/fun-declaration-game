@@ -916,23 +916,33 @@ router.post('/matches/:matchId/declare', async (req, res) => {
   }
 });
 
+import fs from 'fs';
+import path from 'path';
+
 // =========================
-// DEBUG: Find SQLite triggers/views using LOWER()
+// DEBUG: Scan all source files for ".toLowerCase"
 // =========================
-router.get('/debug/sqlite-triggers', async (req, res) => {
-  const db = await getDb();
-  try {
-    const triggers = await db.all(`
-      SELECT name, type, sql
-      FROM sqlite_master
-      WHERE type IN ('trigger', 'view')
-        AND sql LIKE '%lower(%'
-    `);
-    res.json({ found: triggers.length, triggers });
-  } catch (err) {
-    console.error("⚠️ Trigger scan failed:", err);
-    res.json({ error: err.message });
+router.get('/debug/scan-lowercase', async (req, res) => {
+  const baseDir = path.resolve('./src');
+  const results = [];
+
+  function scanDir(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) scanDir(fullPath);
+      else if (entry.name.endsWith('.js')) {
+        const content = fs.readFileSync(fullPath, 'utf8');
+        if (content.includes('toLowerCase')) {
+          results.push({ file: fullPath, matches: (content.match(/toLowerCase/g) || []).length });
+        }
+      }
+    }
   }
+
+  scanDir(baseDir);
+  res.json(results);
 });
+
 
 export default router;
