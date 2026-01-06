@@ -480,7 +480,6 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
   preview: null   // 👈 Added safe default
 });
 });
-console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(dataRows[0], null, 2));
 // =========================
 // BULK IMPORT – SUBMIT (EXCEL OR TEXT)
 // =========================
@@ -512,20 +511,27 @@ dataRows = dataRows.map(row => {
   });
   return safeRow;
 });
-      // ✅ Deep-normalize every value in every row
+     
+// ✅ Deep-normalize values (handles richText, objects, numbers safely)
 dataRows = dataRows.map(row => {
   const safeRow = {};
   for (const key in row) {
     let val = row[key];
 
-    // Flatten objects like { text: 'ABC' }
+    // Excel "richText" or nested text objects
     if (val && typeof val === 'object') {
-      if ('text' in val) val = val.text;
-      else if ('v' in val) val = val.v;
-      else val = JSON.stringify(val);
+      if (Array.isArray(val.richText)) {
+        val = val.richText.map(rt => rt.text || '').join('');
+      } else if ('text' in val) {
+        val = val.text;
+      } else if ('v' in val) {
+        val = val.v;
+      } else {
+        val = JSON.stringify(val);
+      }
     }
 
-    // Coerce to string safely
+    // Numbers become strings
     if (typeof val === 'number') val = String(val);
     if (typeof val !== 'string') val = '';
 
