@@ -519,20 +519,23 @@ if (dataRows && dataRows.length > 0) {
   console.log("⚠️ No rows found in Excel sheet");
 }
 
-      // ✅ Normalize all row keys safely
+      // ✅ Normalize all row keys safely (no toLowerCase crash)
 dataRows = dataRows.map(row => {
   const safeRow = {};
   Object.keys(row || {}).forEach(k => {
     let safeKey = '';
     try {
-      if (typeof k === 'string' || typeof k === 'number') {
+      if (typeof k === 'string') {
+        safeKey = k.trim().toLowerCase();
+      } else if (typeof k === 'number') {
         safeKey = String(k).trim().toLowerCase();
       } else {
-        safeKey = '';
+        // For Excel weird keys (like objects or rich text)
+        safeKey = String(k || '').trim();
       }
     } catch (err) {
       console.warn("⚠️ Key normalization issue:", k, err.message);
-      safeKey = '';
+      safeKey = String(k || '').trim();
     }
     safeRow[safeKey] = row[k];
   });
@@ -569,16 +572,19 @@ dataRows = dataRows.map(row => {
     }
 
     // ✅ 2. If pasted text provided instead
-    else if (req.body.text && req.body.text.trim()) {
-      const lines = req.body.text.trim().split('\n').filter(l => l.trim());
-      const headers = lines[0].split(/[\t,]/).map(h => h.trim().toLowerCase());
-      dataRows = lines.slice(1).map(line => {
-        const cols = line.split(/[\t,]/);
-        const obj = {};
-        headers.forEach((h, i) => (obj[h] = cols[i] || ''));
-        return obj;
-      });
-    }
+else if (req.body.text && req.body.text.trim()) {
+  const lines = req.body.text.trim().split('\n').filter(l => l.trim());
+  const headers = lines[0]
+    .split(/[\t,]/)
+    .map(h => (typeof h === 'string' ? h.trim().toLowerCase() : String(h || '').trim()));
+
+  dataRows = lines.slice(1).map(line => {
+    const cols = line.split(/[\t,]/);
+    const obj = {};
+    headers.forEach((h, i) => (obj[h] = cols[i] || ''));
+    return obj;
+  });
+}
 
     if (!dataRows.length) {
       return res.json({
