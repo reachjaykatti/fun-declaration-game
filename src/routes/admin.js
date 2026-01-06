@@ -480,11 +480,10 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
   preview: null   // 👈 Added safe default
 });
 });
-
+console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(dataRows[0], null, 2));
 // =========================
 // BULK IMPORT – SUBMIT (EXCEL OR TEXT)
 // =========================
-console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(dataRows[0], null, 2));
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   const db = await getDb();
 
