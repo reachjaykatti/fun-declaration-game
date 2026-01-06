@@ -512,6 +512,27 @@ dataRows = dataRows.map(row => {
   });
   return safeRow;
 });
+      // ✅ Deep-normalize every value in every row
+dataRows = dataRows.map(row => {
+  const safeRow = {};
+  for (const key in row) {
+    let val = row[key];
+
+    // Flatten objects like { text: 'ABC' }
+    if (val && typeof val === 'object') {
+      if ('text' in val) val = val.text;
+      else if ('v' in val) val = val.v;
+      else val = JSON.stringify(val);
+    }
+
+    // Coerce to string safely
+    if (typeof val === 'number') val = String(val);
+    if (typeof val !== 'string') val = '';
+
+    safeRow[key] = val.trim();
+  }
+  return safeRow;
+});
     }
 
     // ✅ 2. If pasted text provided instead
