@@ -916,5 +916,23 @@ router.post('/matches/:matchId/declare', async (req, res) => {
   }
 });
 
+// =========================
+// DEBUG: Find SQLite triggers/views using LOWER()
+// =========================
+router.get('/debug/sqlite-triggers', async (req, res) => {
+  const db = await getDb();
+  try {
+    const triggers = await db.all(`
+      SELECT name, type, sql
+      FROM sqlite_master
+      WHERE type IN ('trigger', 'view')
+        AND sql LIKE '%lower(%'
+    `);
+    res.json({ found: triggers.length, triggers });
+  } catch (err) {
+    console.error("⚠️ Trigger scan failed:", err);
+    res.json({ error: err.message });
+  }
+});
 
 export default router;
