@@ -499,6 +499,7 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       dataRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(rows[0], null, 2));
       // ✅ Safely normalize all row keys to lowercase strings
 dataRows = dataRows.map(row => {
   const safeRow = {};
