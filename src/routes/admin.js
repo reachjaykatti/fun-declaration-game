@@ -497,8 +497,8 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   const db = await getDb();
-  db.on('trace', (sql) => {
-  console.log('🧠 SQL TRACE:', sql);
+  // 🧠 DB trace logging disabled — not supported in async wrapper
+console.log("📘 DB connection ready for bulk import");
 });
 
   let ok = 0;
