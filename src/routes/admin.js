@@ -611,7 +611,7 @@ else if (req.body.text && req.body.text.trim()) {
       });
     }
 
-    // ✅ 4. Process import
+   // ✅ 4. Process import
 for (let i = 0; i < dataRows.length; i++) {
   const r = dataRows[i];
 
@@ -669,7 +669,13 @@ for (let i = 0; i < dataRows.length; i++) {
       continue;
     }
 
-    // ✅ Ensure plain-text values before insert
+    // ✅ Prepare SQL safely
+    const sql = `
+      INSERT INTO matches
+        (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
     const insertData = [
       req.params.id,
       String(name ?? ''),
@@ -682,43 +688,27 @@ for (let i = 0; i < dataRows.length; i++) {
       'scheduled'
     ];
 
-  try {
-  const sql = `
-    INSERT INTO matches
-      (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    console.log("🧠 RUNNING SQL:", sql.trim());
+    console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
 
-  const insertData = [
-    req.params.id,
-    String(name ?? ''),
-    String(sport ?? ''),
-    String(team_a ?? ''),
-    String(team_b ?? ''),
-    m.utc().toISOString(),
-    Number(cutoff) || 30,
-    Number(entry) || 50,
-    'scheduled'
-  ];
+    await db.run(sql, insertData);
+    ok++;
 
-  console.log("🧠 RUNNING SQL:", sql.trim());
-  console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
+  } catch (err) {
+    console.error("❌ DB Insert failed for this row!");
+    console.error("🧩 Row Data:", JSON.stringify({ name, sport, team_a, team_b, cutoff, entry }, null, 2));
+    console.error("💥 RAW ERROR:", err);
+    console.error("💥 ERROR MESSAGE:", err.message);
 
-  await db.run(sql, insertData);
-  ok++;
-} catch (err) {
-  console.error("❌ DB Insert failed for this row!");
-  console.error("🧩 Row Data:", JSON.stringify({ name, sport, team_a, team_b, cutoff, entry }, null, 2));
-  console.error("💥 RAW ERROR:", err);
-  console.error("💥 ERROR MESSAGE:", err.message);
+    skipped++;
+    errors.push(`Row ${i + 2}: ${err.message}`);
+  }
+} // ✅ closes for loop
 
-  skipped++;
-  errors.push(`Row ${i + 2}: ${err.message}`);
-}
-
+// ✅ Send final result after loop finishes
 res.json({ ok, skipped, errors });
 
-} catch (err) { // ← closes the big outer try correctly
+} catch (err) { // ✅ closes outer try
   console.error('❌ Bulk import failed:', err);
   res.json({
     ok: 0,
@@ -726,7 +716,6 @@ res.json({ ok, skipped, errors });
     errors: [err.message || 'Unexpected server error']
   });
 }
-
 });
 
 // ==============================
