@@ -12,6 +12,18 @@ import XLSX from 'xlsx';
 const router = express.Router();
 console.log("🧭 admin.js routes initialized");
 
+router.get('/debug/sqlite-triggers', async (req, res) => {
+  const db = await getDb();
+  const rows = await db.all(`
+    SELECT name, sql
+    FROM sqlite_master
+    WHERE type IN ('trigger', 'view')
+      AND sql LIKE '%lower(%'
+  `);
+  res.json(rows);
+});
+
+
 // Multer for CSV/TSV uploads (kept in memory)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -646,28 +658,34 @@ dataRows = dataRows.map(row => {
           continue;
         }
 
-        await db.run(
-          `INSERT INTO matches
-           (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-          [
-            req.params.id,
-            name,
-            sport,
-            team_a,
-            team_b,
-            m.utc().toISOString(),
-            cutoff,
-            entry,
-            'scheduled'
-          ]
-        );
+        // ✅ Ensure values are plain text before inserting
+const insertData = [
+  req.params.id,
+  String(name ?? ''),       // force TEXT
+  String(sport ?? ''),
+  String(team_a ?? ''),
+  String(team_b ?? ''),
+  m.utc().toISOString(),
+  Number(cutoff) || 30,
+  Number(entry) || 50,
+  'scheduled'
+];
 
-        ok++;
-      } catch (err) {
-        skipped++;
-        errors.push(`Row ${i + 2}: ${err.message}`);
-      }
+try {
+  if (typeof name !== 'string') console.warn("⚠️ Name is not string:", name);
+  await db.run(
+    `INSERT INTO matches
+     (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    insertData
+  );
+  ok++;
+} catch (err) {
+  console.error("❌ DB Insert failed for:", insertData);
+  console.error("🔍 Exact DB Error:", err.message);
+  skipped++;
+  errors.push(`Row ${i + 2}: ${err.message}`);
+}
     }
 
     res.json({ ok, skipped, errors });
