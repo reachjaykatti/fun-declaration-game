@@ -478,28 +478,11 @@ router.get('/', async (req, res) => {
 });
 
 // =========================
-// BULK IMPORT – PAGE
-// =========================
-router.get('/series/:id/matches/bulk', async (req, res) => {
-  const db = await getDb();
-  const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
-  if (!series) return res.status(404).render('404', { title: 'Not Found' });
-
-  res.render('admin/matches_bulk', {
-  title: 'Bulk Import Matches',
-  series,
-  result: null,
-  preview: null   // 👈 Added safe default
-});
-});
-// =========================
 // BULK IMPORT – SUBMIT (EXCEL OR TEXT)
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   const db = await getDb();
-  // 🧠 DB trace logging disabled — not supported in async wrapper
-console.log("📘 DB connection ready for bulk import");
-});
+  console.log("📘 DB connection ready for bulk import");
 
   let ok = 0;
   let skipped = 0;
@@ -515,86 +498,77 @@ console.log("📘 DB connection ready for bulk import");
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       dataRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-// ✅ Correct variable name for debugging
-if (dataRows && dataRows.length > 0) {
-  console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(dataRows[0], null, 2));
-} else {
-  console.log("⚠️ No rows found in Excel sheet");
-}
-
-      // ✅ Normalize all row keys safely (no toLowerCase crash)
-dataRows = dataRows.map(row => {
-  const safeRow = {};
-  Object.keys(row || {}).forEach(k => {
-    let safeKey = '';
-    try {
-      if (typeof k === 'string') {
-        safeKey = k.trim().toLowerCase();
-      } else if (typeof k === 'number') {
-        safeKey = String(k).trim().toLowerCase();
+      if (dataRows && dataRows.length > 0) {
+        console.log("🔍 SAMPLE ROW STRUCTURE:", JSON.stringify(dataRows[0], null, 2));
       } else {
-        // For Excel weird keys (like objects or rich text)
-        safeKey = String(k || '').trim();
+        console.log("⚠️ No rows found in Excel sheet");
       }
-    } catch (err) {
-      console.warn("⚠️ Key normalization issue:", k, err.message);
-      safeKey = String(k || '').trim();
-    }
-    safeRow[safeKey] = row[k];
-  });
-  return safeRow;
-});
-     
-// ✅ Deep-normalize values (handles richText, objects, numbers safely)
-dataRows = dataRows.map(row => {
-  const safeRow = {};
-  for (const key in row) {
-    let val = row[key];
 
-    // Excel "richText" or nested text objects
-    if (val && typeof val === 'object') {
-      if (Array.isArray(val.richText)) {
-        val = val.richText.map(rt => rt.text || '').join('');
-      } else if ('text' in val) {
-        val = val.text;
-      } else if ('v' in val) {
-        val = val.v;
-      } else {
-        val = JSON.stringify(val);
-      }
-    }
+      // ✅ Normalize all row keys safely
+      dataRows = dataRows.map(row => {
+        const safeRow = {};
+        Object.keys(row || {}).forEach(k => {
+          let safeKey = '';
+          try {
+            if (typeof k === 'string') safeKey = k.trim().toLowerCase();
+            else if (typeof k === 'number') safeKey = String(k).trim().toLowerCase();
+            else safeKey = String(k || '').trim();
+          } catch (err) {
+            console.warn("⚠️ Key normalization issue:", k, err.message);
+            safeKey = String(k || '').trim();
+          }
+          safeRow[safeKey] = row[k];
+        });
+        return safeRow;
+      });
 
-    // Numbers become strings
-    if (typeof val === 'number') val = String(val);
-    if (typeof val !== 'string') val = '';
-
-    safeRow[key] = val.trim();
-  }
-  return safeRow;
-});
+      // ✅ Normalize values
+      dataRows = dataRows.map(row => {
+        const safeRow = {};
+        for (const key in row) {
+          let val = row[key];
+          if (val && typeof val === 'object') {
+            if (Array.isArray(val.richText)) {
+              val = val.richText.map(rt => rt.text || '').join('');
+            } else if ('text' in val) {
+              val = val.text;
+            } else if ('v' in val) {
+              val = val.v;
+            } else {
+              val = JSON.stringify(val);
+            }
+          }
+          if (typeof val === 'number') val = String(val);
+          if (typeof val !== 'string') val = '';
+          safeRow[key] = val.trim();
+        }
+        return safeRow;
+      });
     }
 
     // ✅ 2. If pasted text provided instead
-else if (req.body.text && req.body.text.trim()) {
-  const lines = req.body.text.trim().split('\n').filter(l => l.trim());
-  const headers = lines[0]
-    .split(/[\t,]/)
-    .map(h => (typeof h === 'string' ? h.trim().toLowerCase() : String(h || '').trim()));
+    else if (req.body.text && req.body.text.trim()) {
+      const lines = req.body.text.trim().split('\n').filter(l => l.trim());
+      const headers = lines[0]
+        .split(/[\t,]/)
+        .map(h => (typeof h === 'string' ? h.trim().toLowerCase() : String(h || '').trim()));
 
-  dataRows = lines.slice(1).map(line => {
-    const cols = line.split(/[\t,]/);
-    const obj = {};
-    headers.forEach((h, i) => (obj[h] = cols[i] || ''));
-    return obj;
-  });
-}
+      dataRows = lines.slice(1).map(line => {
+        const cols = line.split(/[\t,]/);
+        const obj = {};
+        headers.forEach((h, i) => (obj[h] = cols[i] || ''));
+        return obj;
+      });
+    }
 
+    // ✅ Defensive check — must stay INSIDE this try block
     if (!dataRows.length) {
-      return res.json({
+      res.json({
         ok: 0,
         skipped: 0,
         errors: ['No data found in upload or text input.']
       });
+      return; // ✅ safe return INSIDE route
     }
 
     // ✅ 3. If only Preview requested
