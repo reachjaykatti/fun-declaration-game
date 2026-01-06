@@ -497,6 +497,9 @@ router.get('/series/:id/matches/bulk', async (req, res) => {
 // =========================
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   const db = await getDb();
+  db.on('trace', (sql) => {
+  console.log('🧠 SQL TRACE:', sql);
+});
 
   let ok = 0;
   let skipped = 0;
