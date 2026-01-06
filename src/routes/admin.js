@@ -594,49 +594,45 @@ dataRows = dataRows.map(row => {
     for (let i = 0; i < dataRows.length; i++) {
       const r = dataRows[i];
       try {
-        // ✅ Fully sanitize incoming values before using them
-// 🧹 Force every value into a clean, plain string
-function normalizeValue(val, fallback = '') {
-  if (val == null) return fallback;
-  if (typeof val === 'object') {
-    try {
-      if (Array.isArray(val.richText)) return val.richText.map(rt => rt.text || '').join('').trim();
-      if ('text' in val) return String(val.text).trim();
-      if ('v' in val) return String(val.v).trim();
-      return JSON.stringify(val);
-    } catch {
-      return fallback;
+  // ✅ Utility: Clean every incoming value safely
+  function normalizeValue(val, fallback = '') {
+    if (val == null) return fallback;
+    if (typeof val === 'object') {
+      try {
+        if (Array.isArray(val.richText)) return val.richText.map(rt => rt.text || '').join('').trim();
+        if ('text' in val) return String(val.text).trim();
+        if ('v' in val) return String(val.v).trim();
+        return JSON.stringify(val);
+      } catch {
+        return fallback;
+      }
     }
+    return String(val).trim();
   }
-  // Handles Excel numbers too (like 46028)
-  return String(val).trim();
-}
 
-// ✅ Safely extract all fields as clean text
-const name = normalizeValue(r.name);
-const sport = normalizeValue(r.sport, 'Travels');
-const team_a = normalizeValue(r.team_a);
-const team_b = normalizeValue(r.team_b);
-let ist = normalizeValue(r.start_time_ist);
-const cutoff = parseInt(normalizeValue(r.cutoff_minutes_before) || 30, 10);
-const entry = parseFloat(normalizeValue(r.entry_points) || 50);
-console.log("✅ CLEANED ROW:", { name, team_a, team_b, ist });
+  // ✅ Safely extract all fields as clean text
+  const name = normalizeValue(r.name);
+  const sport = normalizeValue(r.sport, 'Travels');
+  const team_a = normalizeValue(r.team_a);
+  const team_b = normalizeValue(r.team_b);
+  let ist = normalizeValue(r.start_time_ist);
+  const cutoff = parseInt(normalizeValue(r.cutoff_minutes_before) || 30, 10);
+  const entry = parseFloat(normalizeValue(r.entry_points) || 50);
 
-        // 🕓 Convert Excel date serials to readable IST datetime
-        let ist = r.start_time_ist;
-        if (typeof ist === 'number') {
-          const jsDate = XLSX.SSF.parse_date_code(ist);
-          ist = moment.tz(
-            `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
-            'Asia/Kolkata'
-          ).format('YYYY-MM-DD HH:mm');
-        } else {
-          ist = String(ist || '').trim();
-        }
+  console.log("✅ CLEANED ROW:", { name, team_a, team_b, ist });
 
-        const cutoff = parseInt(r.cutoff_minutes_before || 30, 10);
-        const entry = parseFloat(r.entry_points || 50);
-
+  // 🕓 Convert Excel date serials to readable IST datetime
+  if (!isNaN(ist) && ist !== '') {
+    const jsDate = XLSX.SSF.parse_date_code(Number(ist));
+    if (jsDate) {
+      ist = moment.tz(
+        `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
+        'Asia/Kolkata'
+      ).format('YYYY-MM-DD HH:mm');
+    }
+  } else {
+    ist = String(ist || '').trim();
+  }
         if (!name || !team_a || !team_b || !ist) {
           skipped++;
           errors.push(`Row ${i + 2}: Missing required fields`);
