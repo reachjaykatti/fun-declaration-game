@@ -500,6 +500,18 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       dataRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      // ✅ Safely normalize all row keys to lowercase strings
+dataRows = dataRows.map(row => {
+  const safeRow = {};
+  Object.keys(row).forEach(k => {
+    let safeKey = '';
+    if (typeof k === 'string') safeKey = k.trim().toLowerCase();
+    else if (typeof k === 'number') safeKey = String(k).trim().toLowerCase();
+    else safeKey = '';
+    safeRow[safeKey] = row[k];
+  });
+  return safeRow;
+});
     }
 
     // ✅ 2. If pasted text provided instead
