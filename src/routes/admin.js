@@ -507,14 +507,21 @@ if (dataRows && dataRows.length > 0) {
   console.log("⚠️ No rows found in Excel sheet");
 }
 
-      // ✅ Safely normalize all row keys to lowercase strings
+      // ✅ Normalize all row keys safely
 dataRows = dataRows.map(row => {
   const safeRow = {};
-  Object.keys(row).forEach(k => {
+  Object.keys(row || {}).forEach(k => {
     let safeKey = '';
-    if (typeof k === 'string') safeKey = k.trim().toLowerCase();
-    else if (typeof k === 'number') safeKey = String(k).trim().toLowerCase();
-    else safeKey = '';
+    try {
+      if (typeof k === 'string' || typeof k === 'number') {
+        safeKey = String(k).trim().toLowerCase();
+      } else {
+        safeKey = '';
+      }
+    } catch (err) {
+      console.warn("⚠️ Key normalization issue:", k, err.message);
+      safeKey = '';
+    }
     safeRow[safeKey] = row[k];
   });
   return safeRow;
