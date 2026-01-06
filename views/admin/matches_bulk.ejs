@@ -33,6 +33,17 @@
     </div>
   </form>
 </div>
+let ist = r.start_time_ist;
+if (typeof ist === 'number') {
+  // Convert Excel serial to readable datetime in IST
+  const jsDate = XLSX.SSF.parse_date_code(ist);
+  ist = moment.tz(
+    `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
+    'Asia/Kolkata'
+  ).format('YYYY-MM-DD HH:mm');
+} else {
+  ist = String(ist).trim();
+}
 
 <!-- ✅ Import Results -->
 <% if (result) { %>
@@ -81,3 +92,4 @@
 <% } %>
 
 <%- include('../partials/foot') %>
+
