@@ -683,24 +683,47 @@ for (let i = 0; i < dataRows.length; i++) {
     ];
 
     try {
-      await db.run(
-        `INSERT INTO matches
-         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        insertData
-      );
-      ok++;
-    } catch (err) {
-      console.error("❌ DB Insert failed for:", insertData);
-      console.error("🔍 Exact DB Error:", err.message);
-      skipped++;
-      errors.push(`Row ${i + 2}: ${err.message}`);
-    }
+  const sql = `
+    INSERT INTO matches
+      (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  } catch (err) {
-    skipped++;
-    errors.push(`Row ${i + 2}: ${err.message}`);
-  }
+  const insertData = [
+    req.params.id,
+    String(name ?? ''),
+    String(sport ?? ''),
+    String(team_a ?? ''),
+    String(team_b ?? ''),
+    m.utc().toISOString(),
+    Number(cutoff) || 30,
+    Number(entry) || 50,
+    'scheduled'
+  ];
+
+  // 🧠 Debug trace before execution
+  console.log("🧠 RUNNING SQL:", sql.trim());
+  console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
+
+  // Run safely
+  await db.run(sql, insertData);
+  ok++;
+
+} catch (err) {
+  // 💥 Log full diagnostic info
+  console.error("❌ DB Insert failed for this row!");
+  console.error("🧩 Row Data:", JSON.stringify({
+    name, sport, team_a, team_b, cutoff, entry
+  }, null, 2));
+  console.error("💥 RAW ERROR:", err);
+  console.error("💥 ERROR MESSAGE:", err.message);
+  console.error("💥 ERROR KEYS:", Object.keys(err || {}));
+  console.error("💥 ERROR TYPE:", typeof err);
+
+  skipped++;
+  errors.push(`Row ${i + 2}: ${err.message}`);
+}
+
 }
 
 res.json({ ok, skipped, errors });
