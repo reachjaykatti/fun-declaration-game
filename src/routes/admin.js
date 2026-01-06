@@ -682,52 +682,52 @@ for (let i = 0; i < dataRows.length; i++) {
       'scheduled'
     ];
 
-    try {
-  const sql = `
-    INSERT INTO matches
-      (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+  try {
+    const sql = `
+      INSERT INTO matches
+        (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-  const insertData = [
-    req.params.id,
-    String(name ?? ''),
-    String(sport ?? ''),
-    String(team_a ?? ''),
-    String(team_b ?? ''),
-    m.utc().toISOString(),
-    Number(cutoff) || 30,
-    Number(entry) || 50,
-    'scheduled'
-  ];
+    const insertData = [
+      req.params.id,
+      String(name ?? ''),
+      String(sport ?? ''),
+      String(team_a ?? ''),
+      String(team_b ?? ''),
+      m.utc().toISOString(),
+      Number(cutoff) || 30,
+      Number(entry) || 50,
+      'scheduled'
+    ];
 
-  // 🧠 Debug trace before execution
-  console.log("🧠 RUNNING SQL:", sql.trim());
-  console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
+    // 🧠 Debug trace before execution
+    console.log("🧠 RUNNING SQL:", sql.trim());
+    console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
 
-  // Run safely
-  await db.run(sql, insertData);
-  ok++;
+    // Run safely
+    await db.run(sql, insertData);
+    ok++;
 
-} catch (err) {
-  // 💥 Log full diagnostic info
-  console.error("❌ DB Insert failed for this row!");
-  console.error("🧩 Row Data:", JSON.stringify({
-    name, sport, team_a, team_b, cutoff, entry
-  }, null, 2));
-  console.error("💥 RAW ERROR:", err);
-  console.error("💥 ERROR MESSAGE:", err.message);
-  console.error("💥 ERROR KEYS:", Object.keys(err || {}));
-  console.error("💥 ERROR TYPE:", typeof err);
+  } catch (err) {
+    // 💥 Log full diagnostic info
+    console.error("❌ DB Insert failed for this row!");
+    console.error("🧩 Row Data:", JSON.stringify({
+      name, sport, team_a, team_b, cutoff, entry
+    }, null, 2));
+    console.error("💥 RAW ERROR:", err);
+    console.error("💥 ERROR MESSAGE:", err.message);
+    console.error("💥 ERROR KEYS:", Object.keys(err || {}));
+    console.error("💥 ERROR TYPE:", typeof err);
 
-  skipped++;
-  errors.push(`Row ${i + 2}: ${err.message}`);
-}
-
-}
+    skipped++;
+    errors.push(`Row ${i + 2}: ${err.message}`);
+  }
+} // ← closes the inner try for one row
 
 res.json({ ok, skipped, errors });
-} catch (err) {        // 👈 this closes the big outer try correctly
+
+} catch (err) { // ← closes the big outer try correctly
   console.error('❌ Bulk import failed:', err);
   res.json({
     ok: 0,
