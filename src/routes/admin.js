@@ -595,27 +595,32 @@ dataRows = dataRows.map(row => {
       const r = dataRows[i];
       try {
         // ✅ Fully sanitize incoming values before using them
-function safeStr(value, fallback = '') {
-  if (value == null) return fallback;
-  if (typeof value === 'object') {
+// 🧹 Force every value into a clean, plain string
+function normalizeValue(val, fallback = '') {
+  if (val == null) return fallback;
+  if (typeof val === 'object') {
     try {
-      // handle nested Excel richText or similar objects
-      if (Array.isArray(value.richText)) return value.richText.map(t => t.text || '').join('').trim();
-      if ('text' in value) return String(value.text).trim();
-      if ('v' in value) return String(value.v).trim();
-      return JSON.stringify(value).trim();
+      if (Array.isArray(val.richText)) return val.richText.map(rt => rt.text || '').join('').trim();
+      if ('text' in val) return String(val.text).trim();
+      if ('v' in val) return String(val.v).trim();
+      return JSON.stringify(val);
     } catch {
       return fallback;
     }
   }
-  return String(value).trim();
+  // Handles Excel numbers too (like 46028)
+  return String(val).trim();
 }
 
-const name = safeStr(r.name);
-const sport = safeStr(r.sport, 'Travels');
-const team_a = safeStr(r.team_a);
-const team_b = safeStr(r.team_b);
-
+// ✅ Safely extract all fields as clean text
+const name = normalizeValue(r.name);
+const sport = normalizeValue(r.sport, 'Travels');
+const team_a = normalizeValue(r.team_a);
+const team_b = normalizeValue(r.team_b);
+let ist = normalizeValue(r.start_time_ist);
+const cutoff = parseInt(normalizeValue(r.cutoff_minutes_before) || 30, 10);
+const entry = parseFloat(normalizeValue(r.entry_points) || 50);
+console.log("✅ CLEANED ROW:", { name, team_a, team_b, ist });
 
         // 🕓 Convert Excel date serials to readable IST datetime
         let ist = r.start_time_ist;
