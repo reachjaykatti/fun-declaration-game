@@ -716,8 +716,6 @@ for (let i = 0; i < dataRows.length; i++) {
   errors.push(`Row ${i + 2}: ${err.message}`);
 }
 
-} // ← closes the inner try for one row
-
 res.json({ ok, skipped, errors });
 
 } catch (err) { // ← closes the big outer try correctly
