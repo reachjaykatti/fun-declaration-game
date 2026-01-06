@@ -509,12 +509,12 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       return res.json({ ok: 0, skipped: 0, errors: ['Empty Excel file'] });
     }
 
-    // ✅ Normalize headers safely
-    const headers = rows[0].map(h =>
-      typeof h === 'string' ? h.trim().toLowerCase() : ''
-    );
-    const dataRows = rows.slice(1);
-
+    // ✅ Normalize headers safely (prevents .toLowerCase crash)
+const headers = rows[0].map(h => {
+  if (typeof h === 'string') return h.trim().toLowerCase();
+  if (typeof h === 'number') return String(h).trim().toLowerCase();
+  return '';
+});
     // ✅ Convert each row to object with normalized keys
     const safeRows = dataRows.map(row => {
       const obj = {};
@@ -546,9 +546,19 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
         const sport = String(req.body.sport || 'Travels').trim();
         const team_a = String(r.team_a || '').trim();
         const team_b = String(r.team_b || '').trim();
-        const ist = String(r.start_time_ist || '').trim();
         const cutoff = parseInt(r.cutoff_minutes_before || 30, 10);
         const entry = parseFloat(r.entry_points || 50);
+        let ist = r.start_time_ist;
+if (typeof ist === 'number') {
+  // Convert Excel serial to readable datetime in IST
+  const jsDate = XLSX.SSF.parse_date_code(ist);
+  ist = moment.tz(
+    `${jsDate.y}-${String(jsDate.m).padStart(2, '0')}-${String(jsDate.d).padStart(2, '0')} ${String(jsDate.H).padStart(2, '0')}:${String(jsDate.M).padStart(2, '0')}`,
+    'Asia/Kolkata'
+  ).format('YYYY-MM-DD HH:mm');
+} else {
+  ist = String(ist).trim();
+}
 
         if (!name || !team_a || !team_b || !ist) {
           skipped++;
