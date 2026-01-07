@@ -6,12 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %> · Travel Plan</title>
   <link rel="stylesheet" href="/css/styles.css">
-  <script>
-    // Back fallback route when no previous page exists
-    window.fdHomeUrl = '<%= currentUser ? "/dashboard" : "/login" %>';
-  </script>
+  <script src="/js/global.js"></script>
+  
 </head>
 <body data-theme="<%= (typeof theme !== 'undefined' ? theme : '') %>">
+<body data-theme="<%= (typeof theme !== 'undefined' ? theme : '') %>" 
+      data-fd-home-url="<%= currentUser ? '/dashboard' : '/login' %>">
+
   <nav class="top-nav">
     <div class="nav-left">
       <a href="#" class="back-link js-back" data-prev="<%= prevUrl || '' %>">← Back</a>
