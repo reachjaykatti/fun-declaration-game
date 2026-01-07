@@ -957,6 +957,23 @@ router.get('/debug/scan-lowercase', async (req, res) => {
   scanDir(baseDir);
   res.json(results);
 });
+// =========================
+// DEBUG: Check DB schema for LOWER()
+// =========================
+router.get('/admin/debug/sqlite-lower', async (req, res) => {
+  try {
+    const db = await getDb();
+    const rows = await db.all(`
+      SELECT name, type, sql
+      FROM sqlite_master
+      WHERE sql LIKE '%LOWER(%'
+         OR sql LIKE '%lower(%'
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
 
 
 export default router;
