@@ -480,6 +480,38 @@ router.get('/', async (req, res) => {
 // =========================
 // BULK IMPORT – SUBMIT (EXCEL OR TEXT)
 // =========================
+// =========================
+// BULK IMPORT – PAGE (GET)
+// =========================
+router.get('/series/:id/matches/bulk', async (req, res) => {
+  try {
+    const db = await getDb();
+    const series = await db.get('SELECT * FROM series WHERE id = ?', [req.params.id]);
+
+    if (!series) {
+      console.warn(`⚠️ Series not found for id ${req.params.id}`);
+      return res.status(404).render('404', { title: 'Series Not Found' });
+    }
+
+    // ✅ Try rendering and catch any EJS template issues
+    try {
+      res.render('admin/matches_bulk', {
+        title: 'Bulk Import Matches',
+        series,
+        result: null,
+        preview: null
+      });
+    } catch (renderErr) {
+      console.error("❌ Failed to render matches_bulk.ejs:", renderErr);
+      return res.status(500).send("Template render failed: " + renderErr.message);
+    }
+
+  } catch (err) {
+    console.error("❌ Bulk Import page load failed:", err);
+    return res.status(500).send("Server error: " + err.message);
+  }
+});
+
 router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) => {
   const db = await getDb();
   console.log("📘 DB connection ready for bulk import");
