@@ -617,28 +617,31 @@ router.post('/series/:id/matches/bulk', upload.single('file'), async (req, res) 
       });
     }
 
-   // ✅ 4. Process import
+   // =========================
+// 4️⃣ PROCESS IMPORT CLEANLY
+// =========================
 for (let i = 0; i < dataRows.length; i++) {
   const r = dataRows[i];
 
-  // ✅ Utility: Clean every incoming value safely
-  function normalizeValue(val, fallback = '') {
-    if (val == null) return fallback;
-    if (typeof val === 'object') {
-      try {
-        if (Array.isArray(val.richText)) return val.richText.map(rt => rt.text || '').join('').trim();
-        if ('text' in val) return String(val.text).trim();
-        if ('v' in val) return String(val.v).trim();
-        return JSON.stringify(val);
-      } catch {
-        return fallback;
-      }
-    }
-    return String(val).trim();
-  }
-
   try {
-    // ✅ Safely extract all fields as clean text
+    // 🧹 Normalize and sanitize every field
+    const normalizeValue = (val, fallback = '') => {
+      if (val == null) return fallback;
+      if (typeof val === 'object') {
+        try {
+          if (Array.isArray(val.richText))
+            return val.richText.map(rt => rt.text || '').join('').trim();
+          if ('text' in val) return String(val.text).trim();
+          if ('v' in val) return String(val.v).trim();
+          return JSON.stringify(val);
+        } catch {
+          return fallback;
+        }
+      }
+      return String(val).trim();
+    };
+
+    // ✅ Extract clean fields
     const name = normalizeValue(r.name);
     const sport = normalizeValue(r.sport, 'Travels');
     const team_a = normalizeValue(r.team_a);
@@ -658,8 +661,6 @@ for (let i = 0; i < dataRows.length; i++) {
           'Asia/Kolkata'
         ).format('YYYY-MM-DD HH:mm');
       }
-    } else {
-      ist = String(ist || '').trim();
     }
 
     if (!name || !team_a || !team_b || !ist) {
@@ -668,51 +669,46 @@ for (let i = 0; i < dataRows.length; i++) {
       continue;
     }
 
-    const m = moment.tz(ist, ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'], 'Asia/Kolkata', true);
+    const m = moment.tz(
+      ist,
+      ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
+      'Asia/Kolkata',
+      true
+    );
     if (!m.isValid()) {
       skipped++;
       errors.push(`Row ${i + 2}: Invalid IST date/time`);
       continue;
     }
 
-    // ✅ Prepare SQL safely
-    const sql = `
+    // ✅ Safe insert
+    const insertSQL = `
       INSERT INTO matches
         (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
-    const insertData = [
+    const insertParams = [
       req.params.id,
-      String(name ?? ''),
-      String(sport ?? ''),
-      String(team_a ?? ''),
-      String(team_b ?? ''),
+      String(name),
+      String(sport),
+      String(team_a),
+      String(team_b),
       m.utc().toISOString(),
       Number(cutoff) || 30,
       Number(entry) || 50,
       'scheduled'
     ];
 
-    console.log("🧠 RUNNING SQL:", sql.trim());
-    console.log("🧩 PARAMS:", JSON.stringify(insertData, null, 2));
-
-    await db.run(sql, insertData);
+    await db.run(insertSQL, insertParams);
     ok++;
-
   } catch (err) {
-    console.error("❌ DB Insert failed for this row!");
-    console.error("🧩 Row Data:", JSON.stringify({ name, sport, team_a, team_b, cutoff, entry }, null, 2));
-    console.error("💥 RAW ERROR:", err);
-    console.error("💥 ERROR MESSAGE:", err.message);
-
     skipped++;
     errors.push(`Row ${i + 2}: ${err.message}`);
   }
-} // ✅ closes for loop
+}
 
-// ✅ Send final result after loop finishes
 res.json({ ok, skipped, errors });
+
 
 } catch (err) { // ✅ closes outer try
   console.error('❌ Bulk import failed:', err);
