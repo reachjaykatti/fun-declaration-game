@@ -31,8 +31,8 @@
 </a>
 
   <!-- ❌ Delete -->
-  <form method="POST"
-      action="/admin/matches/<%= m.id %>/delete"
+<form method="POST"
+      action="/admin/series/<%= series.id %>/matches/<%= m.id %>/delete"
       onsubmit="return confirm('Delete this travel? This cannot be undone.');">
   <button type="submit" title="Delete Travel"
           style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:1.2em;cursor:pointer;color:#c00;">
