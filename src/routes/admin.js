@@ -354,16 +354,32 @@ router.post('/series/:id/matches/new', async (req, res) => {
     [req.params.id, name, sport, team_a, team_b, startUtc, cutoff_minutes_before || 30, entry_points || 50, 'scheduled']);
   res.redirect(`/admin/series/${req.params.id}/matches`);
 });
-// === Admin: Delete Match ===
-router.post('/series/:seriesId/matches/:matchId/delete', async (req, res) => {
+// -----------------------------
+// ❌ Delete Match (Cascade Delete)
+// -----------------------------
+router.post('/series/:seriesId/matches/:matchId/delete', ensureAuthenticated, async (req, res) => {
   const db = await getDb();
+  const { seriesId, matchId } = req.params;
 
-  await db.run('DELETE FROM matches WHERE id = ? AND series_id = ?', [
-    req.params.matchId,
-    req.params.seriesId
-  ]);
+  try {
+    await db.run('BEGIN TRANSACTION');
 
-  res.redirect(`/admin/series/${req.params.seriesId}/matches`);
+    // Delete dependent data first
+    await db.run('DELETE FROM points_ledger WHERE match_id = ?', [matchId]);
+    await db.run('DELETE FROM predictions WHERE match_id = ?', [matchId]);
+
+    // Delete match itself
+    await db.run('DELETE FROM matches WHERE id = ? AND series_id = ?', [matchId, seriesId]);
+
+    await db.run('COMMIT');
+    console.log(`🗑️ Match ${matchId} (Series ${seriesId}) deleted successfully.`);
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error('❌ Delete failed:', err);
+    return res.status(500).send('Database delete failed.');
+  }
+
+  res.redirect(`/admin/series/${seriesId}/matches`);
 });
 
 // ✏️ Edit Travel (GET)
@@ -436,29 +452,6 @@ router.post('/series/:seriesId/matches/:matchId/edit', async (req, res) => {
     console.error('Error updating travel:', err);
     res.status(500).send('Update failed.');
   }
-});
-
-// -----------------------------
-// ❌ Delete Match (Cascade Delete)
-// -----------------------------
-router.post('/matches/:matchId/delete', ensureAuthenticated, async (req, res) => {
-  const db = await getDb();
-  const matchId = req.params.matchId;
-
-  try {
-    await db.run('BEGIN TRANSACTION');
-    await db.run('DELETE FROM points_ledger WHERE match_id = ?', [matchId]);
-    await db.run('DELETE FROM predictions WHERE match_id = ?', [matchId]);
-    await db.run('DELETE FROM matches WHERE id = ?', [matchId]);
-    await db.run('COMMIT');
-    console.log(`🗑️ Match ${matchId} deleted (with all linked data)`);
-  } catch (err) {
-    await db.run('ROLLBACK');
-    console.error('❌ Delete failed:', err);
-    return res.status(500).send('Database delete failed.');
-  }
-
-  res.redirect(`/admin/series/${req.body.series_id}/matches`);
 });
 
 // =========================
