@@ -223,27 +223,30 @@ if (!seriesStats || seriesStats.length === 0) {
     const seq = wlRows.map(r => (r.predicted_team === r.winner ? 'W' : 'L'));
     const streaks = computeStreaks(seq);
 
-    // 🧭 Recent Form Calculation
+   // 🧭 Recent Form Calculation (sorted by most recent match date)
 for (const user of leaderboard) {
   const recent = await db.all(`
     SELECT 
       m.id,
       m.status,
       m.winner,
-      p.predicted_team
+      p.predicted_team,
+      m.start_time_utc
     FROM matches m
     LEFT JOIN predictions p ON p.match_id = m.id AND p.user_id = ?
     WHERE m.status IN ('completed', 'washed_out', 'cancelled')
-    ORDER BY m.id DESC
+    ORDER BY datetime(m.start_time_utc) DESC
     LIMIT 5
   `, [user.user_id]);
 
-  user.recentForm = recent.map(r => {
+  // Reverse so oldest appears on the left, most recent on the right
+  user.recentForm = recent.reverse().map(r => {
     if (r.status === 'washed_out' || r.status === 'cancelled') return 'N'; // Neutral
     if (!r.predicted_team) return 'L'; // Missed or not interested
     return r.predicted_team === r.winner ? 'W' : 'L';
   });
 }
+
     // ✅ Render EJS
 res.render('dashboard/index', {
   title: 'My Dashboard',
