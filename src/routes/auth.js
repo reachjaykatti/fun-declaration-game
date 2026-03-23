@@ -7,7 +7,12 @@ const router = express.Router();
 
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/dashboard');
-  res.render('auth/login', { title: 'Login' });
+
+  res.render('auth/login', {
+    title: 'Login',
+    showChangePassword: false,
+    showLogin: true
+  });
 });
 
 router.post('/login', async (req, res) => {
