@@ -2,16 +2,16 @@
 
 <h1>Login</h1>
 
-<% if (typeof error !== 'undefined' && error) { %>
+<% if (error) { %>
   <div class="alert alert-error"><%= error %></div>
 <% } %>
 
-<% if (typeof success !== 'undefined' && success) { %>
+<% if (success) { %>
   <div class="alert alert-success"><%= success %></div>
 <% } %>
 
 <!-- LOGIN FORM -->
-<div id="loginForm" style="<%= showChangePassword ? 'display:none;' : '' %>">
+<div id="loginForm" style="<%= showChangePassword ? 'display:none;' : '' %>;">
   <form action="/login" method="post" autocomplete="off" class="form">
     <div class="form-row">
       <label for="username">Username</label>
@@ -27,16 +27,17 @@
   </form>
 
   <p>
-    <a href="#" onclick="showChangePasswordForm()">Change Password</a>
+    <button type="button" onclick="showChangePasswordForm()" class="btn-link">
+      Change Password
+    </button>
   </p>
 </div>
 
 <!-- CHANGE PASSWORD FORM -->
-<div id="changePasswordForm" style="<%= showChangePassword ? '' : 'display:none;' %>">
+<div id="changePasswordForm" style="<%= showChangePassword ? '' : 'display:none;' %>;">
   <h2>Change Password</h2>
 
   <form action="/change-password" method="post" autocomplete="off" class="form">
-
     <div class="form-row">
       <label>Username</label>
       <input name="username" type="text" required />
@@ -56,7 +57,9 @@
   </form>
 
   <p>
-    <a href="#" onclick="showLoginForm()">Back to Login</a>
+    <button type="button" onclick="showLoginForm()" class="btn-link">
+      Back to Login
+    </button>
   </p>
 </div>
 
