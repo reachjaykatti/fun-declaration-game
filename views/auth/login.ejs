@@ -1,4 +1,3 @@
-
 <%- include('../partials/head', { title }) %>
 
 <h1>Login</h1>
@@ -7,18 +6,70 @@
   <div class="alert alert-error"><%= error %></div>
 <% } %>
 
-<form action="/login" method="post" autocomplete="off" class="form">
-  <div class="form-row">
-    <label for="username">Username</label>
-    <input id="username" name="username" type="text" required />
-  </div>
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
 
-  <div class="form-row">
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" required />
-  </div>
+<!-- LOGIN FORM -->
+<div id="loginForm" style="<%= showChangePassword ? 'display:none;' : '' %>">
+  <form action="/login" method="post" autocomplete="off" class="form">
+    <div class="form-row">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required />
+    </div>
 
-  <button type="submit" class="btn">Sign in</button>
-</form>
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+    </div>
+
+    <button type="submit" class="btn">Sign in</button>
+  </form>
+
+  <p>
+    <a href="#" onclick="showChangePasswordForm()">Change Password</a>
+  </p>
+</div>
+
+<!-- CHANGE PASSWORD FORM -->
+<div id="changePasswordForm" style="<%= showChangePassword ? '' : 'display:none;' %>">
+  <h2>Change Password</h2>
+
+  <form action="/change-password" method="post" autocomplete="off" class="form">
+
+    <div class="form-row">
+      <label>Username</label>
+      <input name="username" type="text" required />
+    </div>
+
+    <div class="form-row">
+      <label>Old Password</label>
+      <input name="old_password" type="password" required />
+    </div>
+
+    <div class="form-row">
+      <label>New Password</label>
+      <input name="new_password" type="password" required />
+    </div>
+
+    <button type="submit" class="btn">Update Password</button>
+  </form>
+
+  <p>
+    <a href="#" onclick="showLoginForm()">Back to Login</a>
+  </p>
+</div>
+
+<script>
+  function showChangePasswordForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('changePasswordForm').style.display = 'block';
+  }
+
+  function showLoginForm() {
+    document.getElementById('changePasswordForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+  }
+</script>
 
 <%- include('../partials/foot') %>
