@@ -11,7 +11,7 @@
 <% } %>
 
 <!-- LOGIN FORM -->
-<div id="loginForm" style="<%= showChangePassword ? 'display:none;' : '' %>;">
+<div id="loginForm" style="<%= showChangePassword ? 'display:none;' : '' %>">
   <form action="/login" method="post" autocomplete="off" class="form">
     <div class="form-row">
       <label for="username">Username</label>
@@ -34,10 +34,11 @@
 </div>
 
 <!-- CHANGE PASSWORD FORM -->
-<div id="changePasswordForm" style="<%= showChangePassword ? '' : 'display:none;' %>;">
+<div id="changePasswordForm" style="<%= showChangePassword ? '' : 'display:none;' %>">
   <h2>Change Password</h2>
 
   <form action="/change-password" method="post" autocomplete="off" class="form">
+
     <div class="form-row">
       <label>Username</label>
       <input name="username" type="text" required />
