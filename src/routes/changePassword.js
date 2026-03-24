@@ -46,10 +46,11 @@ router.post('/change-password', async (req, res) => {
   );
 
   return res.render('auth/login', {
-    title: 'Login',
-    success: 'Password changed successfully! You may now log in.',
-    showChangePassword: false
-  });
+  title: 'Login',
+  error: null, // ✅ ADD THIS
+  success: 'Password changed successfully! You may now log in.',
+  showChangePassword: false
+});
 });
 
 export default router; // ✅ REQUIRED
