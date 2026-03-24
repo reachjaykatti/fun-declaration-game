@@ -41,3 +41,4 @@ router.post('/change-password', async (req, res) => {
     showLogin: true
   });
 });
+export default router;
