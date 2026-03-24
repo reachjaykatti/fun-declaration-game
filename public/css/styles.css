@@ -577,3 +577,7 @@ button {
 button:hover {
   text-decoration: underline;
 }
+/* 🔥 Hide floating navigator */
+.section-navigator {
+  display: none;
+}
