@@ -14,6 +14,7 @@ import adminRoutes from './src/routes/admin.js';
 import seriesRoutes from './src/routes/series.js';
 import dashboardRoutes from './src/routes/dashboard.js';
 import { ensureAuthenticated } from './src/middleware/auth.js';
+import changePasswordRoutes from './src/routes/changePassword.js';
 
 // Determine directory (ESM-safe)
 const __filename = fileURLToPath(import.meta.url);
@@ -102,6 +103,7 @@ app.use('/', authRoutes);
 app.use('/admin', ensureAuthenticated, adminRoutes);
 app.use('/series', ensureAuthenticated, seriesRoutes);
 app.use('/dashboard', ensureAuthenticated, dashboardRoutes);
+app.use('/', changePasswordRoutes);
 
 // 404 handler
 app.use((req, res) => {
