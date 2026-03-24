@@ -192,20 +192,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
-function showChangePasswordForm() {
-  const loginForm = document.getElementById("loginForm");
-  const changeForm = document.getElementById("changePasswordForm");
-  if (loginForm && changeForm) {
-    loginForm.style.display = "none";
-    changeForm.style.display = "block";
-  }
-}
-
-function showLoginForm() {
-  const loginForm = document.getElementById("loginForm");
-  const changeForm = document.getElementById("changePasswordForm");
-  if (loginForm && changeForm) {
-    changeForm.style.display = "none";
-    loginForm.style.display = "block";
-  }
-}
