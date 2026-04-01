@@ -165,84 +165,76 @@ let leaderboard = [];
 if (!hasSeriesFilter || !selectedSeriesId) {
   // 🌍 Global leaderboard (all users)
   leaderboard = await db.all(`
-  SELECT 
-    u.id AS user_id,
-    u.display_name,
-
-    COALESCE(SUM(pl.points), 0) AS points,
-
-    COALESCE(MAX(running.total), 0) AS highest,
-    COALESCE(MIN(running.total), 0) AS lowest
-
-  FROM users u
-
-  LEFT JOIN (
     SELECT 
-      pl.user_id,
-      pl.match_id,
-      SUM(pl.points) OVER (
-        PARTITION BY pl.user_id 
-        ORDER BY pl.match_id
-      ) AS total
-    FROM points_ledger pl
-  ) running ON running.user_id = u.id
-
-  LEFT JOIN points_ledger pl 
-    ON pl.user_id = u.id
-
-  GROUP BY u.id
-  ORDER BY points DESC
-`);
+      u.id AS user_id,
+      u.display_name,
+      COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    LEFT JOIN points_ledger pl 
+      ON pl.user_id = u.id
+    GROUP BY u.id
+    ORDER BY points DESC
+  `);
 
   console.log("📊 Loaded Global Leaderboard:", leaderboard.length);
 
 } else {
   // 🎯 Series-specific leaderboard (only members of that series)
   leaderboard = await db.all(`
-  SELECT 
-    u.id AS user_id,
-    u.display_name,
-
-    COALESCE(SUM(pl.points), 0) AS points,
-
-    COALESCE(MAX(running.total), 0) AS highest,
-    COALESCE(MIN(running.total), 0) AS lowest
-
-  FROM users u
-
-  INNER JOIN series_members sm 
-    ON sm.user_id = u.id
-
-  LEFT JOIN (
     SELECT 
-      pl.user_id,
-      pl.match_id,
-      pl.series_id,
-      SUM(pl.points) OVER (
-        PARTITION BY pl.user_id, pl.series_id
-        ORDER BY pl.match_id
-      ) AS total
-    FROM points_ledger pl
-  ) running 
-    ON running.user_id = u.id 
-    AND running.series_id = sm.series_id
-
-  LEFT JOIN points_ledger pl 
-    ON pl.user_id = u.id 
-    AND pl.series_id = sm.series_id
-
-  WHERE sm.series_id = ?
-
-  GROUP BY u.id
-  ORDER BY points DESC
-`, [selectedSeriesId]);
-
+      u.id AS user_id,
+      u.display_name,
+      COALESCE(SUM(pl.points), 0) AS points
+    FROM users u
+    INNER JOIN series_members sm 
+      ON sm.user_id = u.id
+    LEFT JOIN points_ledger pl 
+      ON pl.user_id = u.id 
+      AND pl.series_id = sm.series_id
+    WHERE sm.series_id = ?
+    GROUP BY u.id
+    ORDER BY points DESC
+  `, [selectedSeriesId]);
   console.log("📊 Loaded Series Leaderboard:", selectedSeriesId, leaderboard.length);
 }
 
 // 🧩 Safety: ensure leaderboard is always an array
 if (!Array.isArray(leaderboard)) leaderboard = [];
-  
+  // =============================
+// ✅ Highest / Lowest (SAFE)
+// =============================
+const extremesMap = {};
+
+const extremes = await db.all(`
+  SELECT 
+    user_id,
+    MAX(running_total) AS highest,
+    MIN(running_total) AS lowest
+  FROM (
+    SELECT 
+      pl.user_id,
+      SUM(pl.points) OVER (
+        PARTITION BY pl.user_id 
+        ORDER BY pl.match_id
+      ) AS running_total
+    FROM points_ledger pl
+  )
+  GROUP BY user_id
+`);
+
+extremes.forEach(e => {
+  extremesMap[e.user_id] = {
+    highest: e.highest,
+    lowest: e.lowest
+  };
+});
+
+    // Merge extremes into leaderboard (SAFE)
+leaderboard.forEach(user => {
+  const ex = extremesMap[user.user_id] || {};
+  user.highest = ex.highest || 0;
+  user.lowest = ex.lowest || 0;
+});
 
     // 🚫 Hide leaderboard if no series or empty data
 let hideLeaderboard = false;
