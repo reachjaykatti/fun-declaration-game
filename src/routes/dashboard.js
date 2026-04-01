@@ -255,6 +255,36 @@ if (!seriesStats || seriesStats.length === 0) {
     `, [userId]);
     const seq = wlRows.map(r => (r.predicted_team === r.winner ? 'W' : 'L'));
     const streaks = computeStreaks(seq);
+    // =============================
+// 🌍 Global Best Streaks
+// =============================
+let bestPlanned = { name: '-', value: 0 };
+let bestNotInterested = { name: '-', value: 0 };
+
+// Get all users
+const allUsers = await db.all(`SELECT id, display_name FROM users`);
+
+for (const u of allUsers) {
+  const rows = await db.all(`
+    SELECT m.start_time_utc, m.status, m.winner, p.predicted_team
+    FROM matches m
+    LEFT JOIN predictions p 
+      ON p.match_id = m.id AND p.user_id = ?
+    WHERE m.status = 'completed'
+    ORDER BY m.start_time_utc ASC
+  `, [u.id]);
+
+  const seq = rows.map(r => (r.predicted_team === r.winner ? 'W' : 'L'));
+  const s = computeStreaks(seq);
+
+  if (s.longestWin > bestPlanned.value) {
+    bestPlanned = { name: u.display_name, value: s.longestWin };
+  }
+
+  if (s.longestLoss > bestNotInterested.value) {
+    bestNotInterested = { name: u.display_name, value: s.longestLoss };
+  }
+}
 
    // 🧭 Recent Form Calculation (sorted by most recent match date)
 for (const user of leaderboard) {
@@ -288,6 +318,8 @@ res.render('dashboard/index', {
   stats: seriesStats,       // optional alias
   leaderboard,
   streaks,
+  bestPlanned,
+bestNotInterested,
   hideLeaderboard,          // 🟢 added missing comma here
   selectedSeriesId: hasSeriesFilter ? selectedSeriesId : null,
   selectedSeriesName,
