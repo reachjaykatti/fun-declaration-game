@@ -94,7 +94,14 @@
 
     <table class="table">
       <thead>
-        <tr><th>#</th><th>Planner</th><th>Recent Form</th><th>Points</th></tr>
+        <tr>
+  <th>#</th>
+  <th>Planner</th>
+  <th>Recent Form</th>
+  <th>Highest</th>
+  <th>Lowest</th>
+  <th>Points</th>
+</tr>
       </thead>
       <tbody>
         <% leaderboard.forEach((l, idx) => { %>
@@ -114,7 +121,9 @@
                 <% }) %>
               </div>
             </td>
-            <td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
+            <td><%= l.highest ? l.highest.toFixed(2) : 0 %></td>
+<td><%= l.lowest ? l.lowest.toFixed(2) : 0 %></td>
+<td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
           </tr>
         <% }) %>
       </tbody>
