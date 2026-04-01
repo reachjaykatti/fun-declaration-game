@@ -24,8 +24,19 @@
 <div class="card">
   <div class="chips">
     <div class="chip"><span class="dot dot-info"></span> Current: <strong><%= streaks.currentStreak %></strong></div>
-    <div class="chip"><span class="dot dot-ok"></span> Longest Travel Planned: <strong><%= streaks.longestWin %></strong></div>
-    <div class="chip"><span class="dot dot-bad"></span> Longest Not Interested: <strong><%= streaks.longestLoss %></strong></div>
+    <div class="chip">
+  <span class="dot dot-ok"></span>
+  Longest Travel Planned: 
+  <strong><%= bestPlanned.value %></strong> 
+  (<%= bestPlanned.name %>)
+</div>
+
+<div class="chip">
+  <span class="dot dot-bad"></span>
+  Longest Not Interested: 
+  <strong><%= bestNotInterested.value %></strong> 
+  (<%= bestNotInterested.name %>)
+</div>
   </div>
 </div>
 
