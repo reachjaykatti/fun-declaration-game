@@ -312,6 +312,7 @@ const completedMatches = await db.all(`
   FROM matches
   WHERE status = 'completed'
   ORDER BY start_time_utc ASC
+  LIMIT -1 OFFSET 1
 `);
 
 const userRankHistory = {};
