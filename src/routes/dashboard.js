@@ -302,6 +302,63 @@ for (const user of leaderboard) {
     LIMIT 5
   `, [user.user_id]);
 
+  // =============================
+// 🏆 Best Rank / Worst Rank
+// =============================
+
+// Get all completed matches in chronological order
+const completedMatches = await db.all(`
+  SELECT id
+  FROM matches
+  WHERE status = 'completed'
+  ORDER BY start_time_utc ASC
+`);
+
+const userRankHistory = {};
+
+// Initialize history
+leaderboard.forEach(u => {
+  userRankHistory[u.user_id] = [];
+});
+
+// Simulate rankings after each completed match
+for (const match of completedMatches) {
+
+  const ranksAtThisPoint = await db.all(`
+    SELECT
+      u.id AS user_id,
+      COALESCE(SUM(pl.points), 0) AS total_points
+    FROM users u
+    LEFT JOIN points_ledger pl
+      ON pl.user_id = u.id
+      AND pl.match_id <= ?
+    GROUP BY u.id
+    ORDER BY total_points DESC
+  `, [match.id]);
+
+  ranksAtThisPoint.forEach((r, idx) => {
+    if (!userRankHistory[r.user_id]) {
+      userRankHistory[r.user_id] = [];
+    }
+
+    userRankHistory[r.user_id].push(idx + 1);
+  });
+}
+
+// Attach best/worst rank to leaderboard
+leaderboard.forEach(user => {
+
+  const history = userRankHistory[user.user_id] || [];
+
+  user.bestRank = history.length
+    ? Math.min(...history)
+    : '-';
+
+  user.worstRank = history.length
+    ? Math.max(...history)
+    : '-';
+});
+
   // Reverse so oldest appears on the left, most recent on the right
   user.recentForm = recent.reverse().map(r => {
     if (r.status === 'washed_out' || r.status === 'cancelled') return 'N'; // Neutral
