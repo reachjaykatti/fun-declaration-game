@@ -108,10 +108,12 @@
         <tr>
   <th>#</th>
   <th>Planner</th>
+  <th>Total Points</th>
+  <th>Best Rank</th>
+  <th>Worst Rank</th>
   <th>Recent Form</th>
   <th>Highest</th>
   <th>Lowest</th>
-  <th>Points</th>
 </tr>
       </thead>
       <tbody>
@@ -119,6 +121,15 @@
           <tr class="<%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
             <td><%= idx + 1 %></td>
             <td><a href="/dashboard/player/<%= l.user_id %>"><%= l.display_name %></a></td>
+<td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
+
+<td>
+  🥇 <strong><%= l.bestRank %></strong>
+</td>
+
+<td>
+  📉 <strong><%= l.worstRank %></strong>
+</td>
             <td>
               <div style="display:flex;gap:4px;">
                 <% (l.recentForm || []).forEach(result => { %>
