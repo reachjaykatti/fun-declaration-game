@@ -514,13 +514,58 @@ router.get('/player/:userId', ensureAuthenticated, async (req, res) => {
     const totalPreds = await db.get(`SELECT COUNT(*) AS total FROM predictions WHERE user_id = ?`, [userId]);
     const accuracy = totalPreds.total ? ((correct.wins / totalPreds.total) * 100).toFixed(1) : 0;
 
+    // -----------------------------------------
+// 📈 Player Travel-by-Travel Performance
+// -----------------------------------------
+
+const performanceTrend = await db.all(`
+  SELECT
+    m.id,
+    m.name AS travel_name,
+    m.start_time_utc,
+    m.status,
+    m.team_a,
+    m.team_b,
+    m.winner,
+    p.predicted_team,
+    COALESCE(pl.points, 0) AS points
+  FROM matches m
+
+  LEFT JOIN predictions p
+    ON p.match_id = m.id
+    AND p.user_id = ?
+
+  LEFT JOIN points_ledger pl
+    ON pl.match_id = m.id
+    AND pl.user_id = ?
+
+  WHERE m.status IN ('completed', 'washed_out')
+
+  ORDER BY m.start_time_utc ASC
+`, [userId, userId]);
+
+// Running cumulative points
+let running = 0;
+
+performanceTrend.forEach(row => {
+  running += Number(row.points || 0);
+  row.cumulative = running;
+});
+
+// Graph labels/data
+const graphLabels = performanceTrend.map(r => r.travel_name);
+const graphData = performanceTrend.map(r => r.cumulative);
+
     res.render('dashboard/player', {
       title: `${user.display_name} — Performance`,
       user,
       totalPoints: total?.totalPoints || 0,
       rank: rank || null,
       perSeries: perSeries || [],
-      accuracy
+      accuracy,
+      performanceTrend,
+graphLabels,
+graphData,
     });
 
   } catch (e) {
