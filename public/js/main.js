@@ -261,8 +261,6 @@ window.addEventListener('load', () => {
     }
 
     // Point
-    ctx.fillStyle = '#0b7285';
-
     ctx.save();
 
 ctx.fillStyle = '#0b7285';
@@ -272,6 +270,19 @@ ctx.arc(x, y, 4, 0, Math.PI * 2);
 ctx.fill();
 
 ctx.restore();
+
+// Show travel number every 5 points
+if (index % 5 === 0) {
+
+  ctx.fillStyle = '#555';
+  ctx.font = '11px Arial';
+
+  ctx.fillText(
+    index + 1,
+    x - 5,
+    canvas.height - 15
+  );
+}
 
   });
 ctx.lineJoin = 'round';
