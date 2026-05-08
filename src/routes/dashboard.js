@@ -366,6 +366,40 @@ leaderboard.forEach(user => {
     if (!r.predicted_team) return 'L'; // Missed or not interested
     return r.predicted_team === r.winner ? 'W' : 'L';
   });
+  // =============================
+// Current Win/Lose Streak
+// =============================
+
+const streakSeq = recent
+  .map(r => {
+    if (r.status === 'washed_out' || r.status === 'cancelled') return 'N';
+    if (!r.predicted_team) return 'L';
+    return r.predicted_team === r.winner ? 'W' : 'L';
+  })
+  .reverse();
+
+let currentWinStreak = 0;
+let currentLoseStreak = 0;
+
+for (let i = streakSeq.length - 1; i >= 0; i--) {
+
+  if (streakSeq[i] === 'W') {
+    if (currentLoseStreak > 0) break;
+    currentWinStreak++;
+  }
+
+  else if (streakSeq[i] === 'L') {
+    if (currentWinStreak > 0) break;
+    currentLoseStreak++;
+  }
+
+  else {
+    break;
+  }
+}
+
+user.currentWinStreak = currentWinStreak;
+user.currentLoseStreak = currentLoseStreak;
 }
 
     // ✅ Render EJS
