@@ -366,35 +366,48 @@ leaderboard.forEach(user => {
     if (!r.predicted_team) return 'L'; // Missed or not interested
     return r.predicted_team === r.winner ? 'W' : 'L';
   });
-  // =============================
-// Current Win/Lose Streak
+  
+// =============================
+// TRUE Current Win/Lose Streak
 // =============================
 
-const streakSeq = recent
-  .map(r => {
-    if (r.status === 'washed_out' || r.status === 'cancelled') return 'N';
-    if (!r.predicted_team) return 'L';
-    return r.predicted_team === r.winner ? 'W' : 'L';
-  })
-  .reverse();
+// Fetch ALL completed matches for streak calculation
+const allResults = await db.all(`
+  SELECT
+    m.status,
+    m.winner,
+    p.predicted_team,
+    m.start_time_utc
+  FROM matches m
+  LEFT JOIN predictions p
+    ON p.match_id = m.id
+    AND p.user_id = ?
+  WHERE m.status = 'completed'
+  ORDER BY m.start_time_utc ASC
+`, [user.user_id]);
+
+const fullSeq = allResults.map(r => {
+  if (!r.predicted_team) return 'L';
+  return r.predicted_team === r.winner ? 'W' : 'L';
+});
 
 let currentWinStreak = 0;
 let currentLoseStreak = 0;
 
-for (let i = streakSeq.length - 1; i >= 0; i--) {
+// Start from latest result backwards
+for (let i = fullSeq.length - 1; i >= 0; i--) {
 
-  if (streakSeq[i] === 'W') {
+  if (fullSeq[i] === 'W') {
+
     if (currentLoseStreak > 0) break;
+
     currentWinStreak++;
-  }
 
-  else if (streakSeq[i] === 'L') {
+  } else {
+
     if (currentWinStreak > 0) break;
-    currentLoseStreak++;
-  }
 
-  else {
-    break;
+    currentLoseStreak++;
   }
 }
 
