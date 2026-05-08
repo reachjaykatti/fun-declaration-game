@@ -196,51 +196,63 @@ document.addEventListener('DOMContentLoaded', () => {
 // Player Performance Graph
 // =====================================
 
-window.drawPerformanceGraph = function(labels, data) {
+window.addEventListener('load', () => {
+
+  const graphEl = document.getElementById('graphData');
+
+  if (!graphEl) return;
+
+  const labels = JSON.parse(graphEl.dataset.labels || '[]');
+  const data = JSON.parse(graphEl.dataset.values || '[]');
 
   const canvas = document.getElementById('trendChart');
 
-  if (!canvas) return;
+  if (!canvas || !data.length) return;
 
   const ctx = canvas.getContext('2d');
 
   canvas.width = canvas.offsetWidth;
   canvas.height = 400;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!data.length) return;
-
-  const padding = 40;
+  const padding = 50;
 
   const max = Math.max(...data);
   const min = Math.min(...data);
 
   const range = max - min || 1;
 
-  // Draw axis
-  ctx.strokeStyle = '#999';
+  // Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Axis
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = 1;
+
   ctx.beginPath();
   ctx.moveTo(padding, padding);
   ctx.lineTo(padding, canvas.height - padding);
   ctx.lineTo(canvas.width - padding, canvas.height - padding);
   ctx.stroke();
 
-  // Draw graph line
+  // Graph line
   ctx.strokeStyle = '#0b7285';
   ctx.lineWidth = 3;
+
   ctx.beginPath();
 
   data.forEach((value, index) => {
 
     const x =
       padding +
-      (index * (canvas.width - padding * 2)) / (data.length - 1 || 1);
+      (index * (canvas.width - padding * 2)) /
+      (data.length - 1 || 1);
 
     const y =
       canvas.height -
       padding -
-      ((value - min) / range) * (canvas.height - padding * 2);
+      ((value - min) / range) *
+      (canvas.height - padding * 2);
 
     if (index === 0) {
       ctx.moveTo(x, y);
@@ -250,16 +262,13 @@ window.drawPerformanceGraph = function(labels, data) {
 
     // Point
     ctx.fillStyle = '#0b7285';
+
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Label
-    ctx.fillStyle = '#333';
-    ctx.font = '11px Arial';
-    ctx.fillText(labels[index], x - 10, canvas.height - 10);
-
   });
 
   ctx.stroke();
-};
+
+});
