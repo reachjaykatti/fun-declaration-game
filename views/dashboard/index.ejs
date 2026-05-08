@@ -145,16 +145,22 @@
       </td>
 
       <td>
-        <strong style="color:#0f9d58;">
-          <%= l.currentWinStreak %>W
-        </strong>
-      </td>
+  <strong style="color:#0f9d58;">
+    <%= l.currentWinStreak %>W
+    <% if (l.currentWinStreak >= 3) { %>
+      🔥
+    <% } %>
+  </strong>
+</td>
 
-      <td>
-        <strong style="color:#db4437;">
-          <%= l.currentLoseStreak %>L
-        </strong>
-      </td>
+<td>
+  <strong style="color:#db4437;">
+    <%= l.currentLoseStreak %>L
+    <% if (l.currentLoseStreak >= 3) { %>
+      💀
+    <% } %>
+  </strong>
+</td>
 
       <td>
         <div style="display:flex;gap:4px;">
