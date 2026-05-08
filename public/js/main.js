@@ -263,12 +263,19 @@ window.addEventListener('load', () => {
     // Point
     ctx.fillStyle = '#0b7285';
 
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+
+ctx.fillStyle = '#0b7285';
+
+ctx.beginPath();
+ctx.arc(x, y, 4, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.restore();
 
   });
-
+ctx.lineJoin = 'round';
+ctx.lineCap = 'round';
   ctx.stroke();
 
 });
