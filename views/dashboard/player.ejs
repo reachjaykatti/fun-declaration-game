@@ -27,6 +27,127 @@
 </table>
 
 <h2>📈 Performance Trend</h2>
+<!-- 📈 Performance Graph -->
+<div class="card" style="padding:1rem;margin-bottom:2rem;">
+  <canvas id="trendChart" height="100"></canvas>
+</div>
+
+<!-- 📋 Detailed Match History -->
+<div class="card" style="padding:1rem;overflow-x:auto;">
+
+  <h2 style="margin-bottom:1rem;">
+    📋 Travel-by-Travel Performance
+  </h2>
+
+  <table class="table">
+
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Travel</th>
+        <th>Destinations</th>
+        <th>Status</th>
+        <th>Your Pick</th>
+        <th>Winner</th>
+        <th>Points</th>
+        <th>Cumulative</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <% performanceTrend.forEach((m, idx) => { %>
+
+        <tr>
+
+          <td><%= idx + 1 %></td>
+
+          <td><%= m.travel_name %></td>
+
+          <td>
+            <%= m.team_a %> OR <%= m.team_b %>
+          </td>
+
+          <td>
+            <%= m.status %>
+          </td>
+
+          <td>
+            <%= m.predicted_team || '-' %>
+          </td>
+
+          <td>
+            <%= m.winner || '-' %>
+          </td>
+
+          <td
+            style="
+              font-weight:bold;
+              color:<%= Number(m.points) >= 0 ? '#0f9d58' : '#db4437' %>;
+            "
+          >
+            <%= Number(m.points).toFixed(2) %>
+          </td>
+
+          <td
+            style="
+              font-weight:bold;
+              color:<%= Number(m.cumulative) >= 0 ? '#0057b8' : '#db4437' %>;
+            "
+          >
+            <%= Number(m.cumulative).toFixed(2) %>
+          </td>
+
+        </tr>
+
+      <% }) %>
+
+    </tbody>
+
+  </table>
+</div>
+
+<!-- 📊 Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const ctx = document.getElementById('trendChart');
+
+new Chart(ctx, {
+
+  type: 'line',
+
+  data: {
+    labels: <%- JSON.stringify(graphLabels) %>,
+
+    datasets: [{
+      label: 'Cumulative Points',
+      data: <%- JSON.stringify(graphData) %>,
+      borderWidth: 3,
+      tension: 0.25,
+      fill: false
+    }]
+  },
+
+  options: {
+    responsive: true,
+
+    plugins: {
+      legend: {
+        display: true
+      }
+    },
+
+    scales: {
+      y: {
+        beginAtZero: false
+      }
+    }
+  }
+});
+
+</script>
 <canvas id="performanceChart"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
