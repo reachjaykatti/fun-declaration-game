@@ -301,6 +301,19 @@ for (const user of leaderboard) {
     ORDER BY datetime(m.start_time_utc) DESC
     LIMIT 5
   `, [user.user_id]);
+  // =============================
+// Highest / Lowest Total Wins
+// =============================
+
+const allWinCounts = leaderboard.map(u => u.totalWins || 0);
+
+const maxWins = Math.max(...allWinCounts);
+const minWins = Math.min(...allWinCounts);
+
+leaderboard.forEach(u => {
+  u.isHighestWins = u.totalWins === maxWins;
+  u.isLowestWins = u.totalWins === minWins;
+});
 // =============================
 // Total Wins
 // =============================
