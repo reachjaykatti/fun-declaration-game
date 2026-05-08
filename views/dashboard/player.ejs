@@ -29,6 +29,27 @@
 <h2>📈 Performance Trend</h2>
 <div class="card" style="padding:1rem;margin-bottom:2rem;">
 
+  <canvas
+    id="trendChart"
+    style="width:100%;height:400px;"
+  ></canvas>
+
+</div>
+
+<script>
+
+window.addEventListener('load', () => {
+
+  drawPerformanceGraph(
+    <%- JSON.stringify(graphLabels || []) %>,
+    <%- JSON.stringify(graphData || []) %>
+  );
+
+});
+
+</script>
+<div class="card" style="padding:1rem;margin-bottom:2rem;">
+
   <div style="height:450px;">
     <canvas id="trendChart"></canvas>
   </div>
