@@ -29,7 +29,9 @@
 <h2>📈 Performance Trend</h2>
 <!-- 📈 Performance Graph -->
 <div class="card" style="padding:1rem;margin-bottom:2rem;">
-  <canvas id="trendChart" height="100"></canvas>
+  <div style="height:420px; position:relative;">
+  <canvas id="trendChart"></canvas>
+</div>
 </div>
 
 <!-- 📋 Detailed Match History -->
@@ -112,39 +114,74 @@
 
 <script>
 
-const ctx = document.getElementById('trendChart');
+document.addEventListener('DOMContentLoaded', () => {
 
-new Chart(ctx, {
+  const ctx = document.getElementById('trendChart');
 
-  type: 'line',
+  if (!ctx) return;
 
-  data: {
-    labels: <%- JSON.stringify(graphLabels) %>,
+  new Chart(ctx, {
 
-    datasets: [{
-      label: 'Cumulative Points',
-      data: <%- JSON.stringify(graphData) %>,
-      borderWidth: 3,
-      tension: 0.25,
-      fill: false
-    }]
-  },
+    type: 'line',
 
-  options: {
-    responsive: true,
+    data: {
 
-    plugins: {
-      legend: {
-        display: true
-      }
+      labels: <%- JSON.stringify(graphLabels) %>,
+
+      datasets: [
+        {
+          label: 'Cumulative Points',
+
+          data: <%- JSON.stringify(graphData) %>,
+
+          borderColor: '#0b7285',
+
+          backgroundColor: 'rgba(11,114,133,0.15)',
+
+          borderWidth: 4,
+
+          pointRadius: 4,
+
+          pointHoverRadius: 7,
+
+          tension: 0.25,
+
+          fill: true
+        }
+      ]
     },
 
-    scales: {
-      y: {
-        beginAtZero: false
+    options: {
+
+      responsive: true,
+
+      maintainAspectRatio: false,
+
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+
+      plugins: {
+
+        legend: {
+          display: true
+        },
+
+        tooltip: {
+          enabled: true
+        }
+      },
+
+      scales: {
+
+        y: {
+          beginAtZero: false
+        }
       }
     }
-  }
+  });
+
 });
 
 </script>
