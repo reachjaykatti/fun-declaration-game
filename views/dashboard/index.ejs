@@ -135,7 +135,26 @@
       <td>
   <%= l.points.toFixed ? l.points.toFixed(2) : l.points %>
 
-  <span style="color:#666; font-size:0.9em;">
+  <span
+    style="
+      font-size:0.9em;
+      font-weight:bold;
+
+      <% if (l.isHighestWins) { %>
+        color:#0f9d58;
+        background:#e8f5e9;
+        padding:2px 6px;
+        border-radius:6px;
+      <% } else if (l.isLowestWins) { %>
+        color:#db4437;
+        background:#fdecea;
+        padding:2px 6px;
+        border-radius:6px;
+      <% } else { %>
+        color:#666;
+      <% } %>
+    "
+  >
     (<%= l.totalWins %>W)
   </span>
 </td>
