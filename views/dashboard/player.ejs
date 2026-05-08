@@ -27,6 +27,90 @@
 </table>
 
 <h2>📈 Performance Trend</h2>
+<div class="card" style="padding:1rem;margin-bottom:2rem;">
+
+  <div style="height:450px;">
+    <canvas id="trendChart"></canvas>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+window.addEventListener('load', function () {
+
+  const canvas = document.getElementById('trendChart');
+
+  if (!canvas) {
+    console.error('Canvas not found');
+    return;
+  }
+
+  const labels = <%- JSON.stringify(graphLabels || []) %>;
+  const data = <%- JSON.stringify(graphData || []) %>;
+
+  console.log('Graph Labels:', labels);
+  console.log('Graph Data:', data);
+
+  const ctx = canvas.getContext('2d');
+
+  new Chart(ctx, {
+
+    type: 'line',
+
+    data: {
+
+      labels: labels,
+
+      datasets: [{
+        label: 'Cumulative Points',
+
+        data: data,
+
+        borderColor: '#0b7285',
+
+        backgroundColor: 'rgba(11,114,133,0.15)',
+
+        borderWidth: 4,
+
+        tension: 0.3,
+
+        fill: true,
+
+        pointRadius: 4,
+
+        pointHoverRadius: 7
+      }]
+    },
+
+    options: {
+
+      responsive: true,
+
+      maintainAspectRatio: false,
+
+      plugins: {
+
+        legend: {
+          display: true
+        }
+      },
+
+      scales: {
+
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+
+});
+
+</script>
 <!-- 📈 Performance Graph -->
 <div class="card" style="padding:1rem;margin-bottom:2rem;">
   <div style="height:420px; position:relative;">
@@ -110,81 +194,7 @@
 </div>
 
 <!-- 📊 Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-
-document.addEventListener('DOMContentLoaded', () => {
-
-  const ctx = document.getElementById('trendChart');
-
-  if (!ctx) return;
-
-  new Chart(ctx, {
-
-    type: 'line',
-
-    data: {
-
-      labels: <%- JSON.stringify(graphLabels) %>,
-
-      datasets: [
-        {
-          label: 'Cumulative Points',
-
-          data: <%- JSON.stringify(graphData) %>,
-
-          borderColor: '#0b7285',
-
-          backgroundColor: 'rgba(11,114,133,0.15)',
-
-          borderWidth: 4,
-
-          pointRadius: 4,
-
-          pointHoverRadius: 7,
-
-          tension: 0.25,
-
-          fill: true
-        }
-      ]
-    },
-
-    options: {
-
-      responsive: true,
-
-      maintainAspectRatio: false,
-
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-
-      plugins: {
-
-        legend: {
-          display: true
-        },
-
-        tooltip: {
-          enabled: true
-        }
-      },
-
-      scales: {
-
-        y: {
-          beginAtZero: false
-        }
-      }
-    }
-  });
-
-});
-
-</script>
 <canvas id="performanceChart"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
