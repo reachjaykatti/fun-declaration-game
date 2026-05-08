@@ -105,62 +105,88 @@
 
     <table class="table">
       <thead>
-        <tr>
-  <th>#</th>
-  <th>Planner</th>
-  <th>Total Points</th>
-  <th>Best Rank</th>
-<th>Worst Rank</th>
-<th>Win Streak</th>
-<th>Lose Streak</th>
-<th>Recent Form</th>
-  <th>Highest</th>
-  <th>Lowest</th>
-</tr>
-      </thead>
-      <tbody>
-        <% leaderboard.forEach((l, idx) => { %>
-          <tr class="<%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
-            <td><%= idx + 1 %></td>
-            <td><a href="/dashboard/player/<%= l.user_id %>"><%= l.display_name %></a></td>
-<td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
+  <tr>
+    <th>#</th>
+    <th>Planner</th>
+    <th>Total Points</th>
+    <th>Best Rank</th>
+    <th>Worst Rank</th>
+    <th>Win Streak</th>
+    <th>Lose Streak</th>
+    <th>Recent Form</th>
+    <th>Highest</th>
+    <th>Lowest</th>
+  </tr>
+</thead>
 
-<td>
-  📉 <strong><%= l.worstRank %></strong>
-</td>
+<tbody>
+  <% leaderboard.forEach((l, idx) => { %>
 
-<td>
-  <strong style="color:#0f9d58;">
-    <%= l.currentWinStreak %>W
-  </strong>
-</td>
+    <tr class="<%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
 
-<td>
-  <strong style="color:#db4437;">
-    <%= l.currentLoseStreak %>L
-  </strong>
-</td>
+      <td><%= idx + 1 %></td>
 
-<td>
-  <div style="display:flex;gap:4px;">
-            <td>
-              <div style="display:flex;gap:4px;">
-                <% (l.recentForm || []).forEach(result => { %>
-                  <% if (result === 'W') { %>
-                    <span style="color:#0f9d58;">●</span>
-                  <% } else if (result === 'L') { %>
-                    <span style="color:#db4437;">●</span>
-                  <% } else { %>
-                    <span style="color:#999;">●</span>
-                  <% } %>
-                <% }) %>
-              </div>
-            </td>
-            <td><%= l.highest ? l.highest.toFixed(2) : 0 %></td>
-<td><%= l.lowest ? l.lowest.toFixed(2) : 0 %></td>
-          </tr>
-        <% }) %>
-      </tbody>
+      <td>
+        <a href="/dashboard/player/<%= l.user_id %>">
+          <%= l.display_name %>
+        </a>
+      </td>
+
+      <td>
+        <%= l.points.toFixed ? l.points.toFixed(2) : l.points %>
+      </td>
+
+      <td>
+        🥇 <strong><%= l.bestRank %></strong>
+      </td>
+
+      <td>
+        📉 <strong><%= l.worstRank %></strong>
+      </td>
+
+      <td>
+        <strong style="color:#0f9d58;">
+          <%= l.currentWinStreak %>W
+        </strong>
+      </td>
+
+      <td>
+        <strong style="color:#db4437;">
+          <%= l.currentLoseStreak %>L
+        </strong>
+      </td>
+
+      <td>
+        <div style="display:flex;gap:4px;">
+          <% (l.recentForm || []).forEach(result => { %>
+
+            <% if (result === 'W') { %>
+              <span style="color:#0f9d58;">●</span>
+
+            <% } else if (result === 'L') { %>
+              <span style="color:#db4437;">●</span>
+
+            <% } else { %>
+              <span style="color:#999;">●</span>
+
+            <% } %>
+
+          <% }) %>
+        </div>
+      </td>
+
+      <td>
+        <%= l.highest ? l.highest.toFixed(2) : 0 %>
+      </td>
+
+      <td>
+        <%= l.lowest ? l.lowest.toFixed(2) : 0 %>
+      </td>
+
+    </tr>
+
+  <% }) %>
+</tbody>
     </table>
   </div>
 
