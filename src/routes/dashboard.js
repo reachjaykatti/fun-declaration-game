@@ -301,7 +301,21 @@ for (const user of leaderboard) {
     ORDER BY datetime(m.start_time_utc) DESC
     LIMIT 5
   `, [user.user_id]);
+// =============================
+// Total Wins
+// =============================
 
+const totalWins = await db.get(`
+  SELECT COUNT(*) AS wins
+  FROM predictions p
+  INNER JOIN matches m
+    ON m.id = p.match_id
+  WHERE p.user_id = ?
+    AND m.status = 'completed'
+    AND p.predicted_team = m.winner
+`, [user.user_id]);
+
+user.totalWins = totalWins?.wins || 0;
   // =============================
 // 🏆 Best Rank / Worst Rank
 // =============================
