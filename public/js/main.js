@@ -243,48 +243,49 @@ window.addEventListener('load', () => {
 
   data.forEach((value, index) => {
 
-    const x =
-      padding +
-      (index * (canvas.width - padding * 2)) /
-      (data.length - 1 || 1);
+  const x =
+    padding +
+    (index * (canvas.width - padding * 2)) /
+    (data.length - 1 || 1);
 
-    const y =
-      canvas.height -
-      padding -
-      ((value - min) / range) *
-      (canvas.height - padding * 2);
+  const y =
+    canvas.height -
+    padding -
+    ((value - min) / range) *
+    (canvas.height - padding * 2);
 
-    if (index === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
+  // Draw connected line
+  if (index === 0) {
+    ctx.moveTo(x, y);
+  } else {
+    ctx.lineTo(x, y);
+  }
 
-    // Point
-    ctx.save();
+  // Draw point
+  ctx.save();
 
-ctx.fillStyle = '#0b7285';
+  ctx.fillStyle = '#0b7285';
 
-ctx.beginPath();
-ctx.arc(x, y, 4, 0, Math.PI * 2);
-ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
 
-ctx.restore();
+  ctx.restore();
 
-// Show travel number every 5 points
-if (index % 5 === 0) {
+  // Show number every 5 travels
+  if (index % 5 === 0) {
 
-  ctx.fillStyle = '#555';
-  ctx.font = '11px Arial';
+    ctx.fillStyle = '#555';
+    ctx.font = '11px Arial';
 
-  ctx.fillText(
-    index + 1,
-    x - 5,
-    canvas.height - 15
-  );
-}
+    ctx.fillText(
+      index + 1,
+      x - 5,
+      canvas.height - 15
+    );
+  }
 
-  });
+});
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
   ctx.stroke();
