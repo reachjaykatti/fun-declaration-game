@@ -111,6 +111,8 @@
   <th>Total Points</th>
   <th>Best Rank</th>
   <th>Worst Rank</th>
+  <th>Win Streak</th>
+  <th>Lose Streak</th>
   <th>Recent Form</th>
   <th>Highest</th>
   <th>Lowest</th>
@@ -124,12 +126,23 @@
 <td><%= l.points.toFixed ? l.points.toFixed(2) : l.points %></td>
 
 <td>
-  🥇 <strong><%= l.bestRank %></strong>
+  📉 <strong><%= l.worstRank %></strong>
 </td>
 
 <td>
-  📉 <strong><%= l.worstRank %></strong>
+  <strong style="color:#0f9d58;">
+    <%= l.currentWinStreak %>W
+  </strong>
 </td>
+
+<td>
+  <strong style="color:#db4437;">
+    <%= l.currentLoseStreak %>L
+  </strong>
+</td>
+
+<td>
+  <div style="display:flex;gap:4px;">
             <td>
               <div style="display:flex;gap:4px;">
                 <% (l.recentForm || []).forEach(result => { %>
