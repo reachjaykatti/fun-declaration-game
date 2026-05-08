@@ -133,8 +133,12 @@
       </td>
 
       <td>
-        <%= l.points.toFixed ? l.points.toFixed(2) : l.points %>
-      </td>
+  <%= l.points.toFixed ? l.points.toFixed(2) : l.points %>
+
+  <span style="color:#666; font-size:0.9em;">
+    (<%= l.totalWins %>W)
+  </span>
+</td>
 
       <td>
         🥇 <strong><%= l.bestRank %></strong>
