@@ -284,5 +284,87 @@ data.forEach((value, index) => {
   }
 
 });
+// =====================================
+// 🏁 Rank Race Graph
+// =====================================
 
+window.addEventListener('load', () => {
+
+  const holder = document.getElementById('rankRaceData');
+
+  if (!holder) return;
+
+  const raw = holder.dataset.graph;
+
+  if (!raw) return;
+
+  const graph = JSON.parse(raw);
+
+  const currentUserId = Number(holder.dataset.currentUser);
+
+  const svg = document.getElementById('rankRaceGraph');
+
+  if (!svg) return;
+
+  const width = 1200;
+  const height = 500;
+
+  const padding = 50;
+
+  const labels = graph.graphLabels || [];
+  const datasets = graph.graphDatasets || [];
+
+  const totalPlayers = datasets.length;
+
+  svg.innerHTML = '';
+
+  // Axis
+  const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+
+  axis.setAttribute('x1', padding);
+  axis.setAttribute('y1', padding);
+  axis.setAttribute('x2', padding);
+  axis.setAttribute('y2', height - padding);
+  axis.setAttribute('stroke', '#aaa');
+
+  svg.appendChild(axis);
+
+  datasets.forEach(ds => {
+
+    if (!ds.ranks.length) return;
+
+    let path = '';
+
+    ds.ranks.forEach((rank, idx) => {
+
+      const x =
+        padding +
+        (idx * (width - padding * 2)) /
+        (labels.length - 1 || 1);
+
+      const y =
+        padding +
+        ((rank - 1) * (height - padding * 2)) /
+        (totalPlayers - 1 || 1);
+
+      path += idx === 0
+        ? `M ${x} ${y}`
+        : ` L ${x} ${y}`;
+
+    });
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+    line.setAttribute('d', path);
+
+    if (ds.user_id === currentUserId) {
+
+      line.setAttribute('stroke', '#0057b8');
+      line.setAttribute('stroke-width', '4');
+      line.setAttribute('opacity', '1');
+
+    } else {
+
+      line.setAttribute('stroke', '#999');
+});
 });
