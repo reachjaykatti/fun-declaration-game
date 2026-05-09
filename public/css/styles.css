@@ -738,3 +738,111 @@ button:hover {
   color: #083030 !important;
   border: 1px solid #cfe4e4 !important;
 }
+/* =========================================
+   FINAL LIGHT THEME RESTORE
+========================================= */
+
+/* Global page */
+
+body {
+  background: #eef5f3 !important;
+  color: #083030 !important;
+}
+
+/* Cards */
+
+.card,
+.travel-card,
+.admin-card,
+.summary-card {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
+
+/* Tables */
+
+table,
+.table {
+  background: #ffffff !important;
+  color: #083030 !important;
+}
+
+.table th {
+  background: #f3f8f8 !important;
+  color: #083030 !important;
+}
+
+.table td {
+  color: #083030 !important;
+}
+
+/* Admin planner sections */
+
+.planner-card,
+.match-card,
+.admin-panel,
+.admin-section {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
+
+/* Buttons */
+
+button,
+.btn,
+a.btn {
+  background: #0ea5a5 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+button:hover,
+.btn:hover,
+a.btn:hover {
+  background: #0b8b8b !important;
+  color: #ffffff !important;
+}
+
+/* Secondary buttons */
+
+.btn-outline,
+.btn-secondary,
+.btn-light {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
+
+/* Inputs */
+
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
+
+/* Chips */
+
+.chip,
+.badge,
+.planned-chip {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
+
+/* Links */
+
+a {
+  color: #0057b8 !important;
+}
+
+/* Hover rows */
+
+.table tr:hover td {
+  background: #f2f8f8 !important;
+}
