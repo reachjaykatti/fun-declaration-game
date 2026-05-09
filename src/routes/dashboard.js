@@ -23,7 +23,69 @@ function computeStreaks(seq) {
   const currentStreak = current ? `${current}${currentType}` : '—';
   return { currentStreak, longestWin, longestLoss };
 }
+// =======================================
+// 🏁 Build Rank History Graph Data
+// =======================================
+async function buildRankRaceGraph(db, leaderboard) {
 
+  const completedMatches = await db.all(`
+    SELECT id, start_time_utc
+    FROM matches
+    WHERE status = 'completed'
+    ORDER BY start_time_utc ASC
+  `);
+
+  const graphLabels = [];
+  const graphDatasets = [];
+
+  const users = leaderboard.map(u => ({
+    user_id: u.user_id,
+    display_name: u.display_name,
+    history: []
+  }));
+
+  for (const match of completedMatches) {
+
+    graphLabels.push(`T${graphLabels.length + 1}`);
+
+    const ranks = await db.all(`
+      SELECT
+        u.id AS user_id,
+        COALESCE(SUM(pl.points), 0) AS total_points
+      FROM users u
+      LEFT JOIN points_ledger pl
+        ON pl.user_id = u.id
+        AND pl.match_id <= ?
+      GROUP BY u.id
+      ORDER BY total_points DESC
+    `, [match.id]);
+
+    ranks.forEach((r, idx) => {
+
+      const user = users.find(x => x.user_id === r.user_id);
+
+      if (user) {
+        user.history.push(idx + 1);
+      }
+
+    });
+  }
+
+  users.forEach(u => {
+
+    graphDatasets.push({
+      user_id: u.user_id,
+      display_name: u.display_name,
+      ranks: u.history
+    });
+
+  });
+
+  return {
+    graphLabels,
+    graphDatasets
+  };
+}
 // -----------------------------------------
 // 🏠 Dashboard Main Route
 // -----------------------------------------
