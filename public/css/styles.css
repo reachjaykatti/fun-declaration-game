@@ -180,7 +180,7 @@ body[data-theme="light"] {
   /* ====== Tables ====== */
   .table{ width:100%; border-collapse:collapse }
   .table th,.table td{ border-bottom:1px solid var(--border); padding:.6rem; text-align:left }
-  .table th{ color:var(--muted); font-weight:700 }
+  .table th{ color:#083030; font-weight:700 }
   .table tr:hover td{ background:#0c1424 }
   body[data-theme="light"] .table tr:hover td{ background:#eef3fb }
   
