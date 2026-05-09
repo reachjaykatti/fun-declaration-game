@@ -165,11 +165,35 @@ body[data-theme="light"] {
   .back-link:hover{ border-color:var(--border); background:#0b1322 }
   
   /* ====== Buttons ====== */
-  .btn{ cursor:pointer; border:none; border-radius:8px; padding:.55rem .9rem; font-weight:600 }
-  .btn-primary{ background:var(--accent); color:#001018 }
-  .btn-ghost{ background:transparent; color:var(--fg); border:1px solid var(--border) }
-  .btn-warn{ background:var(--warn); color:#1b1400 }
-  .btn-outline{ background:transparent; border:1px solid var(--border); color:var(--fg) }
+  .btn{
+  cursor:pointer;
+  border:none;
+  border-radius:8px;
+  padding:.55rem .9rem;
+  font-weight:600;
+}
+
+.btn-primary{
+  background:#0ea5a5;
+  color:white;
+}
+
+.btn-ghost{
+  background:#ffffff;
+  color:#083030;
+  border:1px solid #cfe4e4;
+}
+
+.btn-warn{
+  background:#f59e0b;
+  color:white;
+}
+
+.btn-outline{
+  background:#ffffff;
+  border:1px solid #cfe4e4;
+  color:#083030;
+}
   .btn:disabled{ opacity:.5; cursor:not-allowed }
   
   /* ====== Cards / Panels ====== */
@@ -206,7 +230,9 @@ body[data-theme="light"] {
   font-weight:700;
   background:#f4f9f9;
 }
-  .table tr:hover td{ background:#0c1424 }
+  .table tr:hover td{
+  background:#f2f8f8;
+}
   body[data-theme="light"] .table tr:hover td{ background:#eef3fb }
   
   /* ====== Form ====== */
@@ -231,8 +257,17 @@ body[data-theme="light"] {
   body[data-theme="light"] .badge.washed_out{ background:#eef1f6 }
   
   .chips{ display:flex; gap:.4rem; flex-wrap:wrap }
-  .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .55rem; border-radius:999px;
-    background:#0b1322; border:1px solid var(--border); font-size:.85rem }
+  .chip{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.3rem .55rem;
+  border-radius:999px;
+  background:#ffffff;
+  border:1px solid #cfe4e4;
+  color:#083030;
+  font-size:.85rem;
+}
   .dot{ width:.5rem; height:.5rem; border-radius:999px; display:inline-block }
   .dot-ok{ background:var(--ok)} .dot-bad{ background:var(--bad)} .dot-warn{ background:var(--warn)} .dot-info{ background:var(--accent) }
   
@@ -320,7 +355,7 @@ body[data-theme="light"] .nav-link:hover { background:#eef3fb; }
 }
 
 .travel-card {
-  background: var(--panel);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
