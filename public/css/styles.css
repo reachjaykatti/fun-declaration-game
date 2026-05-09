@@ -581,3 +581,48 @@ button:hover {
 .section-navigator {
   display: none;
 }
+/* =========================================
+   Flashing Highest / Lowest Leaderboard Rows
+========================================= */
+
+@keyframes flashGreen {
+
+  0% {
+    background-color: rgba(15, 157, 88, 0.08);
+  }
+
+  50% {
+    background-color: rgba(15, 157, 88, 0.22);
+  }
+
+  100% {
+    background-color: rgba(15, 157, 88, 0.08);
+  }
+}
+
+@keyframes flashRed {
+
+  0% {
+    background-color: rgba(219, 68, 55, 0.08);
+  }
+
+  50% {
+    background-color: rgba(219, 68, 55, 0.22);
+  }
+
+  100% {
+    background-color: rgba(219, 68, 55, 0.08);
+  }
+}
+
+.flash-highest {
+
+  animation: flashGreen 1.5s infinite;
+  font-weight: bold;
+}
+
+.flash-lowest {
+
+  animation: flashRed 1.5s infinite;
+  font-weight: bold;
+}
