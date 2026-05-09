@@ -618,6 +618,24 @@ performanceTrend.forEach(row => {
 const graphLabels = performanceTrend.map(r => r.travel_name);
 const graphData = performanceTrend.map(r => r.cumulative);
 
+    // =======================================
+// 🏁 Rank Race Graph
+// =======================================
+
+const allLeaderboard = await db.all(`
+  SELECT
+    u.id AS user_id,
+    u.display_name,
+    COALESCE(SUM(pl.points), 0) AS points
+  FROM users u
+  LEFT JOIN points_ledger pl
+    ON pl.user_id = u.id
+  GROUP BY u.id
+  ORDER BY points DESC
+`);
+
+const rankRace = await buildRankRaceGraph(db, allLeaderboard);
+    
     res.render('dashboard/player', {
       title: `${user.display_name} — Performance`,
       user,
@@ -628,6 +646,7 @@ const graphData = performanceTrend.map(r => r.cumulative);
       performanceTrend,
 graphLabels,
 graphData,
+rankRace,
     });
 
   } catch (e) {
