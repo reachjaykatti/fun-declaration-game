@@ -235,18 +235,17 @@ window.addEventListener('load', () => {
   ctx.lineTo(canvas.width - padding, canvas.height - padding);
   ctx.stroke();
 
-  // Graph line
-  ctx.strokeStyle = '#0b7285';
-  ctx.lineWidth = 3;
+  // =====================================
+// Bar Graph
+// =====================================
 
-  ctx.beginPath();
+const barWidth =
+  (canvas.width - padding * 2) / data.length;
 
-  data.forEach((value, index) => {
+data.forEach((value, index) => {
 
   const x =
-    padding +
-    (index * (canvas.width - padding * 2)) /
-    (data.length - 1 || 1);
+    padding + index * barWidth;
 
   const y =
     canvas.height -
@@ -254,25 +253,24 @@ window.addEventListener('load', () => {
     ((value - min) / range) *
     (canvas.height - padding * 2);
 
-  // Draw connected line
-  if (index === 0) {
-    ctx.moveTo(x, y);
-  } else {
-    ctx.lineTo(x, y);
-  }
+  const barHeight =
+    canvas.height - padding - y;
 
-  // Draw point
-  ctx.save();
+  // Positive = green
+  // Negative = red
+  ctx.fillStyle =
+    value >= 0
+      ? '#0f9d58'
+      : '#db4437';
 
-  ctx.fillStyle = '#0b7285';
+  ctx.fillRect(
+    x + 2,
+    y,
+    barWidth - 4,
+    barHeight
+  );
 
-  ctx.beginPath();
-  ctx.arc(x, y, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-
-  // Show number every 5 travels
+  // Show travel number every 5
   if (index % 5 === 0) {
 
     ctx.fillStyle = '#555';
@@ -280,14 +278,11 @@ window.addEventListener('load', () => {
 
     ctx.fillText(
       index + 1,
-      x - 5,
-      canvas.height - 15
+      x,
+      canvas.height - 10
     );
   }
 
 });
-ctx.lineJoin = 'round';
-ctx.lineCap = 'round';
-  ctx.stroke();
 
 });
