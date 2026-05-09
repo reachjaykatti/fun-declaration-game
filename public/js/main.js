@@ -382,11 +382,41 @@ if (ds.user_id === currentUserId) {
   line.setAttribute('stroke-width', '1.5');
   line.setAttribute('opacity', '0.45');
 }
-  } catch (err) {
+    } catch (err) {
 
     console.error('Rank graph failed:', err);
 
   }
 
 });
+
+/* ===== Double Confirmation Popup Restore ===== */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  document.querySelectorAll('.js-confirm-double').forEach(form => {
+
+    form.addEventListener('submit', (e) => {
+
+      const confirm1 =
+        form.dataset.confirm1 ||
+        'Are you sure?';
+
+      const confirm2 =
+        form.dataset.confirm2 ||
+        'Please confirm again';
+
+      if (!window.confirm(confirm1)) {
+        e.preventDefault();
+        return;
+      }
+
+      if (!window.confirm(confirm2)) {
+        e.preventDefault();
+      }
+
+    });
+
+  });
+
 });
