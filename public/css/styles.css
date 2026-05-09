@@ -1,4 +1,7 @@
-
+body {
+  background: #eef3f3 !important;
+  color: #1f2937 !important;
+}
 /* ========= GLOBAL TYPOGRAPHY ========= */
 html {
   font-size: 16px;
@@ -115,13 +118,13 @@ button:active, .btn:active {
 }
 
 
-/* ====== Dark Theme (Travel Plan) ====== */
+/* ====== Dark Theme (Travel Plan) ====== 
 :root {
   --bg:#0f2f2f; --panel:#103a3a; --border:#155050;
   --fg:#eaf8f8; --muted:#9fd0d0;
   --accent:#00b3b3; --accent-2:#4cd6d6;
   --ok:#24d06d; --warn:#f5b635; --bad:#ff5566;
-}
+}*/
 
 /* ====== Light Theme (Travel Plan) ====== */
 body[data-theme="light"] {
