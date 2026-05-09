@@ -325,7 +325,7 @@ window.addEventListener('load', () => {
   axis.setAttribute('y1', padding);
   axis.setAttribute('x2', padding);
   axis.setAttribute('y2', height - padding);
-  axis.setAttribute('stroke', '#aaa');
+  axis.setAttribute('stroke', document.body.dataset.theme === 'dark'? '#666':'#aaa');
 
   svg.appendChild(axis);
 
@@ -357,14 +357,28 @@ window.addEventListener('load', () => {
 
     line.setAttribute('d', path);
 
-    if (ds.user_id === currentUserId) {
+    const isDarkTheme =
+  document.body.dataset.theme === 'dark';
 
-      line.setAttribute('stroke', '#0057b8');
-      line.setAttribute('stroke-width', '4');
-      line.setAttribute('opacity', '1');
+if (ds.user_id === currentUserId) {
 
-    } else {
+  line.setAttribute(
+    'stroke',
+    isDarkTheme ? '#4dabf7' : '#0057b8'
+  );
 
-      line.setAttribute('stroke', '#999');
+  line.setAttribute('stroke-width', '4');
+  line.setAttribute('opacity', '1');
+
+} else {
+
+  line.setAttribute(
+    'stroke',
+    isDarkTheme ? '#888' : '#bbb'
+  );
+
+  line.setAttribute('stroke-width', '1.5');
+  line.setAttribute('opacity', '0.45');
+}
 });
 });
