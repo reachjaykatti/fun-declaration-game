@@ -707,3 +707,34 @@ button:hover {
   animation: flashRed 1.5s infinite;
   font-weight: bold;
 }
+/* ===== FINAL BUTTON RESTORE ===== */
+
+.travel-card .btn,
+.travel-card button,
+.travel-card a,
+.travel-card a.btn {
+  background: #0ea5a5 !important;
+  color: #ffffff !important;
+  border: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Hover */
+
+.travel-card .btn:hover,
+.travel-card button:hover,
+.travel-card a:hover,
+.travel-card a.btn:hover {
+  background: #0b8b8b !important;
+  color: #ffffff !important;
+}
+
+/* Planned chip */
+
+.travel-card .chip,
+.travel-card .planned-chip {
+  background: #ffffff !important;
+  color: #083030 !important;
+  border: 1px solid #cfe4e4 !important;
+}
