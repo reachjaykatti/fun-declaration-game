@@ -26,45 +26,6 @@
   <% }) %>
 </table>
 
-<h2>📈 Performance Trend</h2>
-
-<div class="card" style="padding:1rem;margin-bottom:2rem;">
-
-  <canvas
-    id="trendChart"
-    style="width:100%;height:400px;"
-  ></canvas>
-
-</div>
-
-<div
-  id="graphData"
-  data-labels='<%- JSON.stringify(graphLabels || []) %>'
-  data-values='<%- JSON.stringify(graphData || []) %>'
-  style="display:none;"
-></div>
-
-<h2>🏁 Rank Race Graph</h2>
-
-<div class="card" style="padding:1rem;margin-bottom:2rem;overflow:auto;">
-
-  <svg
-    id="rankRaceGraph"
-    width="100%"
-    height="500"
-    viewBox="0 0 1200 500"
-    preserveAspectRatio="none"
-  ></svg>
-
-</div>
-
-<div
-  id="rankRaceData"
-  data-current-user="<%= user.id %>"
-  data-graph='<%- JSON.stringify(rankRace || {}) %>'
-  style="display:none;"
-></div>
-
 <!-- 📋 Detailed Match History -->
 <div class="card" style="padding:1rem;overflow-x:auto;">
 
