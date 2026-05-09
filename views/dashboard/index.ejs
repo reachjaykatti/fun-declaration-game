@@ -122,7 +122,19 @@
 <tbody>
   <% leaderboard.forEach((l, idx) => { %>
 
-    <tr class="<%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
+    <tr
+  class="
+    <%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>
+
+    <%= Number(l.points).toFixed(2) === Number(l.highest).toFixed(2)
+      ? 'flash-highest'
+      : '' %>
+
+    <%= Number(l.points).toFixed(2) === Number(l.lowest).toFixed(2)
+      ? 'flash-lowest'
+      : '' %>
+  "
+>
 
       <td><%= idx + 1 %></td>
 
