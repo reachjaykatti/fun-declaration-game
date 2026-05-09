@@ -10,8 +10,9 @@ html {
 }
 
 body {
-  color: var(--fg);
-  background: var(--bg);
+  background: #eef3f3;
+  color: #083030;
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
   font-weight: 400;
@@ -228,7 +229,7 @@ a { cursor: pointer; }
 body[data-theme="light"] .chip {
   background: #fff;          /* was dark in light mode; fix */
   border: 1px solid var(--border);
-  color: var(--fg);
+  color: #083030;
 }
 body[data-theme="light"] .card { background:#fff; }
 body[data-theme="light"] .back-link:hover { background:#eef3fb; }
