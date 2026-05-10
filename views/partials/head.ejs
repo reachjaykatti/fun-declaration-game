@@ -23,6 +23,7 @@
         <a href="/series" class="nav-link">My Series</a>
         <% if (currentUser.is_admin) { %>
           <a href="/admin" class="nav-link">Admin</a>
+          <a href="/admin/prediction-audit" class="nav-link">Prediction Audit</a>
         <% } %>
 
         <form method="post" action="/logout" style="display:inline">
