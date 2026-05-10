@@ -50,19 +50,12 @@
   class="inline"
   method="post"
   action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+  onsubmit="return window.confirm('Confirm selection: <%= m.team_a %>?')"
 >
 
   <input type="hidden" name="team" value="A" />
 
-  <button
-    class="btn btn-small"
-    type="button"
-    onclick="
-      if(confirm('Are you sure you want to select <%= m.team_a %>?')) {
-        this.form.submit();
-      }
-    "
-  >
+  <button class="btn btn-small" type="submit">
     <%= labels.declare %> <%= m.team_a %>
   </button>
 
@@ -72,19 +65,12 @@
   class="inline"
   method="post"
   action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+  onsubmit="return window.confirm('Confirm selection: <%= m.team_b %>?')"
 >
 
   <input type="hidden" name="team" value="B" />
 
-  <button
-    class="btn btn-small"
-    type="button"
-    onclick="
-      if(confirm('Are you sure you want to select <%= m.team_b %>?')) {
-        this.form.submit();
-      }
-    "
-  >
+  <button class="btn btn-small" type="submit">
     <%= labels.declare %> <%= m.team_b %>
   </button>
 
