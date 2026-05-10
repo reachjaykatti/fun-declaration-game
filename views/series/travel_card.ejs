@@ -46,21 +46,31 @@
     <% if (m.status === 'completed') { %>
       <span class="text-muted">Travel Completed</span>
     <% } else if (!m.locked && m.status === 'scheduled' && !m.user_has_predicted) { %>
-      <form class="inline js-confirm-double" method="post"
-        action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-        data-confirm1="Confirm travel plan: <%= m.team_a %>?"
-        data-confirm2="Finalize travel plan: <%= m.team_a %>?">
-        <input type="hidden" name="team" value="A" />
-        <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_a %></button>
-      </form>
+      <form
+  class="inline"
+  method="post"
+  action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+  onsubmit="return confirm('Are you sure you want to select <%= m.team_a %>?')"
+>
+  <input type="hidden" name="team" value="A" />
 
-      <form class="inline js-confirm-double" method="post"
-        action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
-        data-confirm1="Confirm travel plan: <%= m.team_b %>?"
-        data-confirm2="Finalize travel plan: <%= m.team_b %>?">
-        <input type="hidden" name="team" value="B" />
-        <button class="btn btn-small" type="submit"><%= labels.declare %> <%= m.team_b %></button>
-      </form>
+  <button class="btn btn-small" type="submit">
+    <%= labels.declare %> <%= m.team_a %>
+  </button>
+</form>
+
+<form
+  class="inline"
+  method="post"
+  action="/series/<%= series.id %>/matches/<%= m.id %>/predict"
+  onsubmit="return confirm('Are you sure you want to select <%= m.team_b %>?')"
+>
+  <input type="hidden" name="team" value="B" />
+
+  <button class="btn btn-small" type="submit">
+    <%= labels.declare %> <%= m.team_b %>
+  </button>
+</form>
 
     <% } else if (m.user_has_predicted) { %>
       <span class="chip chip-ok">
