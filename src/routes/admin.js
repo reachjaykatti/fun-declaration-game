@@ -968,5 +968,54 @@ router.get('/admin/debug/sqlite-lower', async (req, res) => {
   }
 });
 
+// ======================================
+// 📜 Prediction Audit Log
+// ======================================
+router.get('/prediction-audit', async (req, res) => {
+
+  try {
+
+    const db = await getDb();
+
+    const logs = await db.all(`
+
+      SELECT
+        p.created_at,
+        u.display_name,
+        m.name AS match_name,
+        CASE
+          WHEN p.predicted_team = 'A' THEN m.team_a
+          WHEN p.predicted_team = 'B' THEN m.team_b
+          ELSE p.predicted_team
+        END AS selected_team
+
+      FROM predictions p
+
+      JOIN users u
+        ON u.id = p.user_id
+
+      JOIN matches m
+        ON m.id = p.match_id
+
+      ORDER BY p.created_at DESC
+
+      LIMIT 500
+
+    `);
+
+    res.render('admin/prediction_audit', {
+      title: 'Prediction Audit',
+      logs
+    });
+
+  } catch (err) {
+
+    console.error('Prediction audit failed:', err);
+
+    res.status(500).send('Prediction audit failed');
+
+  }
+
+});
 
 export default router;
