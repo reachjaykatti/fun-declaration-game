@@ -982,6 +982,7 @@ router.get('/prediction-audit', async (req, res) => {
       SELECT
   u.display_name,
   m.name AS match_name,
+  p.created_at,
 
   CASE
     WHEN p.predicted_team = 'A' THEN m.team_a
