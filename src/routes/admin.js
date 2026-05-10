@@ -1006,11 +1006,11 @@ router.get('/prediction-audit', async (req, res) => {
 
   } catch (err) {
 
-    console.error(err);
+  console.error('AUDIT ERROR:', err);
 
-    res.send('Prediction audit failed');
+  res.send(err.toString());
 
-  }
+}
 
 });
 export default router;
