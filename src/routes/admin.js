@@ -980,24 +980,20 @@ router.get('/prediction-audit', async (req, res) => {
     const logs = await db.all(`
 
       SELECT
-        p.id_at,
+        p.id,
         u.display_name,
         m.name AS match_name,
-        CASE
-          WHEN p.predicted_team = 'A' THEN m.team_a
-          WHEN p.predicted_team = 'B' THEN m.team_b
-          ELSE p.predicted_team
-        END AS selected_team
+        p.predicted_team
 
       FROM predictions p
 
-      JOIN users u
+      LEFT JOIN users u
         ON u.id = p.user_id
 
-      JOIN matches m
+      LEFT JOIN matches m
         ON m.id = p.match_id
 
-      ORDER BY p.id_at DESC
+      ORDER BY p.id DESC
 
       LIMIT 500
 
@@ -1010,12 +1006,11 @@ router.get('/prediction-audit', async (req, res) => {
 
   } catch (err) {
 
-    console.error('Prediction audit failed:', err);
+    console.error(err);
 
-    res.status(500).send('Prediction audit failed');
+    res.send('Prediction audit failed');
 
   }
 
 });
-
 export default router;
