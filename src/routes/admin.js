@@ -993,7 +993,7 @@ router.get('/prediction-audit', async (req, res) => {
       LEFT JOIN matches m
         ON m.id = p.match_id
 
-      ORDER BY rowid DESC
+      ORDER BY p.match_id DESC
 
       LIMIT 500
 
