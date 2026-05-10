@@ -980,22 +980,26 @@ router.get('/prediction-audit', async (req, res) => {
     const logs = await db.all(`
 
       SELECT
-        
-        u.display_name,
-        m.name AS match_name,
-        p.predicted_team
+  u.display_name,
+  m.name AS match_name,
 
-      FROM predictions p
+  CASE
+    WHEN p.predicted_team = 'A' THEN m.team_a
+    WHEN p.predicted_team = 'B' THEN m.team_b
+    ELSE p.predicted_team
+  END AS selected_team
 
-      LEFT JOIN users u
-        ON u.id = p.user_id
+FROM predictions p
 
-      LEFT JOIN matches m
-        ON m.id = p.match_id
+LEFT JOIN users u
+  ON u.id = p.user_id
 
-      ORDER BY p.match_id DESC
+LEFT JOIN matches m
+  ON m.id = p.match_id
 
-      LIMIT 500
+ORDER BY p.match_id DESC
+
+LIMIT 500
 
     `);
 
