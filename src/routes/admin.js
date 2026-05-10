@@ -980,7 +980,7 @@ router.get('/prediction-audit', async (req, res) => {
     const logs = await db.all(`
 
       SELECT
-        p.id,
+        
         u.display_name,
         m.name AS match_name,
         p.predicted_team
@@ -993,7 +993,7 @@ router.get('/prediction-audit', async (req, res) => {
       LEFT JOIN matches m
         ON m.id = p.match_id
 
-      ORDER BY p.id DESC
+      ORDER BY rowid DESC
 
       LIMIT 500
 
