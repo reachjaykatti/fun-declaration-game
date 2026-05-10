@@ -980,7 +980,7 @@ router.get('/prediction-audit', async (req, res) => {
     const logs = await db.all(`
 
       SELECT
-        p.created_at,
+        p.id_at,
         u.display_name,
         m.name AS match_name,
         CASE
@@ -997,7 +997,7 @@ router.get('/prediction-audit', async (req, res) => {
       JOIN matches m
         ON m.id = p.match_id
 
-      ORDER BY p.created_at DESC
+      ORDER BY p.id_at DESC
 
       LIMIT 500
 
