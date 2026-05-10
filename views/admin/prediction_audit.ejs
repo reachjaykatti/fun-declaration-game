@@ -1,60 +1,49 @@
 <%- include('../partials/head', { title: title }) %>
 
-<div class="container">
+<h1>📜 Prediction Audit Log</h1>
 
-  <h1 style="margin-bottom:1rem;">
-    📜 Prediction Audit Log
-  </h1>
+<div class="card" style="padding:1rem; overflow-x:auto;">
 
-  <div class="card" style="padding:1rem; overflow-x:auto;">
+  <table class="table">
 
-    <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Player</th>
+        <th>Travel</th>
+        <th>Selected</th>
+      </tr>
+    </thead>
 
-      <thead>
+    <tbody>
+
+      <% logs.forEach(log => { %>
+
         <tr>
-          <th>#</th>
-          <th>Time</th>
-          <th>Player</th>
-          <th>Travel</th>
-          <th>Selected</th>
+
+          <td>#<%= log.id %></td>
+
+          <td>
+            <strong>
+              <%= log.display_name || 'Unknown' %>
+            </strong>
+          </td>
+
+          <td>
+            <%= log.match_name || '-' %>
+          </td>
+
+          <td>
+            <%= log.predicted_team || '-' %>
+          </td>
+
         </tr>
-      </thead>
 
-      <tbody>
+      <% }) %>
 
-        <% logs.forEach((log, idx) => { %>
+    </tbody>
 
-          <tr>
-
-            <td><%= idx + 1 %></td>
-
-            <td>
-              <%= log.id_at %>
-            </td>
-
-            <td>
-              <strong><%= log.display_name %></strong>
-            </td>
-
-            <td>
-              <%= log.match_name %>
-            </td>
-
-            <td>
-              <span class="chip chip-ok">
-                <%= log.selected_team %>
-              </span>
-            </td>
-
-          </tr>
-
-        <% }) %>
-
-      </tbody>
-
-    </table>
-
-  </div>
+  </table>
 
 </div>
 
