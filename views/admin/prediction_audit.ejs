@@ -8,7 +8,7 @@
 
     <thead>
       <tr>
-        <th>ID</th>
+        <th>#</th>
         <th>Player</th>
         <th>Travel</th>
         <th>Selected</th>
@@ -17,32 +17,31 @@
 
     <tbody>
 
-      <% logs.forEach(log => { %>
+  <% logs.forEach((log, loopIndex) => { %>
 
-        <tr>
+    <tr>
 
-          <td>#<%= log.id %></td>
+      <td><%= loopIndex + 1 %></td>
 
-          <td>
-            <strong>
-              <%= log.display_name || 'Unknown' %>
-            </strong>
-          </td>
+      <td>
+        <strong>
+          <%= log.display_name || 'Unknown' %>
+        </strong>
+      </td>
 
-          <td>
-            <%= log.match_name || '-' %>
-          </td>
+      <td>
+        <%= log.match_name || '-' %>
+      </td>
 
-          <td>
-            <%= log.predicted_team || '-' %>
-          </td>
+      <td>
+        <%= log.predicted_team || '-' %>
+      </td>
 
-        </tr>
+    </tr>
 
-      <% }) %>
+  <% }) %>
 
-    </tbody>
-
+</tbody>
   </table>
 
 </div>
