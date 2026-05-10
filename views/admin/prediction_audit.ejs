@@ -1,0 +1,61 @@
+<%- include('../partials/head', { title: title }) %>
+
+<div class="container">
+
+  <h1 style="margin-bottom:1rem;">
+    📜 Prediction Audit Log
+  </h1>
+
+  <div class="card" style="padding:1rem; overflow-x:auto;">
+
+    <table class="table">
+
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Time</th>
+          <th>Player</th>
+          <th>Travel</th>
+          <th>Selected</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <% logs.forEach((log, idx) => { %>
+
+          <tr>
+
+            <td><%= idx + 1 %></td>
+
+            <td>
+              <%= log.created_at %>
+            </td>
+
+            <td>
+              <strong><%= log.display_name %></strong>
+            </td>
+
+            <td>
+              <%= log.match_name %>
+            </td>
+
+            <td>
+              <span class="chip chip-ok">
+                <%= log.selected_team %>
+              </span>
+            </td>
+
+          </tr>
+
+        <% }) %>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+<%- include('../partials/foot') %>
