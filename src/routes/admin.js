@@ -341,13 +341,23 @@ router.post('/series/:id/matches/new', async (req, res) => {
 
   let startUtc = start_time_utc && start_time_utc.trim() ? start_time_utc.trim() : '';
   if (!startUtc && start_time_ist && start_time_ist.trim()) {
-    // Accept both YYYY-MM-DD HH:mm AND DD-MM-YYYY HH:mm
-    const istVal = start_time_ist.trim();
-    let m = moment.tz(istVal, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata', true);
-    if (!m.isValid()) m = moment.tz(istVal, 'DD-MM-YYYY HH:mm', 'Asia/Kolkata', true);
-    if (!m.isValid()) return res.status(400).send('Invalid IST format. Use YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm');
-    startUtc = m.utc().toISOString();
+
+  const istVal = start_time_ist.trim();
+
+  const m = moment.tz(
+    istVal,
+    ['YYYY-MM-DD HH:mm', 'DD-MM-YYYY HH:mm'],
+    'Asia/Kolkata'
+  );
+
+  if (!m.isValid()) {
+    return res.status(400).send(
+      'Invalid IST format. Use YYYY-MM-DD HH:mm or DD-MM-YYYY HH:mm'
+    );
   }
+
+  startUtc = m.utc().toISOString();
+}
   if (!startUtc) return res.status(400).send('Start time required (IST or UTC)');
 
   await db.run('INSERT INTO matches (series_id, name, sport, team_a, team_b, start_time_utc, cutoff_minutes_before, entry_points, status) VALUES (?,?,?,?,?,?,?,?,?)',
