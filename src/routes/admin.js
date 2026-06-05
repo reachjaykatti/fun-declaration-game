@@ -23,7 +23,9 @@ router.get('/debug/sqlite-triggers', async (req, res) => {
   res.json(rows);
 });
 
-
+router.get('/admin/download-db', (req, res) => {
+  res.download('/opt/render/project/data/app.db');
+});
 // Multer for CSV/TSV uploads (kept in memory)
 const upload = multer({
   storage: multer.memoryStorage(),
