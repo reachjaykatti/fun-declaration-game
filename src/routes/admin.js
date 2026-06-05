@@ -1027,4 +1027,7 @@ LIMIT 500
 }
 
 });
+router.get('/download-db', (req, res) => {
+  res.download('/opt/render/project/data/app.db');
+});
 export default router;
